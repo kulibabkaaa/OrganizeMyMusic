@@ -12,12 +12,18 @@ export async function createSupabaseServerClient() {
 
   return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
-      get(name) {
+      get(name: string) {
         return cookieStore.get(name)?.value;
       },
-      set() {},
-      remove() {}
+      set(name: string, value: string, options: Record<string, unknown>) {
+        void name;
+        void value;
+        void options;
+      },
+      remove(name: string, options: Record<string, unknown>) {
+        void name;
+        void options;
+      }
     }
   });
 }
-
