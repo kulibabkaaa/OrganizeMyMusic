@@ -7,8 +7,12 @@ import { StatusPill } from "@/components/ui/status-pill";
 
 const MUSICKIT_SCRIPT = "https://js-cdn.music.apple.com/musickit/v3/musickit.js";
 
+function getMusicKit(): MusicKitGlobal | null {
+  return window.MusicKit ?? null;
+}
+
 async function loadMusicKitScript() {
-  if (window.MusicKit) {
+  if (getMusicKit()) {
     return;
   }
 
@@ -16,7 +20,7 @@ async function loadMusicKitScript() {
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${MUSICKIT_SCRIPT}"]`);
 
     if (existing) {
-      if (window.MusicKit) {
+      if (getMusicKit()) {
         resolve();
         return;
       }
@@ -52,12 +56,13 @@ export function AppleMusicConnectCard() {
           method: "POST"
         });
         const payload = (await response.json()) as { token: string };
+        const musicKit = getMusicKit();
 
-        if (cancelled || !window.MusicKit) {
+        if (cancelled || !musicKit) {
           return;
         }
 
-        window.MusicKit.configure({
+        musicKit.configure({
           developerToken: payload.token,
           app: {
             name: "Organize Your Music",
@@ -81,7 +86,7 @@ export function AppleMusicConnectCard() {
   }, []);
 
   async function connectAppleMusic() {
-    if (!window.MusicKit) {
+    if (!getMusicKit()) {
       setStatus("error");
       setMessage("MusicKit is not available.");
       return;
@@ -89,7 +94,7 @@ export function AppleMusicConnectCard() {
 
     startTransition(async () => {
       try {
-        const musicKit = window.MusicKit;
+        const musicKit = getMusicKit();
 
         if (!musicKit) {
           throw new Error("MusicKit is not available.");

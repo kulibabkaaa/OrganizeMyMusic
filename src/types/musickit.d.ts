@@ -1,17 +1,19 @@
 export {};
 
 declare global {
+  interface MusicKitGlobal {
+    configure(config: {
+      developerToken: string;
+      app: {
+        name: string;
+        build: string;
+      };
+    }): MusicKitInstance;
+    getInstance(): MusicKitInstance;
+  }
+
   interface Window {
-    MusicKit?: {
-      configure(config: {
-        developerToken: string;
-        app: {
-          name: string;
-          build: string;
-        };
-      }): MusicKitInstance;
-      getInstance(): MusicKitInstance;
-    };
+    MusicKit?: MusicKitGlobal;
   }
 
   interface MusicKitInstance {
@@ -20,4 +22,3 @@ declare global {
     storefrontId?: string;
   }
 }
-
