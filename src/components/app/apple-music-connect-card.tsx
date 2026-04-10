@@ -89,7 +89,13 @@ export function AppleMusicConnectCard() {
 
     startTransition(async () => {
       try {
-        const instance = window.MusicKit.getInstance();
+        const musicKit = window.MusicKit;
+
+        if (!musicKit) {
+          throw new Error("MusicKit is not available.");
+        }
+
+        const instance = musicKit.getInstance();
 
         if (!instance) {
           throw new Error("MusicKit is not ready yet.");
