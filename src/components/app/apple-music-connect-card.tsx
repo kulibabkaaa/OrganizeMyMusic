@@ -89,7 +89,12 @@ export function AppleMusicConnectCard() {
 
     startTransition(async () => {
       try {
-        const instance = window.MusicKit?.getInstance();
+        const instance = window.MusicKit.getInstance();
+
+        if (!instance) {
+          throw new Error("MusicKit is not ready yet.");
+        }
+
         const userToken = await instance.authorize();
         const storefront = instance.storefrontId ?? "us";
 
