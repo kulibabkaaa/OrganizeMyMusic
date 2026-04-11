@@ -1,23 +1,23 @@
 const sections = [
   {
     eyebrow: "How it works",
-    title: "Preview the result before a dollar changes hands.",
+    title: "Pay once, then let the sort begin.",
     body:
-      "The product ingests your Apple Music library, removes duplicate noise, classifies each track, and generates a fixed playlist bundle you can inspect before paying.",
+      "We scan your Apple Music library, analyze your tracks, and build a playlist set for you to inspect before anything is added to your account.",
     anchor: "how-it-works"
   },
   {
     eyebrow: "Why it feels useful",
-    title: "The sorting logic stays opinionated so the output is clean.",
+    title: "Common categories when you want speed. Custom criteria when you want control.",
     body:
-      "MVP keeps the dimensions tight: language, genre, and mood. That makes the results easier to trust, support, and improve with real user feedback.",
+      "Use familiar playlist criteria like genre, mood, language, era, and energy, or describe a more specific idea in your own words. The result can be broad, narrow, or highly specific.",
     anchor: "preview"
   },
   {
     eyebrow: "Payment model",
-    title: "A one-time sort fits the job better than a subscription.",
+    title: "Pay once. Sort your library. Keep the result.",
     body:
-      "Users pay after the preview, then manually confirm playlist creation in Apple Music. The product stays low-friction while still protecting against accidental writes.",
+      "Pay once, and we will scan and organize your library. Once your playlists are ready, you can review them before saving them to Apple Music.",
     anchor: "pricing"
   }
 ];
@@ -30,7 +30,7 @@ export function ValueSections() {
           {sections.map((section) => (
             <article key={section.title} id={section.anchor} className="border-t border-black/10 pt-6">
               <p className="text-xs uppercase tracking-[0.24em] text-black/45">{section.eyebrow}</p>
-              <h2 className="mt-4 max-w-sm font-display text-3xl tracking-[-0.03em]">
+              <h2 className="mt-4 max-w-sm font-display text-3xl tracking-[-0.03em] lg:min-h-[11rem]">
                 {section.title}
               </h2>
               <p className="mt-4 max-w-sm text-base leading-7 text-black/66">{section.body}</p>
@@ -41,4 +41,3 @@ export function ValueSections() {
     </section>
   );
 }
-

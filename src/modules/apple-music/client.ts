@@ -59,16 +59,19 @@ function mapLibrarySong(resource: AppleLibrarySongResource): RawAppleTrack {
   };
 }
 
-export async function fetchAppleLibrarySongs(credentials?: AppleApiCredentials) {
+export async function fetchAppleLibrarySongs(
+  credentials?: AppleApiCredentials
+): Promise<RawAppleTrack[]> {
   if (credentials) {
     const tracks: RawAppleTrack[] = [];
     let nextPath: string | undefined = "/me/library/songs?limit=100";
 
     while (nextPath) {
-      const page = await appleRequest<AppleCollectionResponse<AppleLibrarySongResource>>(
-        nextPath,
-        credentials
-      );
+      const page: AppleCollectionResponse<AppleLibrarySongResource> =
+        await appleRequest<AppleCollectionResponse<AppleLibrarySongResource>>(
+          nextPath,
+          credentials
+        );
       tracks.push(...page.data.map(mapLibrarySong));
       nextPath = page.next;
     }

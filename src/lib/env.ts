@@ -1,21 +1,30 @@
 import { z } from "zod";
 
+const emptyStringToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => {
+    if (typeof value === "string" && value.trim() === "") {
+      return undefined;
+    }
+
+    return value;
+  }, schema);
+
 const envSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  DATABASE_URL: z.string().optional(),
-  APPLE_TEAM_ID: z.string().optional(),
-  APPLE_KEY_ID: z.string().optional(),
-  APPLE_PRIVATE_KEY: z.string().optional(),
-  APPLE_MUSICKIT_KEY: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_PRICE_SORT: z.string().optional(),
-  SENTRY_DSN: z.string().optional(),
-  ENCRYPTION_KEY: z.string().optional()
+  NEXT_PUBLIC_APP_URL: emptyStringToUndefined(z.string().url().default("http://localhost:3000")),
+  NEXT_PUBLIC_SUPABASE_URL: emptyStringToUndefined(z.string().url().optional()),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: emptyStringToUndefined(z.string().optional()),
+  SUPABASE_SERVICE_ROLE_KEY: emptyStringToUndefined(z.string().optional()),
+  DATABASE_URL: emptyStringToUndefined(z.string().optional()),
+  APPLE_TEAM_ID: emptyStringToUndefined(z.string().optional()),
+  APPLE_KEY_ID: emptyStringToUndefined(z.string().optional()),
+  APPLE_PRIVATE_KEY: emptyStringToUndefined(z.string().optional()),
+  APPLE_MUSICKIT_KEY: emptyStringToUndefined(z.string().optional()),
+  OPENAI_API_KEY: emptyStringToUndefined(z.string().optional()),
+  STRIPE_SECRET_KEY: emptyStringToUndefined(z.string().optional()),
+  STRIPE_WEBHOOK_SECRET: emptyStringToUndefined(z.string().optional()),
+  STRIPE_PRICE_SORT: emptyStringToUndefined(z.string().optional()),
+  SENTRY_DSN: emptyStringToUndefined(z.string().optional()),
+  ENCRYPTION_KEY: emptyStringToUndefined(z.string().optional())
 });
 
 export const env = envSchema.parse({
@@ -45,4 +54,3 @@ export function requireServerEnv<K extends keyof typeof env>(key: K) {
 
   return value;
 }
-
