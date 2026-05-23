@@ -816,6 +816,32 @@ Acceptance criteria:
 - Tests cover the tuned scoring behavior without using private user library
   data.
 
+## MVP-030 — Deploy tuned sorting and repeat production smoke
+
+Status: not started.
+
+Goal: ship the MVP-029 sorting tuning to the deployed web app and persistent
+worker, then repeat a real Apple Music sorting smoke test.
+
+Tasks:
+
+- Push the checked MVP-029 commit to the branch used by Vercel and Railway.
+- Confirm Vercel production deployment uses the tuned sorting code.
+- Confirm the Railway worker is running the same commit or branch.
+- Run another real sorting flow with at least three playlist requests.
+- Preview the output and confirm only if the playlist selection is acceptable.
+- Verify Apple Music playlists are created only after explicit confirmation.
+- Record the new run IDs, track counts, created playlist counts, and quality
+  observations.
+
+Acceptance criteria:
+
+- Web app and worker are on the same tuned sorting revision.
+- Production checks/deployment are healthy.
+- Real Apple Music write-back is tested only after preview and explicit
+  confirmation.
+- Results and remaining quality issues are documented.
+
 ---
 
 # Final MVP checklist

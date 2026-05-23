@@ -46,6 +46,8 @@ The next important work is quality hardening:
 
 - Continue tuning matching/scoring with more real-library feedback.
 - Use the preview diagnostics to explain why requests have few or no matches.
+- Deploy the tuned scoring to both Vercel and the persistent Railway worker
+  before the next real sorting smoke test.
 - Continue expanding sorting tests across Ukrainian, Russian, English, Polish,
   mixed, instrumental, and unknown tracks.
 - Keep Stripe deferred until the Apple Music organizing quality is acceptable.
