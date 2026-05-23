@@ -836,7 +836,10 @@ confirmation.
 Follow-up implementation: `/api/health` now reports sanitized web deployment
 revision metadata, and `npm run worker:check` logs sanitized worker revision
 metadata before checking database connectivity. These checks make it easier to
-compare the Vercel and Railway commit SHAs without exposing secrets.
+compare the Vercel and Railway commit SHAs without exposing secrets. Vercel
+production deployment `dpl_Ht5dDnacUW6wkg3SX2w7tdPQ1hMa` is `READY` for commit
+`90e3b4533f23c88f35f803257115fede7cc5e2c6`, and
+`https://organize-my-music.vercel.app/api/health` returned that commit SHA.
 
 Goal: ship the MVP-029 sorting tuning to the deployed web app and persistent
 worker, then repeat a real Apple Music sorting smoke test.
