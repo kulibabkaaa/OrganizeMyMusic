@@ -833,6 +833,11 @@ the persistent worker revision. The real Apple Music smoke retest also remains
 manual because it requires user preview review and explicit write-back
 confirmation.
 
+Follow-up implementation: `/api/health` now reports sanitized web deployment
+revision metadata, and `npm run worker:check` logs sanitized worker revision
+metadata before checking database connectivity. These checks make it easier to
+compare the Vercel and Railway commit SHAs without exposing secrets.
+
 Goal: ship the MVP-029 sorting tuning to the deployed web app and persistent
 worker, then repeat a real Apple Music sorting smoke test.
 

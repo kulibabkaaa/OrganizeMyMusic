@@ -1,8 +1,11 @@
 import { env } from "@/lib/env";
+import { getDeploymentRevision } from "@/lib/deployment-revision";
 import { logger } from "@/lib/logger";
 import { createPgBoss } from "@/lib/pg-boss";
 
 async function checkWorkerDatabase() {
+  logger.info({ revision: getDeploymentRevision() }, "Worker deployment revision.");
+
   if (!env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required for worker health check.");
   }

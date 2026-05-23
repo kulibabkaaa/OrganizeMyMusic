@@ -27,6 +27,12 @@ Health check:
 npm run worker:check
 ```
 
+The health check logs deployment revision metadata when the host exposes it.
+For Railway, check the log line named `Worker deployment revision.` and compare
+`revision.commitSha` with the Vercel production commit. If Railway does not
+show a commit SHA, verify the service is connected to the same GitHub branch
+manually in the Railway UI.
+
 Persistent worker:
 
 ```bash
@@ -92,8 +98,10 @@ or encryption values to `NEXT_PUBLIC_*` variables.
 6. Run `npm run worker:check` in the Railway shell or one-off command runner.
 7. Start the worker service.
 8. Confirm logs contain `Worker started and ready for library sync and playlist creation jobs.`
-9. Trigger one safe sync job from the web app after Apple Music auth works.
-10. Confirm `job_events` receives worker progress without logging tokens.
+9. Confirm logs contain `Worker deployment revision.` with the expected commit
+   SHA or branch.
+10. Trigger one safe sync job from the web app after Apple Music auth works.
+11. Confirm `job_events` receives worker progress without logging tokens.
 
 ## Verification Status
 
@@ -109,6 +117,8 @@ As of 2026-05-23:
   policies can break pg-boss.
 - `npm run worker:check` exists for non-destructive database connectivity
   checks when a usable `DATABASE_URL` is available locally or in the host shell.
+- `npm run worker:check` now reports sanitized deployment revision metadata
+  before testing database connectivity.
 
 ## Stop Conditions
 

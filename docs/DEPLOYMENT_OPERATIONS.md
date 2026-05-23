@@ -97,6 +97,7 @@ Supabase handles:
 - Server secrets are server-only.
 - Preview deployment works.
 - Auth redirect URLs include deployment URL.
+- `/api/health` returns the deployed web revision without exposing secrets.
 
 Current status for `MVP-024`:
 
@@ -123,6 +124,7 @@ Current status for `MVP-024`:
 - Worker has `SUPABASE_SERVICE_ROLE_KEY` if needed.
 - Worker has Apple and OpenAI server secrets.
 - Worker health check passes with `npm run worker:check`.
+- Worker health check logs the deployed worker revision.
 - Worker starts successfully.
 - Worker can process one test job.
 - Worker logs do not expose secrets.
