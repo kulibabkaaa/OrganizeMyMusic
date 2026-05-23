@@ -818,20 +818,13 @@ Acceptance criteria:
 
 ## MVP-030 — Deploy tuned sorting and repeat production smoke
 
-Status: in progress on 2026-05-23.
+Status: complete on 2026-05-23 with documented limitations.
 
 Current state: the tuned sorting commits were pushed to `main` and Vercel
 created a production deployment for commit
 `cb067ee431d37580e4da3666d697c2c16cd4864e`. Vercel reports deployment
 `dpl_77eBieb2XtQN2nyxRnyqtAhWoAdL` as `READY`, and the production site returned
 HTTP 200 at `https://organize-my-music.vercel.app`.
-
-Remaining: Railway worker deployment still needs confirmation in the Railway UI
-or an authenticated Railway CLI session. Local Railway CLI inspection failed
-with `Unauthorized. Please login with railway login`, so Codex did not verify
-the persistent worker revision. The real Apple Music smoke retest also remains
-manual because it requires user preview review and explicit write-back
-confirmation.
 
 Follow-up implementation: `/api/health` now reports sanitized web deployment
 revision metadata, and `npm run worker:check` logs sanitized worker revision
@@ -840,6 +833,20 @@ compare the Vercel and Railway commit SHAs without exposing secrets. Vercel
 production deployment `dpl_Ht5dDnacUW6wkg3SX2w7tdPQ1hMa` is `READY` for commit
 `90e3b4533f23c88f35f803257115fede7cc5e2c6`, and
 `https://organize-my-music.vercel.app/api/health` returned that commit SHA.
+
+Production smoke result: the user confirmed the deployed Apple Music MVP flow
+worked end-to-end after preview and explicit confirmation. The app signed in,
+connected Apple Music, synced the available library, stored and normalized
+tracks, generated playlist previews, and created 2 playlists in the user's real
+Apple Music account. Earlier observed production counts for this library were
+377 raw tracks, 359 normalized tracks, and 18 duplicates. This smoke used the
+user's available real library rather than a 500-track test library.
+
+Known limitations: the user reported remaining quality issues after the
+successful write-back, but did not yet provide enough detail to tune the
+sorting logic further. Codex also could not independently inspect Railway from
+the CLI because Railway authentication was unavailable in the local session;
+the successful worker-driven smoke confirms the persistent worker was active.
 
 Goal: ship the MVP-029 sorting tuning to the deployed web app and persistent
 worker, then repeat a real Apple Music sorting smoke test.
@@ -862,6 +869,29 @@ Acceptance criteria:
 - Real Apple Music write-back is tested only after preview and explicit
   confirmation.
 - Results and remaining quality issues are documented.
+
+## MVP-031 — Triage real smoke quality issues
+
+Status: not started.
+
+Goal: turn the user's real post-smoke feedback into targeted sorting and preview
+improvements without broad redesign or unsafe Apple Music writes.
+
+Tasks:
+
+- Collect the specific created playlists, expected playlist intent, and visible
+  mismatch patterns without storing or sharing private track-level data.
+- Inspect aggregate preview and assignment counts where possible.
+- Add synthetic tests that reproduce the reported issue patterns.
+- Tune heuristics or structured planning only for the confirmed issue patterns.
+- Preserve preview and explicit confirmation before any Apple Music write-back.
+
+Acceptance criteria:
+
+- Each reported quality issue has either a fix, a test-backed limitation, or a
+  documented follow-up.
+- Sorting changes remain deterministic-first and schema-validated.
+- No Apple Music write-back path changes bypass confirmation.
 
 ---
 
