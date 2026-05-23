@@ -818,7 +818,20 @@ Acceptance criteria:
 
 ## MVP-030 — Deploy tuned sorting and repeat production smoke
 
-Status: not started.
+Status: in progress on 2026-05-23.
+
+Current state: the tuned sorting commits were pushed to `main` and Vercel
+created a production deployment for commit
+`cb067ee431d37580e4da3666d697c2c16cd4864e`. Vercel reports deployment
+`dpl_77eBieb2XtQN2nyxRnyqtAhWoAdL` as `READY`, and the production site returned
+HTTP 200 at `https://organize-my-music.vercel.app`.
+
+Remaining: Railway worker deployment still needs confirmation in the Railway UI
+or an authenticated Railway CLI session. Local Railway CLI inspection failed
+with `Unauthorized. Please login with railway login`, so Codex did not verify
+the persistent worker revision. The real Apple Music smoke retest also remains
+manual because it requires user preview review and explicit write-back
+confirmation.
 
 Goal: ship the MVP-029 sorting tuning to the deployed web app and persistent
 worker, then repeat a real Apple Music sorting smoke test.
