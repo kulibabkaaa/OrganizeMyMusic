@@ -30,26 +30,25 @@ This folder contains the product, architecture, implementation, and Codex workfl
 
 ## Current project stage
 
-The repo is an early scaffold. It already has:
+As of 2026-05-23, the Apple Music MVP path has completed one production smoke
+test with a real Apple Music account:
 
-- Next.js, React, TypeScript, Tailwind.
-- Supabase and Postgres dependencies.
-- OpenAI dependency.
-- Stripe dependency.
-- `pg-boss` dependency and basic worker boot.
-- Initial database migration.
-- Marketing page and mock preview data.
+- Supabase Auth protects the dashboard.
+- MusicKit connects Apple Music and stores an encrypted user token.
+- The Railway worker syncs Apple Music library songs through `pg-boss`.
+- Raw Apple Music payloads, normalized tracks, dedupe counts, classifications,
+  playlist requests, preview snapshots, playlist rows, playlist-track rows, and
+  job events are stored in Supabase.
+- Preview and explicit confirmation are in place before Apple Music write-back.
+- A confirmed production run created two real Apple Music playlists.
 
-The repo still needs:
+The next important work is quality hardening:
 
-- Real authenticated dashboard data.
-- Library sync jobs.
-- Normalization and dedupe.
-- AI classification.
-- Playlist planning.
-- Preview and confirmation UI.
-- Apple Music playlist creation.
-- Integration tests and deployment setup.
+- Improve matching/scoring for real libraries.
+- Make empty or tiny playlist output clearer before confirmation.
+- Add stronger sorting tests across Ukrainian, Russian, English, Polish, mixed,
+  instrumental, and unknown tracks.
+- Keep Stripe deferred until the Apple Music organizing quality is acceptable.
 
 ## Documentation rule
 

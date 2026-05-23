@@ -643,24 +643,35 @@ Acceptance criteria:
 
 ## MVP-026 — Production smoke test
 
-Status: blocked on 2026-05-23.
+Status: complete on 2026-05-23 with documented limitations.
 
-Current state: infrastructure preflight is complete. Railway worker is online,
-Supabase MCP confirms the `pgboss` schema exists, and the current MVP worktree
-was deployed to Vercel Production on 2026-05-23 as
-`dpl_BFfhH5dLXiQFcpC96E7XBtdX4ZQg`. The Production alias
-`https://organize-my-music.vercel.app` responds publicly, and safe smoke checks
-for `/`, `/dashboard`, and `/login` return `200`. A full smoke test still
-requires a real Apple Music user to sign in, connect MusicKit, inspect the
-preview, and explicitly confirm before any playlist write-back.
+Current state: a real production smoke test completed with the user's Apple
+Music account. The user signed in, connected Apple Music through MusicKit,
+synced the library, saved three playlist requests, reviewed the preview, gave
+explicit confirmation, and verified that two playlists were created in the real
+Apple Music app.
 
-Blockers:
+Evidence:
 
-- Confirm Vercel Production `DATABASE_URL` works through an authenticated sync
-  request. Sensitive Vercel env values cannot be independently read back from
-  CLI/MCP.
-- Run the final write-back step only with the user's explicit Apple Music
-  confirmation.
+- Vercel Production alias: `https://organize-my-music.vercel.app`.
+- Confirmed sort run: `4fede120-bc0e-4d9b-861b-477cc236a2e5`.
+- Confirmed library sync: `9d30ecd1-d786-4aff-aec3-4c839e858a1f`.
+- Supabase `library_syncs` recorded `status = completed`, `raw_track_count =
+  377`, `normalized_track_count = 359`, and `duplicate_count = 18`.
+- Supabase `sort_runs` recorded `state = completed`.
+- Supabase `sort_playlists` recorded two selected playlist rows with stored
+  Apple Music playlist IDs.
+- Job events recorded: `Apple Music write-back finished: 2 playlists created,
+  0 already existed, 3 tracks added.`
+
+Known limitations:
+
+- The test library contained 377 raw tracks, so the 500-track target was not
+  independently exercised in this smoke run.
+- Sorting quality needs hardening. The first real run produced very small
+  playlists and one requested playlist with no tracks, so the core flow works
+  but matching/scoring quality is not yet good enough.
+- Stripe remains intentionally deferred until after Apple Music quality work.
 
 Goal: test full flow with a real Apple Music account.
 
@@ -687,6 +698,9 @@ Acceptance criteria:
 
 ## MVP-027 — Stripe one-time payment gate
 
+Status: deferred. The user explicitly chose to skip Stripe until the Apple
+Music flow works and sorting quality improves.
+
 Goal: add payment only after product flow works.
 
 Tasks:
@@ -702,6 +716,34 @@ Acceptance criteria:
 - Paid confirmation path works.
 - Webhook updates payment state.
 - User cannot pay for a changing preview.
+
+---
+
+# Phase 9 — Quality hardening after first production smoke
+
+## MVP-028 — Sorting quality evaluation and low-match handling
+
+Status: not started.
+
+Goal: improve playlist quality after the first real Apple Music smoke test.
+
+Tasks:
+
+- Add a repeatable way to inspect why tracks matched or did not match each
+  requested playlist without exposing private library data in logs.
+- Improve low-match handling so empty or tiny playlists are clearly called out
+  before confirmation.
+- Review scoring for language, genre, mood, and use-case rules.
+- Add focused tests using synthetic Ukrainian, Russian, Polish, English, mixed,
+  instrumental, and unknown tracks.
+- Preserve the explicit confirmation gate before any Apple Music write-back.
+
+Acceptance criteria:
+
+- Preview explains low-confidence or empty playlist output before confirmation.
+- Sorting tests cover the languages and cases required by the MVP.
+- No new Apple Music writes are introduced outside the existing confirmation
+  flow.
 
 ---
 

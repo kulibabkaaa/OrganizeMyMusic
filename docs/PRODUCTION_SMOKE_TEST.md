@@ -64,12 +64,38 @@ As of 2026-05-23:
 
 - Railway worker is online.
 - Supabase MCP confirms `pgboss` tables exist.
-- Current MVP worktree is deployed to Vercel Production as
-  `dpl_BFfhH5dLXiQFcpC96E7XBtdX4ZQg`.
+- Current MVP worktree has been deployed to Vercel Production and is available
+  through `https://organize-my-music.vercel.app`.
 - Production alias `https://organize-my-music.vercel.app` responds publicly.
 - Safe smoke checks for `/`, `/dashboard`, and `/login` returned `200`.
-- Vercel Production `DATABASE_URL` cannot be independently read back from
-  CLI/MCP because it is sensitive; it still needs validation through an
-  authenticated sync request.
-- A full smoke test has not been run because it requires a real Apple Music
-  account and explicit user confirmation before write-back.
+- Vercel Production `DATABASE_URL` was validated indirectly through an
+  authenticated production sync request.
+- A full smoke test was run with a real Apple Music account and explicit user
+  confirmation before write-back.
+
+Smoke result:
+
+- App account sign-in worked.
+- MusicKit Apple Music authorization worked.
+- The Apple Music user token was persisted server-side and connection status
+  appeared on the dashboard.
+- Library sync `9d30ecd1-d786-4aff-aec3-4c839e858a1f` completed with 377 raw
+  tracks, 359 normalized tracks, and 18 duplicates.
+- Playlist requests were saved for Ukrainian rap, gym rap, and sad Slavic
+  songs.
+- Sort run `4fede120-bc0e-4d9b-861b-477cc236a2e5` reached `preview_ready`,
+  then explicit user confirmation queued write-back.
+- Railway processed the playlist creation job and Supabase recorded the sort
+  run as `completed`.
+- Apple Music write-back created two playlists and added three tracks.
+- The user verified the two playlists appeared in the Apple Music app.
+
+Known issues from this smoke:
+
+- The test account had 377 raw tracks, so the 500-track scale target remains
+  unverified.
+- Sorting quality is weak in the first real run: output playlists were very
+  small, and one requested playlist had no tracks.
+- Empty or low-match playlists need stronger preview warnings before the user
+  confirms write-back.
+- Stripe remains deferred.
