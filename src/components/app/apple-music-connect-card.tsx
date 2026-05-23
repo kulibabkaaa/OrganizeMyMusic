@@ -1,159 +1,132 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
+import {
+  connectAppleMusicWithMusicKit,
+  prepareAppleMusicAuthorization,
+  type PreparedAppleMusicAuthorization
+} from "@/modules/apple-music/musickit-browser";
 
-const MUSICKIT_SCRIPT = "https://js-cdn.music.apple.com/musickit/v3/musickit.js";
+type ConnectionState = "idle" | "connecting" | "connected" | "error";
 
-function getMusicKit(): MusicKitGlobal | null {
-  return window.MusicKit ?? null;
-}
+export function AppleMusicConnectCard({
+  canConnect = true,
+  initiallyConnected = false,
+  initialStorefront = null
+}: {
+  canConnect?: boolean;
+  initiallyConnected?: boolean;
+  initialStorefront?: string | null;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<ConnectionState>(initiallyConnected ? "connected" : "idle");
+  const [storefront, setStorefront] = useState<string | null>(initialStorefront);
+  const [prepared, setPrepared] = useState<PreparedAppleMusicAuthorization | null>(null);
+  const [message, setMessage] = useState(
+    initiallyConnected
+      ? "Apple Music authorization is stored encrypted server-side."
+      : canConnect
+      ? "Authorize Apple Music with MusicKit. The browser receives a MusicKit user token and sends it to the backend."
+      : "Sign in before connecting Apple Music. MusicKit authorization stays disabled while signed out."
+  );
+  const isConnected = state === "connected";
+  const isPreparing = canConnect && !isConnected && state !== "error" && !prepared;
+  const isBusy = state === "connecting";
 
-async function loadMusicKitScript() {
-  if (getMusicKit()) {
-    return;
-  }
-
-  await new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${MUSICKIT_SCRIPT}"]`);
-
-    if (existing) {
-      if (getMusicKit()) {
-        resolve();
-        return;
-      }
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener("error", () => reject(new Error("Unable to load MusicKit.")), {
-        once: true
-      });
+  useEffect(() => {
+    if (!canConnect || initiallyConnected) {
       return;
     }
 
-    const script = document.createElement("script");
-    script.src = MUSICKIT_SCRIPT;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Unable to load MusicKit."));
-    document.body.appendChild(script);
-  });
-}
+    let isCancelled = false;
 
-export function AppleMusicConnectCard() {
-  const [status, setStatus] = useState<"idle" | "ready" | "connected" | "error">("idle");
-  const [message, setMessage] = useState("Load MusicKit and prepare Apple Music sign-in.");
-  const [isPending, startTransition] = useTransition();
+    setMessage("Preparing Apple Music authorization...");
+    const preparation = prepareAppleMusicAuthorization();
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function bootstrap() {
-      try {
-        await loadMusicKitScript();
-
-        const response = await fetch("/api/apple/developer-token", {
-          method: "POST"
-        });
-        const payload = (await response.json()) as { token: string };
-        const musicKit = getMusicKit();
-
-        if (cancelled || !musicKit) {
+    preparation
+      .then((result) => {
+        if (isCancelled) {
           return;
         }
 
-        musicKit.configure({
-          developerToken: payload.token,
-          app: {
-            name: "Organize Your Music",
-            build: "0.1.0"
-          }
-        });
+        setPrepared(result);
+        setMessage("Apple Music authorization is ready. Click Connect Apple Music to open Apple's approval prompt.");
+      })
+      .catch((error) => {
+        if (isCancelled) {
+          return;
+        }
 
-        setStatus("ready");
-        setMessage("MusicKit is ready. Authorize Apple Music to persist the connection.");
-      } catch (error) {
-        setStatus("error");
-        setMessage(error instanceof Error ? error.message : "MusicKit setup failed.");
-      }
-    }
-
-    bootstrap();
+        setState("error");
+        setMessage(error instanceof Error ? error.message : "Unable to prepare Apple Music authorization.");
+      });
 
     return () => {
-      cancelled = true;
+      isCancelled = true;
     };
-  }, []);
+  }, [canConnect, initiallyConnected]);
 
-  async function connectAppleMusic() {
-    if (!getMusicKit()) {
-      setStatus("error");
-      setMessage("MusicKit is not available.");
+  function handleConnect() {
+    if (!prepared) {
+      setMessage("Apple Music authorization is still preparing. Try again in a moment.");
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const musicKit = getMusicKit();
+    setState("connecting");
+    setMessage("Opening Apple Music authorization...");
 
-        if (!musicKit) {
-          throw new Error("MusicKit is not available.");
-        }
-
-        const instance = musicKit.getInstance();
-
-        if (!instance) {
-          throw new Error("MusicKit is not ready yet.");
-        }
-
-        const userToken = await instance.authorize();
-        const storefront = instance.storefrontId ?? "us";
-
-        await fetch("/api/apple/connect", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            userId: "demo-user",
-            storefront,
-            userToken
-          })
-        });
-
-        setStatus("connected");
-        setMessage("Apple Music connected. The account token is now ready for sync and playlist creation.");
-      } catch (error) {
-        setStatus("error");
-        setMessage(error instanceof Error ? error.message : "Apple Music connection failed.");
-      }
-    });
+    void connectAppleMusicWithMusicKit(fetch, prepared)
+      .then((result) => {
+        setStorefront(result.storefront);
+        setState("connected");
+        setMessage("Apple Music authorization succeeded. The user token is encrypted and stored server-side.");
+        router.refresh();
+      })
+      .catch((error) => {
+        setState("error");
+        setMessage(error instanceof Error ? error.message : "Unable to connect Apple Music.");
+      });
   }
 
   return (
-    <section className="rounded-[2rem] bg-black p-7 text-white">
+    <section className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_24px_80px_rgba(0,0,0,0.24)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.18em] text-white/48">Apple Music</p>
           <h2 className="mt-2 font-display text-3xl tracking-[-0.04em]">
-            Connect once, then keep the write step explicit.
+            {isConnected ? "Apple Music connected" : "Connect Apple Music"}
           </h2>
         </div>
         <StatusPill
-          label={status === "connected" ? "Connected" : status === "ready" ? "Ready" : status}
-          tone={status === "connected" ? "success" : status === "error" ? "warning" : "neutral"}
+          label={isConnected ? "Connected" : state === "error" ? "Needs attention" : "Not connected"}
+          tone={isConnected ? "success" : "warning"}
         />
       </div>
 
-      <p className="mt-5 max-w-xl text-sm leading-7 text-white/68">{message}</p>
+      <p className="mt-5 max-w-xl text-sm leading-7 text-white/68">
+        {message}
+      </p>
+      {storefront ? (
+        <p className="mt-3 text-sm leading-6 text-white/54">Storefront: {storefront}</p>
+      ) : null}
 
       <div className="mt-6">
         <Button
-          onClick={connectAppleMusic}
-          disabled={isPending || status === "idle"}
-          className="min-w-48"
+          disabled={!canConnect || isPreparing || isBusy || isConnected}
+          onClick={handleConnect}
+          className="min-w-48 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         >
-          {isPending ? "Connecting..." : "Connect Apple Music"}
+          {isBusy
+            ? "Connecting..."
+            : isConnected
+            ? "Connected"
+            : isPreparing
+            ? "Preparing..."
+            : "Connect Apple Music"}
         </Button>
       </div>
     </section>

@@ -1,34 +1,7 @@
 import type { GeneratedPlaylist } from "@/types/domain";
 
 import type { AppleApiCredentials, ApplePlaylistWriteResult } from "@/modules/apple-music/types";
-
-const APPLE_API_ROOT = "https://api.music.apple.com/v1";
-
-interface CreatePlaylistResponse {
-  data: Array<{ id: string }>;
-}
-
-async function applePlaylistRequest<T>(
-  path: string,
-  credentials: AppleApiCredentials,
-  init?: RequestInit
-): Promise<T> {
-  const response = await fetch(`${APPLE_API_ROOT}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${credentials.developerToken}`,
-      "Music-User-Token": credentials.musicUserToken,
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {})
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  return (await response.json()) as T;
-}
+import { AppleMusicClient } from "@/modules/apple-music/client";
 
 export async function createAppleMusicPlaylists(
   playlists: GeneratedPlaylist[],
@@ -46,36 +19,20 @@ export async function createAppleMusicPlaylists(
   }
 
   const results: ApplePlaylistWriteResult[] = [];
+  const client = new AppleMusicClient(credentials);
 
   for (const playlist of playlists) {
     try {
-      const created = await applePlaylistRequest<CreatePlaylistResponse>(
-        "/me/library/playlists",
-        credentials,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            attributes: {
-              name: playlist.title,
-              description: playlist.description
-            },
-            relationships: {
-              tracks: {
-                data: playlist.appleSongIds.map((songId) => ({
-                  id: songId,
-                  type: "songs"
-                }))
-              }
-            }
-          })
-        }
-      );
+      const created = await client.createLibraryPlaylist({
+        name: playlist.title,
+        description: playlist.description
+      });
 
       results.push({
-        playlistId: created.data[0]?.id ?? playlist.id,
+        playlistId: created.id,
         title: playlist.title,
         success: true,
-        message: "Playlist created in Apple Music."
+        message: "Playlist shell created in Apple Music."
       });
     } catch (error) {
       results.push({

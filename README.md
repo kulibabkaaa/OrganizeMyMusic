@@ -24,9 +24,7 @@ Web-first Apple Music playlist organizer that ingests a user's saved library, cl
 
 ## Local Setup
 
-The current machine does not have Node installed, so dependency installation and runtime verification were not run here.
-
-Once Node is available:
+Install dependencies and run local verification:
 
 ```bash
 npm install
@@ -41,4 +39,3 @@ npm run dev
 - Classification uses heuristics first and OpenAI for ambiguous language plus mood labeling.
 - Preview snapshots are immutable once a checkout session is created.
 - Admin visibility is intentionally simple: queryable run state, job events, retries, and failure summaries.
-

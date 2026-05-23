@@ -13,10 +13,13 @@ export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
 export type AppleMusicConnectionStatus = "disconnected" | "connected" | "expired";
 
-export type PlaylistDimension = "language" | "genre" | "mood";
+export type PlaylistDimension = "language" | "genre" | "mood" | "request";
 
 export type TrackLanguage =
   | "english"
+  | "ukrainian"
+  | "russian"
+  | "polish"
   | "spanish"
   | "french"
   | "german"
@@ -24,6 +27,7 @@ export type TrackLanguage =
   | "korean"
   | "portuguese"
   | "instrumental"
+  | "mixed"
   | "unknown";
 
 export type GenreLabel =
@@ -54,7 +58,11 @@ export type MoodLabel =
   | "Romantic"
   | "Workout"
   | "Feel-Good"
-  | "Melancholy";
+  | "Melancholy"
+  | "Dark"
+  | "Party"
+  | "Driving"
+  | "Late-Night";
 
 export interface RawAppleTrack {
   id: string;
@@ -87,7 +95,9 @@ export interface TrackClassification {
   fingerprint: string;
   language: TrackLanguage;
   genre: GenreLabel;
+  subgenres: string[];
   moods: MoodLabel[];
+  energy: number | null;
   confidence: number;
   source: "metadata" | "heuristic" | "openai";
   version: number;
@@ -103,6 +113,19 @@ export interface GeneratedPlaylist {
   trackCount: number;
   trackFingerprints: string[];
   appleSongIds: string[];
+  tracks: GeneratedPlaylistTrack[];
+}
+
+export interface GeneratedPlaylistTrack {
+  fingerprint: string;
+  normalizedTrackId?: string;
+  appleSongId?: string;
+  name?: string;
+  artistName?: string;
+  albumName?: string;
+  position: number;
+  score: number;
+  reason: string;
 }
 
 export interface SortRunSummary {

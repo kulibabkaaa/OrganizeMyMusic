@@ -1,0 +1,143 @@
+# Environment Variables
+
+## Public variables
+
+These may be exposed to browser code.
+
+```text
+NEXT_PUBLIC_APP_URL
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+## Server-only variables
+
+These must never be exposed to browser code.
+
+```text
+SUPABASE_SERVICE_ROLE_KEY
+DATABASE_URL
+APPLE_TEAM_ID
+APPLE_KEY_ID
+APPLE_PRIVATE_KEY
+APPLE_MUSICKIT_KEY
+OPENAI_API_KEY
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_PRICE_SORT
+SENTRY_DSN
+ENCRYPTION_KEY
+```
+
+## Variable purpose
+
+## `NEXT_PUBLIC_APP_URL`
+
+Base app URL.
+
+Local example:
+
+```text
+http://localhost:3000
+```
+
+Production example:
+
+```text
+https://your-app.vercel.app
+```
+
+## `NEXT_PUBLIC_SUPABASE_URL`
+
+Supabase project URL.
+
+## `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Supabase anonymous browser key.
+
+This is public but RLS must protect data.
+
+## `SUPABASE_SERVICE_ROLE_KEY`
+
+Server-only Supabase service role key.
+
+Used by worker/server operations. Never expose to browser.
+
+## `DATABASE_URL`
+
+Postgres connection string.
+
+Used by `pg-boss`, migrations, and worker.
+
+## `APPLE_TEAM_ID`
+
+Apple Developer Team ID.
+
+## `APPLE_KEY_ID`
+
+Apple Music private key ID.
+
+## `APPLE_PRIVATE_KEY`
+
+Apple private key used to sign Apple Music developer tokens.
+
+Store as a Vercel secret/server-only env var. The implementation accepts normal PEM newlines or escaped `\n` sequences.
+
+## `APPLE_MUSICKIT_KEY`
+
+Optional MusicKit-related identifier if used by implementation.
+
+Do not confuse this with the private key.
+
+## `OPENAI_API_KEY`
+
+Server-only OpenAI API key.
+
+## `STRIPE_SECRET_KEY`
+
+Server-only Stripe secret key. Optional until payment ticket.
+
+## `STRIPE_WEBHOOK_SECRET`
+
+Stripe webhook verification secret. Optional until payment ticket.
+
+## `STRIPE_PRICE_SORT`
+
+Stripe price ID for one-time sort/payment. Optional until payment ticket.
+
+## `SENTRY_DSN`
+
+Optional error monitoring DSN.
+
+## `ENCRYPTION_KEY`
+
+Server-only key used to encrypt Apple Music user tokens.
+
+Recommended:
+
+- At least 32 bytes of cryptographically secure random data.
+- Do not rotate casually without migration plan.
+- Add encryption version field in database.
+
+The Apple Music connection route requires this variable before it can persist a music user token.
+
+## Local `.env.local`
+
+Use `.env.local` for local development.
+
+Never commit `.env.local`.
+
+## Vercel
+
+Add all required vars to Vercel environment settings.
+
+Only `NEXT_PUBLIC_*` variables should be public.
+
+## Supabase
+
+Supabase MCP should confirm:
+
+- Project URL.
+- Anon key.
+- Service role key.
+- Database URL.

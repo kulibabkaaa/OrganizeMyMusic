@@ -1,0 +1,336 @@
+# API Spec
+
+## Principles
+
+- API routes must validate input with Zod where practical.
+- API routes must use authenticated user context.
+- API routes must not expose secrets.
+- API routes should be thin and call server modules.
+- Long-running work should be queued, not done inside request-response routes.
+
+## Planned routes
+
+## Auth/profile
+
+### `GET /api/me`
+
+Returns the current authenticated profile.
+
+Response:
+
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com"
+  },
+  "profile": {
+    "id": "uuid",
+    "isAdmin": false
+  }
+}
+```
+
+## Apple Music
+
+### `GET /api/apple/developer-token`
+
+Returns an Apple Music developer token for MusicKit browser authorization.
+
+Rules:
+
+- Must be generated server-side.
+- Must not expose private key.
+- Requires an authenticated app session.
+- Returns `503` with missing environment variable names when Apple developer credentials are not configured.
+
+Response:
+
+```json
+{
+  "developerToken": "jwt",
+  "expiresAt": "2026-01-01T00:00:00.000Z"
+}
+```
+
+### `POST /api/apple/connect`
+
+Stores Apple Music user token.
+
+Request:
+
+```json
+{
+  "musicUserToken": "token",
+  "storefront": "gb"
+}
+```
+
+Response:
+
+```json
+{
+  "status": "connected",
+  "storefront": "gb"
+}
+```
+
+Rules:
+
+- Token must be encrypted before storage.
+- Raw token must not be logged.
+- Requires authenticated user.
+- The response must not include the raw token.
+- Stores only encrypted token data in `apple_music_connections`.
+
+### `GET /api/apple/connection`
+
+Returns current Apple Music connection status.
+
+Response:
+
+```json
+{
+  "status": "connected",
+  "storefront": "gb",
+  "lastValidatedAt": "2026-01-01T00:00:00.000Z"
+}
+```
+
+## Library sync
+
+### `POST /api/library-syncs`
+
+Starts a library sync job.
+
+Response:
+
+```json
+{
+  "syncId": "uuid",
+  "status": "queued"
+}
+```
+
+Rules:
+
+- Requires Apple Music connection.
+- Creates `library_syncs` row.
+- Queues `pg-boss` job.
+- Records a `job_events` row.
+- Worker fetches Apple Music library songs and stores raw responses in `library_tracks_raw`.
+- Worker updates `rawTrackCount` and records failures in `errorSummary`.
+- Worker normalizes and dedupes fetched tracks into `tracks_normalized`.
+- Worker links owned normalized tracks through `track_ownership`.
+- Worker updates `normalizedTrackCount` and `duplicateCount`.
+
+### `GET /api/library-syncs/:syncId`
+
+Returns sync status.
+
+Response:
+
+```json
+{
+  "id": "uuid",
+  "status": "syncing",
+  "rawTrackCount": 500,
+  "normalizedTrackCount": 480,
+  "duplicateCount": 20,
+  "errorSummary": null
+}
+```
+
+### `GET /api/library-syncs`
+
+Returns latest library sync summary and track count.
+
+## Sort runs
+
+### `POST /api/sort-runs`
+
+Creates a draft sort run and stores parsed playlist requests.
+
+Request:
+
+```json
+{
+  "librarySyncId": "uuid",
+  "playlistRequests": [
+    "Ukrainian rap",
+    "Gym rap",
+    "Sad Slavic songs"
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "sortRunId": "uuid",
+  "state": "preview_ready",
+  "playlistRequests": [
+    {
+      "id": "uuid",
+      "userPrompt": "Ukrainian rap",
+      "parsedRules": {
+        "title": "Ukrainian Rap",
+        "languages": ["ukrainian"],
+        "genres": ["Hip-Hop/Rap"],
+        "subgenres": ["rap"],
+        "moods": [],
+        "energyMin": null,
+        "energyMax": null,
+        "excludeExplicit": false,
+        "source": "heuristic"
+      }
+    }
+  ],
+  "previewSnapshot": {
+    "sortRunId": "uuid",
+    "librarySyncId": "uuid",
+    "generatedAt": "2026-01-01T00:00:00.000Z",
+    "playlists": []
+  }
+}
+```
+
+Rules:
+
+- Requires authenticated user.
+- Requires at least three playlist request strings.
+- Requires a completed user-owned library sync.
+- Stores original prompts in `playlist_requests.user_prompt`.
+- Stores deterministic parsed rules in `playlist_requests.parsed_rules`.
+- Generates and stores a stable preview snapshot.
+- Stores generated playlists in `sort_playlists`.
+- Stores playlist-track assignments, score, and reason in `sort_playlist_tracks`.
+- Does not write to Apple Music in this step.
+
+### `GET /api/sort-runs/:sortRunId`
+
+Returns sort run status.
+
+Response includes:
+
+```json
+{
+  "sortRunId": "uuid",
+  "state": "preview_ready",
+  "paymentStatus": "pending",
+  "previewSnapshot": {
+    "playlists": []
+  },
+  "playlistRequests": []
+}
+```
+
+### `GET /api/sort-runs/:sortRunId/preview`
+
+Returns preview snapshot.
+
+Response:
+
+```json
+{
+  "sortRunId": "uuid",
+  "state": "preview_ready",
+  "playlists": [
+    {
+      "id": "uuid",
+      "title": "Ukrainian Rap",
+      "description": "Ukrainian-language rap and hip-hop from your library.",
+      "trackCount": 32,
+      "tracks": [
+        {
+          "id": "uuid",
+          "appleSongId": "i.xxxxx",
+          "name": "Track name",
+          "artistName": "Artist",
+          "score": 0.91,
+          "reason": "Ukrainian language and rap genre classification."
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `POST /api/sort-runs/:sortRunId/confirm`
+
+Confirms selected playlists and queues Apple Music write-back.
+
+Request:
+
+```json
+{
+  "selectedPlaylistIds": ["preview-playlist-id-1", "preview-playlist-id-2"],
+  "removedTrackFingerprintsByPlaylistId": {
+    "preview-playlist-id-1": ["track-fingerprint"]
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "sortRunId": "uuid",
+  "state": "creating_playlists",
+  "selectedPlaylistCount": 2,
+  "selectedTrackCount": 42,
+  "jobId": "pg-boss-job-id"
+}
+```
+
+Rules:
+
+- Must require explicit user action.
+- Must not run on page load.
+- Must not confirm runs owned by another user.
+- Persists selected playlists in `sort_playlists.selected`.
+- Persists removed tracks in `sort_playlist_tracks.removed_by_user`.
+- Queues `playlist-create` for the persistent worker.
+
+## Job events
+
+### `GET /api/sort-runs/:sortRunId/events`
+
+Returns job events for a sort run.
+
+Response:
+
+```json
+{
+  "events": [
+    {
+      "stage": "classification",
+      "level": "info",
+      "message": "Classified 500 tracks.",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+## Retry routes
+
+### `POST /api/library-syncs/:syncId/retry`
+
+Retries a failed library sync by creating a new queued sync for the same user.
+This covers sync, normalization, and classification failures because
+classification runs inside the library sync worker.
+
+### `POST /api/sort-runs/:sortRunId/retry`
+
+Retries failed Apple Music write-back for a confirmed sort run. The route only
+accepts failed sort runs, sets the run back to `creating_playlists`, and queues
+the playlist creation worker.
+
+Rules:
+
+- Retry must be idempotent.
+- Do not create duplicate Apple Music playlists if some already exist.
+- Existing `sort_playlists.apple_playlist_id` values are reused on retry.
+- Apple Music writes remain worker-only and require prior explicit confirmation.

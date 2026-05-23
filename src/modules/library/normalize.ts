@@ -8,9 +8,9 @@ const versionPattern = /\b(remaster(ed)?|live|mono|stereo|deluxe|bonus track|ver
 export function sanitizeText(value: string) {
   return value
     .normalize("NFKD")
-    .replace(/[^\w\s-]/g, " ")
     .replace(featuringPattern, " ")
     .replace(versionPattern, " ")
+    .replace(/[^\w\s-]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
@@ -33,7 +33,7 @@ export function normalizeTrack(raw: RawAppleTrack): NormalizedTrack {
     fingerprint: makeTrackFingerprint({
       normalizedName,
       normalizedArtist,
-      normalizedAlbum
+      durationInMillis: raw.durationInMillis
     }),
     durationInMillis: raw.durationInMillis,
     genreNames: raw.genreNames ?? [],
@@ -41,4 +41,3 @@ export function normalizeTrack(raw: RawAppleTrack): NormalizedTrack {
     isrc: raw.isrc
   };
 }
-

@@ -15,6 +15,60 @@ describe("classification heuristics", () => {
     expect(inferLanguage(track)).toBe("japanese");
   });
 
+  it("detects Ukrainian, Russian, Polish, and mixed language metadata hints", () => {
+    expect(
+      inferLanguage(
+        normalizeTrack({
+          id: "uk",
+          name: "Місто",
+          artistName: "Океан Ельзи",
+          genreNames: ["Rock"]
+        })
+      )
+    ).toBe("ukrainian");
+    expect(
+      inferLanguage(
+        normalizeTrack({
+          id: "ru",
+          name: "Звезда",
+          artistName: "Кино",
+          genreNames: ["Rock"]
+        })
+      )
+    ).toBe("russian");
+    expect(
+      inferLanguage(
+        normalizeTrack({
+          id: "pl",
+          name: "Za późno",
+          artistName: "Polski Artist",
+          genreNames: ["Pop"]
+        })
+      )
+    ).toBe("polish");
+    expect(
+      inferLanguage(
+        normalizeTrack({
+          id: "mixed",
+          name: "Love Україна",
+          artistName: "Artist",
+          genreNames: ["Pop"]
+        })
+      )
+    ).toBe("mixed");
+  });
+
+  it("detects instrumental tracks from reliable Apple genre metadata", () => {
+    const track = normalizeTrack({
+      id: "instrumental",
+      name: "Piano Sonata No. 14",
+      artistName: "Performer",
+      genreNames: ["Classical", "Instrumental"]
+    });
+
+    expect(inferLanguage(track)).toBe("instrumental");
+  });
+
   it("maps Apple metadata into the controlled genre taxonomy", () => {
     const track = normalizeTrack({
       id: "2",
@@ -26,6 +80,21 @@ describe("classification heuristics", () => {
     expect(inferGenre(track)).toBe("Hip-Hop/Rap");
   });
 
+  it("uses metadata source and higher confidence for obvious Apple genres", () => {
+    const track = normalizeTrack({
+      id: "4",
+      name: "Track",
+      artistName: "Artist",
+      genreNames: ["Hip-Hop/Rap"]
+    });
+
+    expect(heuristicClassify(track)).toMatchObject({
+      genre: "Hip-Hop/Rap",
+      source: "metadata",
+      confidence: 0.86
+    });
+  });
+
   it("uses title tokens to infer mood defaults", () => {
     const track = normalizeTrack({
       id: "3",
@@ -35,6 +104,6 @@ describe("classification heuristics", () => {
     });
 
     expect(inferMoods(track)).toContain("Romantic");
-    expect(heuristicClassify(track).source).toBe("heuristic");
+    expect(heuristicClassify(track).source).toBe("metadata");
   });
 });

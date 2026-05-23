@@ -33,9 +33,18 @@
     ]
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "*.config.mjs",
+    "*.config.ts",
+    ".next/types/app/**/*.ts",
+    ".next/types/cache-life.d.ts",
+    ".next/types/link.d.ts",
+    ".next/types/routes.d.ts",
+    ".next/types/validator.ts",
     "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
     ".next/types/**/*.ts"
   ],
   "exclude": [

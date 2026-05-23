@@ -7,14 +7,24 @@ import {
   inferLanguage,
   inferMoods
 } from "@/modules/classification/heuristics";
-import { classifyAmbiguousTrackWithOpenAI } from "@/modules/classification/openai-client";
+import { classifyAmbiguousTracksWithOpenAI } from "@/modules/classification/openai-client";
 
 function isAmbiguous(track: NormalizedTrack) {
   return inferLanguage(track) === "english" && inferMoods(track).length === 1;
 }
 
-export async function classifyTracks(tracks: NormalizedTrack[]) {
-  const results: TrackClassification[] = [];
+export async function classifyTracks(
+  tracks: NormalizedTrack[],
+  options: {
+    classifyAmbiguousTracksWithOpenAI?: (
+      tracksToClassify: NormalizedTrack[]
+    ) => Promise<TrackClassification[] | null>;
+  } = {}
+) {
+  const results = new Map<string, TrackClassification>();
+  const uncachedTracks: NormalizedTrack[] = [];
+  const classifyWithOpenAI =
+    options.classifyAmbiguousTracksWithOpenAI ?? classifyAmbiguousTracksWithOpenAI;
 
   for (const track of tracks) {
     const metadataHash = buildMetadataHash(track);
@@ -22,29 +32,40 @@ export async function classifyTracks(tracks: NormalizedTrack[]) {
     const cached = classificationCache.get(cacheKey);
 
     if (cached) {
-      results.push(cached);
+      results.set(track.fingerprint, cached);
       continue;
     }
 
-    let classification = heuristicClassify(track);
-
-    if (isAmbiguous(track)) {
-      const aiClassification = await classifyAmbiguousTrackWithOpenAI(track);
-      if (aiClassification) {
-        classification = {
-          ...classification,
-          language: aiClassification.language,
-          moods: aiClassification.moods,
-          confidence: aiClassification.confidence,
-          source: aiClassification.source
-        };
-      }
-    }
-
-    classificationCache.set(cacheKey, classification);
-    results.push(classification);
+    const classification = heuristicClassify(track);
+    results.set(track.fingerprint, classification);
+    uncachedTracks.push(track);
   }
 
-  return results;
-}
+  const ambiguousTracks = uncachedTracks.filter(isAmbiguous);
 
+  if (ambiguousTracks.length > 0) {
+    const aiClassifications = await classifyWithOpenAI(ambiguousTracks);
+
+    if (aiClassifications) {
+      for (const classification of aiClassifications) {
+        results.set(classification.fingerprint, classification);
+      }
+    }
+  }
+
+  for (const track of uncachedTracks) {
+    const metadataHash = buildMetadataHash(track);
+    const cacheKey = `${track.fingerprint}:${metadataHash}`;
+    const classification = results.get(track.fingerprint);
+
+    if (classification) {
+      classificationCache.set(cacheKey, classification);
+    }
+  }
+
+  return tracks.flatMap((track) => {
+    const classification = results.get(track.fingerprint);
+
+    return classification ? [classification] : [];
+  });
+}

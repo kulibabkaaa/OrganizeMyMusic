@@ -8,7 +8,7 @@ declare global {
         name: string;
         build: string;
       };
-    }): MusicKitInstance;
+    }): MusicKitInstance | void;
     getInstance(): MusicKitInstance;
   }
 

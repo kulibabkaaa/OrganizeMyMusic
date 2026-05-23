@@ -1,21 +1,46 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
-import { persistAppleConnection } from "@/modules/apple-music/auth";
-
-const connectSchema = z.object({
-  userId: z.string().min(1),
-  storefront: z.string().min(1),
-  userToken: z.string().min(1)
-});
+import { getAuthenticatedSession } from "@/lib/auth/session";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
+import { persistAppleMusicUserToken } from "@/modules/apple-music/auth";
+import { acceptAppleMusicConnection, parseAppleMusicConnectPayload } from "@/modules/apple-music/connect";
 
 export async function POST(request: Request) {
-  const payload = connectSchema.parse(await request.json());
-  const connection = persistAppleConnection(payload);
+  const session = await getAuthenticatedSession();
 
-  return NextResponse.json({
-    ok: true,
-    connection
+  if (session.status !== "authenticated") {
+    return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+  }
+
+  const payload = parseAppleMusicConnectPayload(await request.json());
+
+  if (!payload.success) {
+    return NextResponse.json({ error: "Invalid Apple Music connection payload." }, { status: 400 });
+  }
+
+  const supabase = createSupabaseServiceRoleClient();
+
+  if (!supabase) {
+    return NextResponse.json(
+      { error: "Apple Music connection storage is not configured." },
+      { status: 503 }
+    );
+  }
+
+  const persisted = await persistAppleMusicUserToken({
+    supabase,
+    userId: session.user.id,
+    ...payload.data
   });
-}
 
+  if (persisted.status === "error") {
+    return NextResponse.json({ error: persisted.message }, { status: 500 });
+  }
+
+  return NextResponse.json(
+    acceptAppleMusicConnection({
+      userId: session.user.id,
+      ...payload.data
+    })
+  );
+}

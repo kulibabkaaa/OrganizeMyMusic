@@ -4,6 +4,9 @@ export const CLASSIFICATION_VERSION = 1;
 
 export const supportedLanguages: TrackLanguage[] = [
   "english",
+  "ukrainian",
+  "russian",
+  "polish",
   "spanish",
   "french",
   "german",
@@ -11,6 +14,7 @@ export const supportedLanguages: TrackLanguage[] = [
   "korean",
   "portuguese",
   "instrumental",
+  "mixed",
   "unknown"
 ];
 
@@ -43,6 +47,9 @@ export const supportedMoods: MoodLabel[] = [
   "Romantic",
   "Workout",
   "Feel-Good",
-  "Melancholy"
+  "Melancholy",
+  "Dark",
+  "Party",
+  "Driving",
+  "Late-Night"
 ];
-

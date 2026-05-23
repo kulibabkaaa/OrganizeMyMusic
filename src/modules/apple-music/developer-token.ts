@@ -1,33 +1,87 @@
 import { SignJWT, importPKCS8 } from "jose";
 
-import { env, requireServerEnv } from "@/lib/env";
+import { env } from "@/lib/env";
 
-export async function createAppleDeveloperToken() {
-  if (!env.APPLE_PRIVATE_KEY || !env.APPLE_TEAM_ID || !env.APPLE_KEY_ID) {
-    return {
-      token: "dev_token_placeholder",
-      expiresAt: new Date(Date.now() + 1000 * 60 * 30).toISOString()
-    };
+const DEFAULT_TTL_SECONDS = 60 * 30;
+const MAX_APPLE_TTL_SECONDS = 15_777_000;
+
+export interface AppleDeveloperTokenConfig {
+  teamId?: string;
+  keyId?: string;
+  privateKey?: string;
+  issuedAt?: Date;
+  ttlSeconds?: number;
+}
+
+export interface AppleDeveloperTokenResult {
+  developerToken: string;
+  expiresAt: string;
+}
+
+export class AppleDeveloperTokenConfigError extends Error {
+  readonly missing: string[];
+
+  constructor(missing: string[]) {
+    super(`Missing Apple Music developer token configuration: ${missing.join(", ")}`);
+    this.name = "AppleDeveloperTokenConfigError";
+    this.missing = missing;
+  }
+}
+
+export function normalizeApplePrivateKey(privateKey: string) {
+  return privateKey.replace(/\\n/g, "\n").trim();
+}
+
+function validateAppleDeveloperTokenConfig(config: AppleDeveloperTokenConfig) {
+  const missing: string[] = [];
+
+  if (!config.teamId?.trim()) {
+    missing.push("APPLE_TEAM_ID");
   }
 
-  const privateKey = await importPKCS8(
-    requireServerEnv("APPLE_PRIVATE_KEY").replace(/\\n/g, "\n"),
-    "ES256"
-  );
+  if (!config.keyId?.trim()) {
+    missing.push("APPLE_KEY_ID");
+  }
 
-  const token = await new SignJWT({})
+  if (!config.privateKey?.trim()) {
+    missing.push("APPLE_PRIVATE_KEY");
+  }
+
+  if (missing.length > 0) {
+    throw new AppleDeveloperTokenConfigError(missing);
+  }
+}
+
+export async function createAppleDeveloperTokenFromConfig(
+  config: AppleDeveloperTokenConfig
+): Promise<AppleDeveloperTokenResult> {
+  validateAppleDeveloperTokenConfig(config);
+
+  const issuedAt = config.issuedAt ?? new Date();
+  const ttlSeconds = Math.min(config.ttlSeconds ?? DEFAULT_TTL_SECONDS, MAX_APPLE_TTL_SECONDS);
+  const expiresAt = new Date(issuedAt.getTime() + ttlSeconds * 1000);
+  const privateKey = await importPKCS8(normalizeApplePrivateKey(config.privateKey ?? ""), "ES256");
+
+  const developerToken = await new SignJWT({})
     .setProtectedHeader({
       alg: "ES256",
-      kid: requireServerEnv("APPLE_KEY_ID")
+      kid: config.keyId?.trim()
     })
-    .setIssuer(requireServerEnv("APPLE_TEAM_ID"))
-    .setIssuedAt()
-    .setExpirationTime("30m")
+    .setIssuer(config.teamId?.trim() ?? "")
+    .setIssuedAt(Math.floor(issuedAt.getTime() / 1000))
+    .setExpirationTime(Math.floor(expiresAt.getTime() / 1000))
     .sign(privateKey);
 
   return {
-    token,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 30).toISOString()
+    developerToken,
+    expiresAt: expiresAt.toISOString()
   };
 }
 
+export async function createAppleDeveloperToken() {
+  return createAppleDeveloperTokenFromConfig({
+    teamId: env.APPLE_TEAM_ID,
+    keyId: env.APPLE_KEY_ID,
+    privateKey: env.APPLE_PRIVATE_KEY
+  });
+}

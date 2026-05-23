@@ -11,15 +11,27 @@ function scoreTrack(track: NormalizedTrack) {
 
 export function dedupeTracks(tracks: NormalizedTrack[]) {
   const groups = new Map<string, NormalizedTrack[]>();
+  const isrcCounts = new Map<string, number>();
 
   for (const track of tracks) {
-    const existing = groups.get(track.fingerprint) ?? [];
+    const isrc = track.isrc?.trim().toLowerCase();
+
+    if (isrc) {
+      isrcCounts.set(isrc, (isrcCounts.get(isrc) ?? 0) + 1);
+    }
+  }
+
+  for (const track of tracks) {
+    const isrc = track.isrc?.trim().toLowerCase();
+    const dedupeKey = isrc && (isrcCounts.get(isrc) ?? 0) > 1
+      ? `isrc:${isrc}`
+      : `fingerprint:${track.fingerprint}`;
+    const existing = groups.get(dedupeKey) ?? [];
     existing.push(track);
-    groups.set(track.fingerprint, existing);
+    groups.set(dedupeKey, existing);
   }
 
   return Array.from(groups.values()).map((group) =>
     group.sort((a, b) => scoreTrack(b) - scoreTrack(a))[0]
   );
 }
-

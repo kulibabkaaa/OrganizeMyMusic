@@ -1,0 +1,26 @@
+# Documentation Files Created
+
+- AGENTS.md
+- docs/AI_CLASSIFICATION_STRATEGY.md
+- docs/API_SPEC.md
+- docs/APPLE_MUSIC_INTEGRATION.md
+- docs/ARCHITECTURE.md
+- docs/CODEX_MASTER_PROMPT.md
+- docs/CODEX_WORKFLOW.md
+- docs/DATABASE_MODEL.md
+- docs/DECISIONS.md
+- docs/DEPLOYMENT_OPERATIONS.md
+- docs/DEVELOPMENT_GUIDE.md
+- docs/ENVIRONMENT_VARIABLES.md
+- docs/MCP_AUTOMATION_RULES.md
+- docs/MVP_ACCEPTANCE_CRITERIA.md
+- docs/POST_MVP_SCOPE.md
+- docs/PROJECT_BRIEF.md
+- docs/README.md
+- docs/ROADMAP_TO_MPV.md
+- docs/ROADMAP_TO_MVP.md
+- docs/SECURITY_PRIVACY.md
+- docs/SUPABASE_MCP_SETUP.md
+- docs/TESTING_STRATEGY.md
+- docs/TICKET_TEMPLATE.md
+- docs/VERCEL_MCP_SETUP.md

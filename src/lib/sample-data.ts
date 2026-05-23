@@ -17,7 +17,8 @@ export const demoSortRun: SortRunSummary = {
       confidenceLabel: "high",
       trackCount: 124,
       trackFingerprints: ["fp_1", "fp_2", "fp_3"],
-      appleSongIds: ["track_1", "track_2", "track_3"]
+      appleSongIds: ["track_1", "track_2", "track_3"],
+      tracks: []
     },
     {
       id: "genre_pop",
@@ -27,7 +28,8 @@ export const demoSortRun: SortRunSummary = {
       confidenceLabel: "high",
       trackCount: 88,
       trackFingerprints: ["fp_1", "fp_4", "fp_5"],
-      appleSongIds: ["track_1", "track_4", "track_5"]
+      appleSongIds: ["track_1", "track_4", "track_5"],
+      tracks: []
     },
     {
       id: "mood_chill",
@@ -37,7 +39,8 @@ export const demoSortRun: SortRunSummary = {
       confidenceLabel: "medium",
       trackCount: 47,
       trackFingerprints: ["fp_2", "fp_6", "fp_7"],
-      appleSongIds: ["track_2", "track_6", "track_7"]
+      appleSongIds: ["track_2", "track_6", "track_7"],
+      tracks: []
     },
     {
       id: "mood_hype",
@@ -47,7 +50,8 @@ export const demoSortRun: SortRunSummary = {
       confidenceLabel: "medium",
       trackCount: 33,
       trackFingerprints: ["fp_8", "fp_9", "fp_10"],
-      appleSongIds: ["track_8", "track_9", "track_10"]
+      appleSongIds: ["track_8", "track_9", "track_10"],
+      tracks: []
     }
   ]
 };

@@ -38,9 +38,17 @@ const upbeatTokens = ["party", "dance", "club", "run", "night", "summer"];
 const calmTokens = ["sleep", "calm", "rain", "blue", "moon", "slow"];
 const sadTokens = ["cry", "alone", "broken", "goodbye", "tears"];
 const romanticTokens = ["love", "heart", "kiss", "forever", "darling"];
+const instrumentalGenreTokens = ["instrumental", "classical"];
 
 export function inferLanguage(track: NormalizedTrack): TrackLanguage {
   const text = `${track.name} ${track.artistName}`;
+  const genres = track.genreNames.join(" ").toLowerCase();
+  const hasLatin = /[a-z]/i.test(text);
+  const hasCyrillic = /[\u0400-\u04ff]/.test(text);
+
+  if (instrumentalGenreTokens.some((token) => genres.includes(token))) {
+    return "instrumental";
+  }
 
   if (/[ぁ-んァ-ン]/.test(text)) {
     return "japanese";
@@ -48,6 +56,22 @@ export function inferLanguage(track: NormalizedTrack): TrackLanguage {
 
   if (/[가-힣]/.test(text)) {
     return "korean";
+  }
+
+  if (hasLatin && hasCyrillic) {
+    return "mixed";
+  }
+
+  if (/[іїєґІЇЄҐ]/.test(text)) {
+    return "ukrainian";
+  }
+
+  if (hasCyrillic) {
+    return "russian";
+  }
+
+  if (/[ąćęłńóśźż]/i.test(text)) {
+    return "polish";
   }
 
   if (/[áéíóúñ]/i.test(text)) {
@@ -58,8 +82,8 @@ export function inferLanguage(track: NormalizedTrack): TrackLanguage {
     return "portuguese";
   }
 
-  if (!/[a-z]/i.test(text)) {
-    return "instrumental";
+  if (!hasLatin) {
+    return "unknown";
   }
 
   return "english";
@@ -122,15 +146,19 @@ export function buildMetadataHash(track: NormalizedTrack) {
 }
 
 export function heuristicClassify(track: NormalizedTrack): TrackClassification {
+  const genre = inferGenre(track);
+  const hasMetadataGenre = genre !== "Other";
+
   return {
     fingerprint: track.fingerprint,
     language: inferLanguage(track),
-    genre: inferGenre(track),
+    genre,
+    subgenres: [],
     moods: inferMoods(track),
-    confidence: 0.72,
-    source: "heuristic",
+    energy: null,
+    confidence: hasMetadataGenre ? 0.86 : 0.72,
+    source: hasMetadataGenre ? "metadata" : "heuristic",
     version: CLASSIFICATION_VERSION,
     metadataHash: buildMetadataHash(track)
   };
 }
-

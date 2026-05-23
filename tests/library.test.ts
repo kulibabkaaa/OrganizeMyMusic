@@ -30,5 +30,44 @@ describe("dedupeTracks", () => {
 
     expect(dedupeTracks([base, richer])).toEqual([richer]);
   });
-});
 
+  it("prefers ISRC over metadata fingerprints when deduping", () => {
+    const albumVersion = normalizeTrack({
+      id: "1",
+      name: "Same Song",
+      artistName: "Artist A",
+      albumName: "Album Version",
+      isrc: "USABC123"
+    });
+    const singleVersion = normalizeTrack({
+      id: "2",
+      name: "Same Song - Single",
+      artistName: "Artist A",
+      albumName: "Single Version",
+      isrc: "usabc123",
+      genreNames: ["Pop"]
+    });
+
+    expect(dedupeTracks([albumVersion, singleVersion])).toEqual([singleVersion]);
+  });
+
+  it("uses title, artist, and duration bucket as fallback fingerprint", () => {
+    const first = normalizeTrack({
+      id: "1",
+      name: "Same Song",
+      artistName: "Artist A",
+      albumName: "Album One",
+      durationInMillis: 201200
+    });
+    const second = normalizeTrack({
+      id: "2",
+      name: "Same Song",
+      artistName: "Artist A",
+      albumName: "Album Two",
+      durationInMillis: 203900
+    });
+
+    expect(first.fingerprint).toBe(second.fingerprint);
+    expect(dedupeTracks([first, second])).toHaveLength(1);
+  });
+});
