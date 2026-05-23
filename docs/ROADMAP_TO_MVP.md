@@ -877,10 +877,19 @@ Status: in progress on 2026-05-23.
 Current state: the preview page now includes a privacy-safe quality triage
 report for each sort run. The report summarizes playlist counts, selected track
 counts, empty and low-match playlists, aggregate match diagnostics, warnings,
-and top rejection reasons. It intentionally excludes track names, Apple Music
-song IDs, normalized track IDs, fingerprints, user tokens, and raw Apple Music
-payloads. Users can add issue notes and copy the report for tuning feedback
-without storing extra private track-level data.
+top rejection reasons, issue tags, and suggested next investigation steps. It
+intentionally excludes track names, Apple Music song IDs, normalized track IDs,
+fingerprints, user tokens, and raw Apple Music payloads. Users can add issue
+notes and copy the report for tuning feedback without storing extra private
+track-level data.
+
+Supabase aggregate inspection on 2026-05-23 found two recent sort runs without
+reading track names or raw payloads. The completed production smoke run
+`4fede120-bc0e-4d9b-861b-477cc236a2e5` had 2 preview playlists, 2 stored
+playlists, 3 stored playlist-track assignments, 2 selected playlists, 2 stored
+Apple Music playlist IDs, and 0 removed tracks. The preceding preview run
+`25249bee-0722-4d92-9c2b-b47e55ced059` had the same 2 playlists and 3
+assignments but no Apple Music playlist IDs.
 
 Remaining: the user still needs to provide specific quality observations from
 the real Apple Music smoke run before Codex can tune heuristics for those exact

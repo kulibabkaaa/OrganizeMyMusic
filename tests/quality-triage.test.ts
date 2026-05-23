@@ -103,16 +103,22 @@ describe("quality triage report", () => {
       title: "Ukrainian Rap",
       proposedTrackCount: 2,
       selectedTrackCount: 2,
-      topRejectionReason: "language"
+      topRejectionReason: "language",
+      issueTags: ["low_match", "review_warning", "missing_classifications", "language_filter"],
+      suggestedNextStep: "Compare expected playlist size with aggregate rejection reasons before tuning score weights."
     });
     expect(report.playlists[1]).toMatchObject({
       title: "Sad Slavic Songs",
       proposedTrackCount: 0,
       selectedTrackCount: 0,
-      topRejectionReason: "mood"
+      topRejectionReason: "mood",
+      issueTags: ["empty_playlist", "review_warning", "missing_classifications", "mood_filter"],
+      suggestedNextStep: "Confirm whether the request is too narrow, then add synthetic fixtures for the missing playlist pattern."
     });
     expect(formatted).toContain("Ukrainian Rap: 2 proposed, 2 selected");
     expect(formatted).toContain("Sad Slavic Songs: 0 proposed, 0 selected");
+    expect(formatted).toContain("tags: low_match, review_warning, missing_classifications, language_filter");
+    expect(formatted).toContain("next: Compare expected playlist size with aggregate rejection reasons before tuning score weights.");
 
     for (const privateValue of [
       "Private Track Name",

@@ -13,6 +13,8 @@ export interface QualityTriagePlaylistSummary {
   warnings: string[];
   matchStats: GeneratedPlaylistMatchStats | null;
   topRejectionReason: string | null;
+  issueTags: string[];
+  suggestedNextStep: string;
 }
 
 export interface QualityTriageReport {
@@ -52,22 +54,103 @@ function topRejectionReason(stats: GeneratedPlaylistMatchStats | undefined) {
   return top && top.count > 0 ? top.label : null;
 }
 
+function issueTagsForPlaylist(input: {
+  proposedTrackCount: number;
+  warningCount: number;
+  matchStats: GeneratedPlaylistMatchStats | undefined;
+  topRejectionReason: string | null;
+}) {
+  const tags = new Set<string>();
+
+  if (input.proposedTrackCount === 0) {
+    tags.add("empty_playlist");
+  } else if (input.proposedTrackCount < 5) {
+    tags.add("low_match");
+  }
+
+  if (input.warningCount > 0) {
+    tags.add("review_warning");
+  }
+
+  if (
+    input.matchStats &&
+    input.matchStats.totalTrackCount > 0 &&
+    input.matchStats.missingClassificationCount / input.matchStats.totalTrackCount >= 0.1
+  ) {
+    tags.add("missing_classifications");
+  }
+
+  if (input.topRejectionReason) {
+    tags.add(`${input.topRejectionReason}_filter`);
+  }
+
+  if (tags.size === 0) {
+    tags.add("no_obvious_aggregate_issue");
+  }
+
+  return [...tags];
+}
+
+function suggestedNextStepForTags(tags: string[]) {
+  if (tags.includes("empty_playlist")) {
+    return "Confirm whether the request is too narrow, then add synthetic fixtures for the missing playlist pattern.";
+  }
+
+  if (tags.includes("low_match")) {
+    return "Compare expected playlist size with aggregate rejection reasons before tuning score weights.";
+  }
+
+  if (tags.includes("language_filter")) {
+    return "Check whether the request should allow mixed or related languages instead of a single strict language.";
+  }
+
+  if (tags.includes("genre_filter")) {
+    return "Check whether related genres or subgenres should count as partial matches.";
+  }
+
+  if (tags.includes("mood_filter") || tags.includes("energy_filter")) {
+    return "Check whether sparse mood or energy metadata needs a safer fallback for this request.";
+  }
+
+  if (tags.includes("below_score_filter")) {
+    return "Review score threshold and reasons for near-matches before lowering the threshold.";
+  }
+
+  if (tags.includes("missing_classifications")) {
+    return "Retry or improve classification coverage before tuning playlist scoring.";
+  }
+
+  return "Collect user-visible mismatch notes for this playlist before changing scoring.";
+}
+
 export function buildQualityTriageReport(
   snapshot: PreviewSnapshot,
   selection: PreviewSelection
 ): QualityTriageReport {
   const selectionSummary = summarizePreviewSelection(snapshot, selection);
-  const playlists = snapshot.playlists.map((playlist) => ({
-    id: playlist.id,
-    title: playlist.title,
-    confidenceLabel: playlist.confidenceLabel,
-    proposedTrackCount: playlist.tracks.length,
-    selectedTrackCount: getVisiblePreviewTrackCount(snapshot, selection, playlist.id),
-    warningCount: playlist.qualityWarnings?.length ?? 0,
-    warnings: playlist.qualityWarnings ?? [],
-    matchStats: playlist.matchStats ?? null,
-    topRejectionReason: topRejectionReason(playlist.matchStats)
-  }));
+  const playlists = snapshot.playlists.map((playlist) => {
+    const topReason = topRejectionReason(playlist.matchStats);
+    const issueTags = issueTagsForPlaylist({
+      proposedTrackCount: playlist.tracks.length,
+      warningCount: playlist.qualityWarnings?.length ?? 0,
+      matchStats: playlist.matchStats,
+      topRejectionReason: topReason
+    });
+
+    return {
+      id: playlist.id,
+      title: playlist.title,
+      confidenceLabel: playlist.confidenceLabel,
+      proposedTrackCount: playlist.tracks.length,
+      selectedTrackCount: getVisiblePreviewTrackCount(snapshot, selection, playlist.id),
+      warningCount: playlist.qualityWarnings?.length ?? 0,
+      warnings: playlist.qualityWarnings ?? [],
+      matchStats: playlist.matchStats ?? null,
+      topRejectionReason: topReason,
+      issueTags,
+      suggestedNextStep: suggestedNextStepForTags(issueTags)
+    };
+  });
 
   return {
     sortRunId: snapshot.sortRunId,
@@ -108,6 +191,8 @@ export function formatQualityTriageReport(report: QualityTriageReport, notes: st
         playlist.topRejectionReason ? `, top rejection: ${playlist.topRejectionReason}` : ""
       }`
     );
+    lines.push(`  tags: ${playlist.issueTags.join(", ")}`);
+    lines.push(`  next: ${playlist.suggestedNextStep}`);
 
     if (playlist.matchStats) {
       lines.push(

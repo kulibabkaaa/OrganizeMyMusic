@@ -209,7 +209,9 @@ Current playlist planner implementation:
 - Request parsing currently covers common MVP prompts including Ukrainian rap, gym rap, sad Slavic songs, chill electronic, late night electronic, and mixed-language driving rap.
 - The preview page can generate a privacy-safe quality triage report containing
   only playlist-level counts, aggregate match diagnostics, warnings, and top
-  rejection reasons. The report excludes track names, Apple Music song IDs,
+  rejection reasons. The report also adds issue tags such as `low_match`,
+  `empty_playlist`, `language_filter`, and `mood_filter` with a suggested next
+  investigation step. The report excludes track names, Apple Music song IDs,
   normalized track IDs, fingerprints, user tokens, and raw Apple Music payloads.
 
 ## Prompting rules

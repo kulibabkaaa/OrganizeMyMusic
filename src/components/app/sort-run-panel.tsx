@@ -526,6 +526,14 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
                     ? ` Top rejection: ${playlist.topRejectionReason}.`
                     : ""}
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {playlist.issueTags.map((tag) => (
+                    <StatusPill key={tag} label={tag} tone="inverse" />
+                  ))}
+                </div>
+                <p className="mt-3 text-sm leading-6 text-white/50">
+                  {playlist.suggestedNextStep}
+                </p>
               </article>
             ))}
           </div>
