@@ -770,7 +770,30 @@ Acceptance criteria:
 
 ## MVP-029 — Sorting score tuning for real-library quality
 
-Status: not started.
+Status: complete on 2026-05-23.
+
+Current state: aggregate production diagnostics from the first real Apple Music
+library showed that many tracks had useful language or genre classifications but
+sparse mood and energy labels. The request scorer now treats language or genre
+as a strong anchor for use-case playlists, and allows lower-confidence fallback
+matches when mood or energy metadata is missing. These fallback matches remain
+explainable in preview through track reasons and low-match warnings.
+
+Implemented:
+
+- Mixed-language request parsing for prompts such as `Mixed language driving
+  rap`.
+- Driving request parsing with a moderate energy floor.
+- Softer fallback scoring for genre-anchored workout, chill, driving, and late
+  night requests when mood or energy metadata is sparse.
+- Softer fallback scoring for language-anchored mood requests such as `Sad
+  Slavic songs` when mood labels are sparse.
+- Synthetic tests covering Slavic, rap, workout, sad, electronic, chill,
+  driving, and mixed-language cases without using private library data.
+
+Known limitation: this tuning improves playlist size and explainability, but it
+is still heuristic. More real-library feedback should continue to shape weights
+and classification quality.
 
 Goal: improve match quality and playlist size using the diagnostics added in
 MVP-028.

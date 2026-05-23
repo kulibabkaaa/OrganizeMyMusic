@@ -44,7 +44,7 @@ test with a real Apple Music account:
 
 The next important work is quality hardening:
 
-- Tune matching/scoring for real libraries.
+- Continue tuning matching/scoring with more real-library feedback.
 - Use the preview diagnostics to explain why requests have few or no matches.
 - Continue expanding sorting tests across Ukrainian, Russian, English, Polish,
   mixed, instrumental, and unknown tracks.

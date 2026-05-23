@@ -163,6 +163,8 @@ function scoreTrackForRequest(input: {
   let genreMismatch = false;
   let moodMismatch = false;
   let energyMismatch = false;
+  let matchedLanguage = false;
+  let matchedGenre = false;
 
   if (rules.excludeExplicit && track.contentRating === "explicit") {
     return { status: "rejected", reason: "explicit" };
@@ -173,11 +175,13 @@ function scoreTrackForRequest(input: {
   }
 
   if (rules.languages.length > 0) {
+    matchedLanguage = true;
     score += 0.4;
     reasons.push(`language ${classification.language}`);
   }
 
   if (rules.genres.length > 0 && rules.genres.includes(classification.genre)) {
+    matchedGenre = true;
     score += 0.35;
     reasons.push(`genre ${classification.genre}`);
   } else if (rules.genres.length > 0) {
@@ -214,6 +218,11 @@ function scoreTrackForRequest(input: {
     reasons.push("energy range");
   } else if (hasEnergyRule) {
     energyMismatch = true;
+  }
+
+  if (score < MIN_REQUEST_SCORE && (matchedLanguage || matchedGenre) && (moodMismatch || energyMismatch)) {
+    score += matchedGenre ? 0.12 : 0.08;
+    reasons.push("sparse mood/energy metadata");
   }
 
   if (score < MIN_REQUEST_SCORE) {

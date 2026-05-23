@@ -76,6 +76,20 @@ describe("parsePlaylistRequestLines", () => {
       parsePlaylistRequestLines([" Ukrainian rap ", "", "Ukrainian rap"])
     ).toHaveLength(1);
   });
+
+  it("parses mixed-language driving requests for tuned sorting", () => {
+    const [request] = parsePlaylistRequestLines(["Mixed language driving rap"]);
+
+    expect(request).toMatchObject({
+      parsedRules: expect.objectContaining({
+        title: "Mixed Language Driving Rap",
+        languages: ["mixed"],
+        genres: ["Hip-Hop/Rap"],
+        moods: ["Driving"],
+        energyMin: 0.45
+      })
+    });
+  });
 });
 
 describe("createPlaylistRequestSortRun", () => {

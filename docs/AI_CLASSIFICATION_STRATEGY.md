@@ -201,10 +201,12 @@ Current playlist planner implementation:
 - `generateRequestedPlaylists` scores each requested playlist independently from parsed rules and stored classifications.
 - Language rules are treated as required filters when present.
 - Genre, subgenre, mood, and energy rules contribute to score and explainable track reasons.
+- Language or genre can act as a strong fallback anchor for use-case playlists when mood or energy metadata is sparse.
 - Explicit tracks are excluded when a request asks for clean or family-safe output.
 - Tracks may appear in multiple requested playlists when they match multiple rules.
-- Empty-result requests are skipped instead of producing unusable playlists.
+- Empty-result requests are preserved as warning-only preview cards and excluded from default confirmation.
 - Generated playlist tracks include position, score, and reason for later preview storage.
+- Request parsing currently covers common MVP prompts including Ukrainian rap, gym rap, sad Slavic songs, chill electronic, late night electronic, and mixed-language driving rap.
 
 ## Prompting rules
 

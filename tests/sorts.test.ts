@@ -264,4 +264,216 @@ describe("generateRequestedPlaylists", () => {
       })
     });
   });
+
+  it("keeps genre matches for workout requests when mood and energy metadata are sparse", () => {
+    const definiteWorkoutRap = normalizeTrack({
+      id: "definite_workout_rap",
+      name: "Definite Workout Rap",
+      artistName: "Artist",
+      genreNames: ["Hip-Hop/Rap"]
+    });
+    const sparseRap = normalizeTrack({
+      id: "sparse_rap",
+      name: "Sparse Rap",
+      artistName: "Artist",
+      genreNames: ["Hip-Hop/Rap"]
+    });
+    const unrelatedPop = normalizeTrack({
+      id: "unrelated_pop",
+      name: "Unrelated Pop",
+      artistName: "Artist",
+      genreNames: ["Pop"]
+    });
+    const [request] = parsePlaylistRequestLines(["Gym rap"]);
+    const playlists = generateRequestedPlaylists({
+      requests: [request],
+      tracks: [definiteWorkoutRap, sparseRap, unrelatedPop],
+      classifications: [
+        {
+          fingerprint: definiteWorkoutRap.fingerprint,
+          language: "english",
+          genre: "Hip-Hop/Rap",
+          subgenres: ["rap"],
+          moods: ["Workout", "Hype"],
+          energy: 0.9,
+          confidence: 0.9,
+          source: "openai",
+          version: 1,
+          metadataHash: "hash_definite"
+        },
+        {
+          fingerprint: sparseRap.fingerprint,
+          language: "english",
+          genre: "Hip-Hop/Rap",
+          subgenres: [],
+          moods: ["Feel-Good"],
+          energy: null,
+          confidence: 0.82,
+          source: "metadata",
+          version: 1,
+          metadataHash: "hash_sparse"
+        },
+        {
+          fingerprint: unrelatedPop.fingerprint,
+          language: "english",
+          genre: "Pop",
+          subgenres: [],
+          moods: ["Workout"],
+          energy: 0.88,
+          confidence: 0.9,
+          source: "openai",
+          version: 1,
+          metadataHash: "hash_pop"
+        }
+      ]
+    });
+
+    expect(playlists[0]?.tracks.map((track) => track.fingerprint)).toEqual([
+      definiteWorkoutRap.fingerprint,
+      sparseRap.fingerprint
+    ]);
+    expect(playlists[0]?.tracks[1]).toMatchObject({
+      reason: expect.stringContaining("genre Hip-Hop/Rap")
+    });
+    expect(playlists[0]?.matchStats).toMatchObject({
+      matchedTrackCount: 2,
+      rejectedGenreCount: 1
+    });
+  });
+
+  it("keeps language matches for sad Slavic requests when mood metadata is sparse", () => {
+    const russianRap = normalizeTrack({
+      id: "russian_rap",
+      name: "Russian Rap",
+      artistName: "Artist",
+      genreNames: ["Hip-Hop/Rap"]
+    });
+    const polishRock = normalizeTrack({
+      id: "polish_rock",
+      name: "Polish Rock",
+      artistName: "Artist",
+      genreNames: ["Rock"]
+    });
+    const englishSad = normalizeTrack({
+      id: "english_sad",
+      name: "English Sad",
+      artistName: "Artist",
+      genreNames: ["Pop"]
+    });
+    const [request] = parsePlaylistRequestLines(["Sad Slavic songs"]);
+    const playlists = generateRequestedPlaylists({
+      requests: [request],
+      tracks: [russianRap, polishRock, englishSad],
+      classifications: [
+        {
+          fingerprint: russianRap.fingerprint,
+          language: "russian",
+          genre: "Hip-Hop/Rap",
+          subgenres: ["rap"],
+          moods: ["Feel-Good"],
+          energy: null,
+          confidence: 0.84,
+          source: "metadata",
+          version: 1,
+          metadataHash: "hash_ru"
+        },
+        {
+          fingerprint: polishRock.fingerprint,
+          language: "polish",
+          genre: "Rock",
+          subgenres: [],
+          moods: ["Sad"],
+          energy: 0.42,
+          confidence: 0.88,
+          source: "openai",
+          version: 1,
+          metadataHash: "hash_pl"
+        },
+        {
+          fingerprint: englishSad.fingerprint,
+          language: "english",
+          genre: "Pop",
+          subgenres: [],
+          moods: ["Sad", "Melancholy"],
+          energy: 0.34,
+          confidence: 0.9,
+          source: "openai",
+          version: 1,
+          metadataHash: "hash_en"
+        }
+      ]
+    });
+
+    expect(playlists[0]?.tracks.map((track) => track.fingerprint)).toEqual([
+      polishRock.fingerprint,
+      russianRap.fingerprint
+    ]);
+    expect(playlists[0]?.tracks[1]).toMatchObject({
+      reason: expect.stringContaining("language russian")
+    });
+    expect(playlists[0]?.matchStats).toMatchObject({
+      matchedTrackCount: 2,
+      rejectedLanguageCount: 1
+    });
+  });
+
+  it("covers electronic, chill, driving, and mixed-language tuned scoring", () => {
+    const mixedDrivingRap = normalizeTrack({
+      id: "mixed_driving_rap",
+      name: "Mixed Driving Rap",
+      artistName: "Artist",
+      genreNames: ["Hip-Hop/Rap"]
+    });
+    const chillElectronic = normalizeTrack({
+      id: "chill_electronic",
+      name: "Chill Electronic",
+      artistName: "Artist",
+      genreNames: ["Electronic"]
+    });
+    const [drivingRequest, chillRequest] = parsePlaylistRequestLines([
+      "Mixed language driving rap",
+      "Chill electronic"
+    ]);
+    const playlists = generateRequestedPlaylists({
+      requests: [drivingRequest, chillRequest],
+      tracks: [mixedDrivingRap, chillElectronic],
+      classifications: [
+        {
+          fingerprint: mixedDrivingRap.fingerprint,
+          language: "mixed",
+          genre: "Hip-Hop/Rap",
+          subgenres: ["rap"],
+          moods: ["Driving"],
+          energy: 0.62,
+          confidence: 0.9,
+          source: "openai",
+          version: 1,
+          metadataHash: "hash_drive"
+        },
+        {
+          fingerprint: chillElectronic.fingerprint,
+          language: "instrumental",
+          genre: "Electronic",
+          subgenres: [],
+          moods: ["Chill", "Focus"],
+          energy: 0.4,
+          confidence: 0.9,
+          source: "openai",
+          version: 1,
+          metadataHash: "hash_chill"
+        }
+      ]
+    });
+
+    expect(playlists).toEqual([
+      expect.objectContaining({
+        title: "Mixed Language Driving Rap",
+        trackFingerprints: [mixedDrivingRap.fingerprint]
+      }),
+      expect.objectContaining({
+        title: "Chill Electronic",
+        trackFingerprints: [chillElectronic.fingerprint]
+      })
+    ]);
+  });
 });

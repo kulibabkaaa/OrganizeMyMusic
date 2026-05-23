@@ -98,6 +98,10 @@ function parseSinglePlaylistRequest(userPrompt: string): ParsedPlaylistRequest {
     languages.push("polish");
   }
 
+  if (text.includes("mixed")) {
+    languages.push("mixed");
+  }
+
   if (text.includes("slavic")) {
     languages.push(...slavicLanguages);
   }
@@ -143,6 +147,11 @@ function parseSinglePlaylistRequest(userPrompt: string): ParsedPlaylistRequest {
   if (text.includes("late night")) {
     moods.push("Late-Night", "Chill");
     energyMax = energyMax ?? 0.6;
+  }
+
+  if (text.includes("driving") || text.includes("drive")) {
+    moods.push("Driving");
+    energyMin = energyMin ?? 0.45;
   }
 
   if (/\b(chill|calm|focus|work)\b/.test(text)) {
