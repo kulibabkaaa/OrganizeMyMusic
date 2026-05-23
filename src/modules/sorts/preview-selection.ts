@@ -12,7 +12,9 @@ export interface PreviewSelectionSummary {
 
 export function createInitialPreviewSelection(snapshot: PreviewSnapshot): PreviewSelection {
   return {
-    selectedPlaylistIds: snapshot.playlists.map((playlist) => playlist.id),
+    selectedPlaylistIds: snapshot.playlists
+      .filter((playlist) => playlist.tracks.length > 0)
+      .map((playlist) => playlist.id),
     removedTrackFingerprintsByPlaylistId: {}
   };
 }
@@ -76,8 +78,14 @@ export function summarizePreviewSelection(
   snapshot: PreviewSnapshot,
   selection: PreviewSelection
 ): PreviewSelectionSummary {
+  const selectedPlaylistCount = snapshot.playlists.filter(
+    (playlist) =>
+      selection.selectedPlaylistIds.includes(playlist.id) &&
+      getVisiblePreviewTrackCount(snapshot, selection, playlist.id) > 0
+  ).length;
+
   return {
-    selectedPlaylistCount: selection.selectedPlaylistIds.length,
+    selectedPlaylistCount,
     selectedTrackCount: snapshot.playlists.reduce(
       (count, playlist) => count + getVisiblePreviewTrackCount(snapshot, selection, playlist.id),
       0

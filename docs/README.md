@@ -44,10 +44,10 @@ test with a real Apple Music account:
 
 The next important work is quality hardening:
 
-- Improve matching/scoring for real libraries.
-- Make empty or tiny playlist output clearer before confirmation.
-- Add stronger sorting tests across Ukrainian, Russian, English, Polish, mixed,
-  instrumental, and unknown tracks.
+- Tune matching/scoring for real libraries.
+- Use the preview diagnostics to explain why requests have few or no matches.
+- Continue expanding sorting tests across Ukrainian, Russian, English, Polish,
+  mixed, instrumental, and unknown tracks.
 - Keep Stripe deferred until the Apple Music organizing quality is acceptable.
 
 ## Documentation rule

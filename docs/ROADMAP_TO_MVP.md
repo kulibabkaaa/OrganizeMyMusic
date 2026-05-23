@@ -723,7 +723,30 @@ Acceptance criteria:
 
 ## MVP-028 — Sorting quality evaluation and low-match handling
 
-Status: not started.
+Status: complete on 2026-05-23.
+
+Current state: preview snapshots now preserve every requested playlist even when
+no tracks match. Each requested playlist includes aggregate match diagnostics
+without non-matching track names or private raw library data. Empty diagnostic
+playlists are excluded from the default confirmation selection and are filtered
+again in the confirmation service before any Apple Music write-back job is
+queued.
+
+Implemented:
+
+- Aggregate match stats per requested playlist: total tracks checked,
+  classified tracks, missing classifications, matched tracks, and rejection
+  counts by explicit, language, genre, mood, energy, and score.
+- Low-match warnings in preview for empty or tiny playlists.
+- Empty playlist cards remain inspectable but cannot be selected in the UI.
+- Confirmation ignores empty selected playlists defensively, so a crafted
+  request cannot queue an empty Apple Music playlist.
+- Synthetic tests cover Ukrainian, Russian, Polish, English, mixed,
+  instrumental, and unknown language classifications.
+
+Known limitation: this improves visibility and safety around weak matches, but
+does not yet tune the scoring weights enough to produce larger or better
+playlists from the user's real library.
 
 Goal: improve playlist quality after the first real Apple Music smoke test.
 
@@ -744,6 +767,31 @@ Acceptance criteria:
 - Sorting tests cover the languages and cases required by the MVP.
 - No new Apple Music writes are introduced outside the existing confirmation
   flow.
+
+## MVP-029 — Sorting score tuning for real-library quality
+
+Status: not started.
+
+Goal: improve match quality and playlist size using the diagnostics added in
+MVP-028.
+
+Tasks:
+
+- Review real low-match diagnostics for representative playlist requests.
+- Tune language, genre, subgenre, mood, and energy weights.
+- Add broader synthetic fixtures for Slavic, rap, workout, sad, electronic,
+  chill, driving, and mixed-language cases.
+- Keep deterministic rules first and OpenAI bounded to structured
+  classification/planning outputs.
+- Preserve explicit confirmation and retry-safe Apple Music write-back.
+
+Acceptance criteria:
+
+- Common requests produce plausible, non-empty playlists when matching tracks
+  exist in the synced library.
+- Low-confidence matches are explained rather than silently accepted.
+- Tests cover the tuned scoring behavior without using private user library
+  data.
 
 ---
 

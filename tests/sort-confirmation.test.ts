@@ -211,4 +211,58 @@ describe("confirmSortRun", () => {
     expect(store.saveConfirmation).not.toHaveBeenCalled();
     expect(queue.send).not.toHaveBeenCalled();
   });
+
+  it("does not queue empty diagnostic playlists for write-back", async () => {
+    const sortRunWithEmptyPlaylist: PreviewSortRun = {
+      ...previewSortRun,
+      previewSnapshot: {
+        ...previewSortRun.previewSnapshot!,
+        playlists: [
+          ...previewSortRun.previewSnapshot!.playlists,
+          {
+            id: "playlist_empty",
+            dimension: "request",
+            title: "Sad Slavic Songs",
+            description: "No matching tracks were found.",
+            confidenceLabel: "medium",
+            trackCount: 0,
+            trackFingerprints: [],
+            appleSongIds: [],
+            tracks: [],
+            qualityWarnings: ["No tracks matched this request. It is excluded by default."]
+          }
+        ]
+      }
+    };
+    const store = createStore(sortRunWithEmptyPlaylist);
+    const queue = createQueue();
+
+    await expect(
+      confirmSortRun({
+        store,
+        queue,
+        sortRunId: "sort_1",
+        userId: "user_1",
+        selection: {
+          selectedPlaylistIds: ["playlist_1", "playlist_empty"],
+          removedTrackFingerprintsByPlaylistId: {}
+        }
+      })
+    ).resolves.toMatchObject({
+      status: "confirmed",
+      selectedPlaylistCount: 1,
+      selectedTrackCount: 2
+    });
+
+    expect(store.saveConfirmation).toHaveBeenCalledWith({
+      sortRun: sortRunWithEmptyPlaylist,
+      selectedPlaylists: [
+        {
+          generatedPlaylistId: "playlist_1",
+          removedTrackFingerprints: [],
+          includedNormalizedTrackIds: ["track_1", "track_2"]
+        }
+      ]
+    });
+  });
 });

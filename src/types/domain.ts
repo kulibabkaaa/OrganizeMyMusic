@@ -114,6 +114,8 @@ export interface GeneratedPlaylist {
   trackFingerprints: string[];
   appleSongIds: string[];
   tracks: GeneratedPlaylistTrack[];
+  qualityWarnings?: string[];
+  matchStats?: GeneratedPlaylistMatchStats;
 }
 
 export interface GeneratedPlaylistTrack {
@@ -126,6 +128,19 @@ export interface GeneratedPlaylistTrack {
   position: number;
   score: number;
   reason: string;
+}
+
+export interface GeneratedPlaylistMatchStats {
+  totalTrackCount: number;
+  classifiedTrackCount: number;
+  missingClassificationCount: number;
+  matchedTrackCount: number;
+  rejectedExplicitCount: number;
+  rejectedLanguageCount: number;
+  rejectedGenreCount: number;
+  rejectedMoodCount: number;
+  rejectedEnergyCount: number;
+  belowScoreCount: number;
 }
 
 export interface SortRunSummary {

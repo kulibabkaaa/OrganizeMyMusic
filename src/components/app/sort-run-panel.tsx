@@ -86,10 +86,14 @@ function PlaylistCard({
   onRemoveTrack: (fingerprint: string) => void;
 }) {
   const removedFingerprintSet = new Set(removedFingerprints);
+  const hasTracks = playlist.tracks.length > 0;
+  const checkboxDisabled = locked || !hasTracks;
 
   return (
     <article
-      className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-6 shadow-[0_18px_80px_rgba(0,0,0,0.24)]"
+      className={`rounded-[2rem] border p-6 shadow-[0_18px_80px_rgba(0,0,0,0.24)] ${
+        hasTracks ? "border-white/10 bg-white/[0.08]" : "border-amber-200/20 bg-amber-200/[0.06]"
+      }`}
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
@@ -97,9 +101,9 @@ function PlaylistCard({
             <label className="inline-flex items-center gap-3 text-sm font-semibold text-white">
               <input
                 type="checkbox"
-                checked={selected}
+                checked={selected && hasTracks}
                 onChange={onToggle}
-                disabled={locked}
+                disabled={checkboxDisabled}
                 className="h-5 w-5 rounded border-white/20 bg-black/30 accent-[#fa244d]"
                 aria-label={`${selected ? "Deselect" : "Select"} ${playlist.title}`}
               />
@@ -121,6 +125,23 @@ function PlaylistCard({
           </span>
         </div>
       </div>
+
+      {playlist.qualityWarnings && playlist.qualityWarnings.length > 0 ? (
+        <div className="mt-5 rounded-3xl border border-amber-200/20 bg-amber-200/10 p-4">
+          <p className="text-sm font-semibold text-amber-100">Review before confirming</p>
+          <ul className="mt-2 grid gap-1 text-sm leading-6 text-amber-50/72">
+            {playlist.qualityWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+          {playlist.matchStats ? (
+            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-amber-50/46">
+              {playlist.matchStats.matchedTrackCount} matched /{" "}
+              {playlist.matchStats.totalTrackCount} checked
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {playlist.tracks.length > 0 ? (
         <ol className="mt-5 grid gap-3">

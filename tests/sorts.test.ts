@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { normalizeTrack } from "@/modules/library/normalize";
 import { parsePlaylistRequestLines } from "@/modules/playlist-requests/parser";
 import { generatePlaylists, generateRequestedPlaylists } from "@/modules/sorts/playlist-rules";
-import type { TrackClassification } from "@/types/domain";
+import type { GenreLabel, MoodLabel, TrackClassification, TrackLanguage } from "@/types/domain";
 
 describe("generatePlaylists", () => {
   it("skips buckets below the minimum track threshold", () => {
@@ -172,6 +172,96 @@ describe("generateRequestedPlaylists", () => {
     const [request] = parsePlaylistRequestLines(["Late night electronic"]);
     const playlists = generateRequestedPlaylists({ requests: [request], tracks, classifications });
 
-    expect(playlists).toEqual([]);
+    expect(playlists).toEqual([
+      expect.objectContaining({
+        title: "Late Night Electronic",
+        trackCount: 0,
+        tracks: [],
+        qualityWarnings: expect.arrayContaining([
+          expect.stringContaining("No tracks matched")
+        ]),
+        matchStats: expect.objectContaining({
+          matchedTrackCount: 0,
+          rejectedLanguageCount: 0,
+          belowScoreCount: expect.any(Number)
+        })
+      })
+    ]);
+  });
+
+  it("adds low-match diagnostics without exposing non-matching track names", () => {
+    const [request] = parsePlaylistRequestLines(["Ukrainian rap"]);
+    const playlists = generateRequestedPlaylists({ requests: [request], tracks, classifications });
+
+    expect(playlists[0]).toMatchObject({
+      trackCount: 1,
+      qualityWarnings: expect.arrayContaining([
+        expect.stringContaining("Only 1 track matched")
+      ]),
+      matchStats: expect.objectContaining({
+        totalTrackCount: 3,
+        matchedTrackCount: 1,
+        rejectedLanguageCount: 2
+      })
+    });
+    expect(JSON.stringify(playlists[0]?.matchStats)).not.toContain("Sad Song");
+    expect(JSON.stringify(playlists[0]?.matchStats)).not.toContain("Gym Track");
+  });
+
+  it("covers required MVP languages in request diagnostics", () => {
+    const requiredTrackInputs: Array<{
+      id: string;
+      language: TrackLanguage;
+      genre: GenreLabel;
+      moods: MoodLabel[];
+    }> = [
+      { id: "uk", language: "ukrainian", genre: "Hip-Hop/Rap", moods: ["Sad", "Melancholy"] },
+      { id: "ru", language: "russian", genre: "Pop", moods: ["Sad"] },
+      { id: "pl", language: "polish", genre: "Rock", moods: ["Melancholy"] },
+      { id: "en", language: "english", genre: "Pop", moods: ["Sad"] },
+      { id: "mix", language: "mixed", genre: "Hip-Hop/Rap", moods: ["Hype"] },
+      { id: "inst", language: "instrumental", genre: "Electronic", moods: ["Focus"] },
+      { id: "unknown", language: "unknown", genre: "Other", moods: ["Chill"] }
+    ];
+    const requiredTracks = requiredTrackInputs.map((item) => {
+      const track = normalizeTrack({
+        id: item.id,
+        name: `Track ${item.id}`,
+        artistName: "Artist",
+        genreNames: [item.genre]
+      });
+
+      return {
+        track,
+        classification: {
+          fingerprint: track.fingerprint,
+          language: item.language,
+          genre: item.genre,
+          subgenres: [],
+          moods: item.moods,
+          energy: 0.35,
+          confidence: 0.9,
+          source: "heuristic",
+          version: 1,
+          metadataHash: `hash_${item.id}`
+        } satisfies TrackClassification
+      };
+    });
+    const [request] = parsePlaylistRequestLines(["Sad Slavic songs"]);
+    const playlists = generateRequestedPlaylists({
+      requests: [request],
+      tracks: requiredTracks.map((item) => item.track),
+      classifications: requiredTracks.map((item) => item.classification)
+    });
+
+    expect(playlists[0]).toMatchObject({
+      title: "Sad Slavic Songs",
+      trackCount: 3,
+      matchStats: expect.objectContaining({
+        totalTrackCount: 7,
+        matchedTrackCount: 3,
+        rejectedLanguageCount: 4
+      })
+    });
   });
 });

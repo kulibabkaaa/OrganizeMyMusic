@@ -149,13 +149,15 @@ export async function confirmSortRun(input: {
         : []
     );
 
-    return [
-      {
-        generatedPlaylistId: playlist.id,
-        removedTrackFingerprints,
-        includedNormalizedTrackIds
-      }
-    ];
+    return includedNormalizedTrackIds.length > 0
+      ? [
+          {
+            generatedPlaylistId: playlist.id,
+            removedTrackFingerprints,
+            includedNormalizedTrackIds
+          }
+        ]
+      : [];
   });
   const selectedPlaylistCount = selectedPlaylists.length;
   const selectedTrackCount = sortRun.previewSnapshot.playlists.reduce(

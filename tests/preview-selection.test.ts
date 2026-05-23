@@ -93,4 +93,33 @@ describe("preview selection", () => {
       selectedTrackCount: 1
     });
   });
+
+  it("excludes empty diagnostic playlists from the default confirmation selection", () => {
+    const snapshotWithEmptyPlaylist: PreviewSnapshot = {
+      ...previewSnapshot,
+      playlists: [
+        ...previewSnapshot.playlists,
+        {
+          id: "playlist_empty",
+          dimension: "request",
+          title: "Sad Slavic Songs",
+          description: "No matching tracks were found.",
+          confidenceLabel: "medium",
+          trackCount: 0,
+          trackFingerprints: [],
+          appleSongIds: [],
+          tracks: [],
+          qualityWarnings: ["No tracks matched this request. It is excluded by default."]
+        }
+      ]
+    };
+
+    const selection = createInitialPreviewSelection(snapshotWithEmptyPlaylist);
+
+    expect(selection.selectedPlaylistIds).toEqual(["playlist_1", "playlist_2"]);
+    expect(summarizePreviewSelection(snapshotWithEmptyPlaylist, selection)).toEqual({
+      selectedPlaylistCount: 2,
+      selectedTrackCount: 3
+    });
+  });
 });
