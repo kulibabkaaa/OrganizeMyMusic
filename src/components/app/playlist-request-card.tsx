@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -105,7 +106,14 @@ export function PlaylistRequestCard({
         <Button disabled={!canRequest || isPending} onClick={submitRequests} className="min-w-48">
           {isPending ? "Saving..." : "Save requests"}
         </Button>
-        {sortRunId ? <span className="text-sm text-white/48">Sort run: {sortRunId}</span> : null}
+        {sortRunId ? (
+          <>
+            <Link href={`/sorts/${sortRunId}`} className="inline-flex">
+              <Button variant="secondary">Review preview</Button>
+            </Link>
+            <span className="text-sm text-white/48">Sort run: {sortRunId}</span>
+          </>
+        ) : null}
       </div>
 
       {requests.length > 0 ? (
