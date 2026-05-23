@@ -1,6 +1,7 @@
 import { PipelineOverview } from "@/components/app/pipeline-overview";
 import { AppShell } from "@/components/app/app-shell";
 import { AppleMusicConnectCard } from "@/components/app/apple-music-connect-card";
+import { LatestSortRunCard } from "@/components/app/latest-sort-run-card";
 import { LibrarySyncCard } from "@/components/app/library-sync-card";
 import { PlaylistRequestCard } from "@/components/app/playlist-request-card";
 import { signOut } from "@/app/(app)/dashboard/actions";
@@ -14,6 +15,10 @@ import {
   getLatestLibrarySyncStatus,
   type AppleMusicConnectionSummary
 } from "@/modules/library-syncs/queue";
+import {
+  createSupabaseLatestSortRunStore,
+  type LatestSortRunSummary
+} from "@/modules/sorts/latest-run";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +143,9 @@ export default async function DashboardPage() {
   const syncStore = serviceSupabase ? createSupabaseLibrarySyncStore(serviceSupabase) : null;
   let appleMusicConnection: AppleMusicConnectionSummary | null = null;
   let latestLibrarySync: Awaited<ReturnType<typeof getLatestLibrarySyncStatus>> = null;
+  let latestSortRun: LatestSortRunSummary | null = null;
   let libraryStateError: string | null = null;
+  let sortRunStateError: string | null = null;
 
   if (syncStore) {
     try {
@@ -149,6 +156,16 @@ export default async function DashboardPage() {
       });
     } catch (error) {
       libraryStateError = error instanceof Error ? error.message : "Unable to load library state.";
+    }
+  }
+
+  if (serviceSupabase) {
+    try {
+      latestSortRun = await createSupabaseLatestSortRunStore(serviceSupabase).getLatestSortRunSummary({
+        userId: session.user.id
+      });
+    } catch (error) {
+      sortRunStateError = error instanceof Error ? error.message : "Unable to load latest sort run.";
     }
   }
 
@@ -246,6 +263,10 @@ export default async function DashboardPage() {
                 : undefined
           }
         />
+      </section>
+
+      <section className="mt-6">
+        <LatestSortRunCard latestSortRun={latestSortRun} error={sortRunStateError} />
       </section>
     </AppShell>
   );

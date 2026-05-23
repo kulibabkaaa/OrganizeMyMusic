@@ -883,6 +883,11 @@ fingerprints, user tokens, and raw Apple Music payloads. Users can add issue
 notes and copy the report for tuning feedback without storing extra private
 track-level data.
 
+Dashboard follow-up: signed-in users now see a latest sort run card after the
+playlist request panel. It links back to the latest preview/quality triage page
+and shows only aggregate counts: playlists, selected playlists, playlist-track
+assignments, and stored Apple Music playlist IDs.
+
 Supabase aggregate inspection on 2026-05-23 found two recent sort runs without
 reading track names or raw payloads. The completed production smoke run
 `4fede120-bc0e-4d9b-861b-477cc236a2e5` had 2 preview playlists, 2 stored
