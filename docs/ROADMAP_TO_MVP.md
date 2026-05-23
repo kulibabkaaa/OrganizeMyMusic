@@ -872,7 +872,19 @@ Acceptance criteria:
 
 ## MVP-031 — Triage real smoke quality issues
 
-Status: not started.
+Status: in progress on 2026-05-23.
+
+Current state: the preview page now includes a privacy-safe quality triage
+report for each sort run. The report summarizes playlist counts, selected track
+counts, empty and low-match playlists, aggregate match diagnostics, warnings,
+and top rejection reasons. It intentionally excludes track names, Apple Music
+song IDs, normalized track IDs, fingerprints, user tokens, and raw Apple Music
+payloads. Users can add issue notes and copy the report for tuning feedback
+without storing extra private track-level data.
+
+Remaining: the user still needs to provide specific quality observations from
+the real Apple Music smoke run before Codex can tune heuristics for those exact
+issue patterns.
 
 Goal: turn the user's real post-smoke feedback into targeted sorting and preview
 improvements without broad redesign or unsafe Apple Music writes.

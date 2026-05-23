@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
 import type { PreviewSortRun } from "@/modules/sorts/preview-snapshot";
 import {
+  buildQualityTriageReport,
+  formatQualityTriageReport
+} from "@/modules/sorts/quality-triage";
+import {
   createInitialPreviewSelection,
   getVisiblePreviewTrackCount,
   removePreviewTrack,
@@ -244,10 +248,16 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
   const [confirmationQueued, setConfirmationQueued] = useState(sortRun.state === "creating_playlists");
   const [retryError, setRetryError] = useState<string | null>(null);
   const [retryQueued, setRetryQueued] = useState(false);
+  const [qualityNotes, setQualityNotes] = useState("");
+  const [qualityCopyState, setQualityCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [isPending, startTransition] = useTransition();
 
   const summary = useMemo(
     () => (snapshot && selection ? summarizePreviewSelection(snapshot, selection) : null),
+    [snapshot, selection]
+  );
+  const qualityReport = useMemo(
+    () => (snapshot && selection ? buildQualityTriageReport(snapshot, selection) : null),
     [snapshot, selection]
   );
 
@@ -315,6 +325,21 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
       setConfirmationQueued(payload.state === "creating_playlists");
       router.refresh();
     });
+  }
+
+  async function copyQualityReport() {
+    if (!qualityReport) {
+      return;
+    }
+
+    const text = formatQualityTriageReport(qualityReport, qualityNotes);
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setQualityCopyState("copied");
+    } catch {
+      setQualityCopyState("failed");
+    }
   }
 
   const canConfirm =
@@ -443,6 +468,99 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
                 </p>
               </article>
             ))}
+          </div>
+        </section>
+      ) : null}
+
+      {qualityReport ? (
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-6">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+            <div>
+              <p className="text-sm uppercase tracking-[0.18em] text-white/42">
+                Quality triage
+              </p>
+              <h2 className="mt-2 font-display text-2xl tracking-[0em]">
+                Privacy-safe sorting report
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-white/62">
+                This report includes playlist counts, match diagnostics, and your notes. It does
+                not include track names, Apple Music IDs, fingerprints, or user tokens.
+              </p>
+            </div>
+            <StatusPill
+              label={`${qualityReport.selectedTrackCount}/${qualityReport.proposedTrackCount} selected`}
+              tone="inverse"
+            />
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-3xl border border-white/10 bg-black/24 p-4">
+              <p className="text-2xl font-semibold">{qualityReport.emptyPlaylistCount}</p>
+              <p className="mt-1 text-sm text-white/54">empty playlists</p>
+            </div>
+            <div className="rounded-3xl border border-white/10 bg-black/24 p-4">
+              <p className="text-2xl font-semibold">{qualityReport.lowMatchPlaylistCount}</p>
+              <p className="mt-1 text-sm text-white/54">low-match playlists</p>
+            </div>
+            <div className="rounded-3xl border border-white/10 bg-black/24 p-4">
+              <p className="text-2xl font-semibold">{qualityReport.playlistCount}</p>
+              <p className="mt-1 text-sm text-white/54">requested playlists</p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            {qualityReport.playlists.map((playlist) => (
+              <article key={playlist.id} className="rounded-3xl border border-white/10 bg-black/24 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-semibold text-white/86">{playlist.title}</p>
+                  <StatusPill
+                    label={`${playlist.proposedTrackCount} proposed`}
+                    tone={playlist.proposedTrackCount === 0 ? "warning" : "inverse"}
+                  />
+                </div>
+                <p className="mt-2 text-sm leading-6 text-white/58">
+                  {playlist.matchStats
+                    ? `${playlist.matchStats.matchedTrackCount} matched from ${playlist.matchStats.totalTrackCount} checked.`
+                    : "No aggregate match diagnostics were stored for this playlist."}
+                  {playlist.topRejectionReason
+                    ? ` Top rejection: ${playlist.topRejectionReason}.`
+                    : ""}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <label className="mt-5 block text-sm font-medium text-white/72" htmlFor="quality-notes">
+            Quality notes
+          </label>
+          <textarea
+            id="quality-notes"
+            value={qualityNotes}
+            onChange={(event) => {
+              setQualityNotes(event.target.value);
+              setQualityCopyState("idle");
+            }}
+            rows={4}
+            placeholder="Expected playlist intent, what felt wrong, and which playlist needs tuning."
+            className="mt-2 w-full resize-y rounded-3xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-white/32 focus:border-white/30"
+          />
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={copyQualityReport}
+              className="border-white/12 bg-white/8 text-white"
+            >
+              Copy quality report
+            </Button>
+            {qualityCopyState !== "idle" ? (
+              <p className="text-sm text-white/58" aria-live="polite">
+                {qualityCopyState === "copied"
+                  ? "Quality report copied."
+                  : "Copy failed. Select the notes and report manually."}
+              </p>
+            ) : null}
           </div>
         </section>
       ) : null}
