@@ -19,16 +19,16 @@ export default async function SortRunPage({
   if (session.status !== "authenticated") {
     return (
       <AppShell
-        title="Sort run"
+        title="Sort"
         subtitle="Sign in before viewing private Apple Music preview data."
       >
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-7">
           <p className="text-sm uppercase tracking-[0.18em] text-white/42">Account required</p>
           <h2 className="mt-3 font-display text-3xl tracking-[0em]">Preview is private.</h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-white/62">
-            Sign in with the account that created this sort run to inspect playlist output.
+            Sign in with the account that created this Sort to inspect playlist output.
           </p>
-          <a href="/login" className="mt-6 inline-flex">
+          <a href="/auth" className="mt-6 inline-flex">
             <Button>Sign in</Button>
           </a>
         </section>
@@ -47,8 +47,8 @@ export default async function SortRunPage({
 
   return (
     <AppShell
-      title="Sort run"
-      subtitle="Inspect generated playlists and tracks before any Apple Music write-back."
+      title="Sort"
+      subtitle="Inspect generated playlists and tracks before Apple Music export."
     >
       {previewResult.status === "ready" ? (
         <SortRunPanel sortRun={previewResult.sortRun} />
@@ -59,12 +59,12 @@ export default async function SortRunPage({
           </p>
           <h2 className="mt-3 font-display text-3xl tracking-[0em]">
             {previewResult.status === "missing_config"
-              ? "Server database access is not configured."
+              ? "Preview is temporarily unavailable."
               : "Preview could not be loaded."}
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-white/62">
             {previewResult.status === "missing_config"
-              ? "SUPABASE_SERVICE_ROLE_KEY is required server-side before stored previews can load."
+              ? "Stored previews are not available right now. Try again later."
               : previewErrorMessage}
           </p>
         </section>

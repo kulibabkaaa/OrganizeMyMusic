@@ -113,11 +113,12 @@ Classified 112 ambiguous tracks with OpenAI.
 Created 3 Apple Music playlists.
 ```
 
-## Confirmation safety
+## Review/export safety
 
-No Apple Music write-back before explicit confirmation.
+No Apple Music write-back before explicit confirmation. In the platform UI this
+confirmation is the export action after review.
 
-Confirmation must show:
+Confirmation/export must show:
 
 - Number of playlists to create.
 - Names of playlists.
@@ -132,7 +133,8 @@ If `apple_playlist_id` exists, do not create another playlist for that generated
 
 ## Payment
 
-Payment is optional until core MVP works.
+Payment is optional until core MVP works. When enabled, payment unlocks one
+Sort, not account signup or Apple Music connection.
 
 If payment is added:
 
@@ -140,3 +142,5 @@ If payment is added:
 - Verify webhooks.
 - Do not trust client-side payment status.
 - Freeze preview before checkout.
+- Do not start paid full sorting until payment is confirmed or an explicit
+  development bypass is configured.

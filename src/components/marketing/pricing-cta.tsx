@@ -1,8 +1,9 @@
 import Link from "next/link";
+import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
 
-export function PricingCta() {
+export function PricingCta({ connectHref = "/auth" }: { connectHref?: string }) {
   return (
     <section className="bg-black text-white">
       <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-28">
@@ -20,7 +21,7 @@ export function PricingCta() {
 
           <div className="flex flex-col items-start gap-4 lg:items-end">
             <div className="font-display text-6xl tracking-[-0.05em]">$19</div>
-            <Link href="/dashboard">
+            <Link href={connectHref as Route}>
               <Button className="min-w-44">Connect Apple Music</Button>
             </Link>
           </div>
@@ -29,4 +30,3 @@ export function PricingCta() {
     </section>
   );
 }
-

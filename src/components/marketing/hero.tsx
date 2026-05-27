@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ const stats: {
   { value: "1 click", label: "TO SORT YOUR MUSIC" }
 ];
 
-export function Hero() {
+export function Hero({ startSortHref = "/auth" }: { startSortHref?: string }) {
   return (
     <section className="relative min-h-[100svh] overflow-hidden bg-black text-white">
       <div className="absolute inset-0 bg-hero-bloom" />
@@ -46,7 +47,7 @@ export function Hero() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link href="/dashboard">
+              <Link href={startSortHref as Route}>
                 <Button className="min-h-14 min-w-52 px-7 py-4 text-base shadow-[0_28px_90px_rgba(255,4,54,0.22)]">
                   Start a sort
                 </Button>

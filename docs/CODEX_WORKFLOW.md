@@ -48,6 +48,8 @@ Read:
 - AGENTS.md
 - docs/README.md
 - docs/ROADMAP_TO_MVP.md
+- docs/UI_PLATFORM_FLOW_ROADMAP.md when the ticket touches app UI, routes,
+  Sorts, Playlist Recipes, preview, payment, review, or export
 - the documentation file most relevant to this ticket
 
 Work only on ticket: <ticket id and title>
@@ -57,6 +59,8 @@ Rules:
 - Do not add Spotify or YouTube Music.
 - Do not expose secrets to the browser.
 - Do not write playlists to Apple Music before explicit user confirmation.
+- Preserve the public landing page visuals unless the ticket explicitly changes them.
+- Keep `/login` and `/dashboard` working while migrating canonical app routes to `/auth` and `/app`.
 - Keep TypeScript strict.
 - Add or update tests where practical.
 - Use Supabase MCP only for the Supabase tasks in the ticket.

@@ -20,10 +20,10 @@ Vercel
 Responsibilities:
 
 - Landing page.
-- Dashboard.
+- Platform dashboard (`/app`) and legacy dashboard redirects while migration is in progress.
 - Auth callbacks.
 - API routes.
-- Preview and confirmation UI.
+- Preview, review, and export UI.
 
 ## Worker
 
@@ -169,18 +169,17 @@ A production smoke test must verify:
 - Sync.
 - Classification.
 - Preview.
-- Confirmation.
+- Review and explicit export confirmation.
 - Apple Music write-back.
 
 Current `MVP-026` status:
 
-- Current MVP worktree was deployed to Vercel Production on 2026-05-23 as
-  `dpl_BFfhH5dLXiQFcpC96E7XBtdX4ZQg`.
+- Current MVP worktree was deployed to Vercel Production on 2026-05-23.
 - Production alias `https://organize-my-music.vercel.app` responds publicly.
 - Safe smoke checks for `/`, `/dashboard`, and `/login` returned `200`.
-- Remaining blocker: confirm Vercel Production `DATABASE_URL` works through an
-  authenticated sync request. Sensitive Vercel env values cannot be
-  independently read back from CLI/MCP.
+- Vercel Production `DATABASE_URL` was validated indirectly through the
+  authenticated production sync request.
 - The manual smoke path is documented in `docs/PRODUCTION_SMOKE_TEST.md`.
 - Apple Music write-back must be performed only by the real user after they
-  inspect and explicitly confirm the preview.
+  inspect and explicitly confirm the preview or, in the platform UI, the export
+  review screen.

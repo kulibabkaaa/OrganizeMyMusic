@@ -6,6 +6,11 @@ import {
 } from "@/modules/apple-music/client";
 import { decryptAppleMusicUserToken } from "@/modules/apple-music/auth";
 import { createAppleDeveloperToken } from "@/modules/apple-music/developer-token";
+import {
+  createPrivacySafeFailure,
+  createPrivacySafeJobDetails,
+  getWorkflowDurationMs
+} from "@/modules/activity/privacy-safe-observability";
 import { classifyTracks } from "@/modules/classification/batch-classify";
 import { dedupeTracks } from "@/modules/library/dedupe";
 import { normalizeTrack } from "@/modules/library/normalize";
@@ -156,6 +161,12 @@ export type QueueLibrarySyncResult =
       status: "missing_apple_music_connection";
     };
 
+const activeLibrarySyncStatuses = new Set<LibrarySyncStatus>([
+  "queued",
+  "syncing",
+  "normalizing"
+]);
+
 export async function queueLibrarySync(input: {
   store: LibrarySyncStore;
   queue: LibrarySyncQueue;
@@ -190,7 +201,11 @@ export async function queueLibrarySync(input: {
     level: "info",
     message: "Library sync queued.",
     details: {
-      jobId
+      ...createPrivacySafeJobDetails({
+        eventType: "library_sync_queued",
+        jobName: LIBRARY_SYNC_JOB_NAME,
+        jobId
+      })
     }
   });
 
@@ -199,6 +214,30 @@ export async function queueLibrarySync(input: {
     sync,
     jobId
   };
+}
+
+export type QueueLibrarySyncAfterConnectionResult =
+  | QueueLibrarySyncResult
+  | {
+      status: "already_active";
+      sync: LibrarySyncSummary;
+    };
+
+export async function queueLibrarySyncAfterConnection(input: {
+  store: LibrarySyncStore;
+  queue: LibrarySyncQueue;
+  userId: string;
+}): Promise<QueueLibrarySyncAfterConnectionResult> {
+  const latestSync = await input.store.getLatestSyncForUser(input.userId);
+
+  if (latestSync && activeLibrarySyncStatuses.has(latestSync.status)) {
+    return {
+      status: "already_active",
+      sync: latestSync
+    };
+  }
+
+  return queueLibrarySync(input);
 }
 
 export async function handleLibrarySyncJob(input: {
@@ -222,7 +261,11 @@ export async function handleLibrarySyncJob(input: {
     librarySyncId: input.data.syncId,
     stage: "library_sync",
     level: "info",
-    message: "Library sync worker picked up the job."
+    message: "Library sync worker picked up the job.",
+    details: createPrivacySafeJobDetails({
+      eventType: "library_sync_started",
+      jobName: LIBRARY_SYNC_JOB_NAME
+    })
   });
 
   await runRawLibrarySync({
@@ -248,6 +291,8 @@ export async function runRawLibrarySync(input: {
   decryptUserToken?: (encryptedUserToken: string) => string;
   classifyNormalizedTracks?: typeof classifyTracks;
 }) {
+  const startedAt = Date.now();
+
   try {
     const connection = await input.store.getConnectedAppleMusicConnection(input.userId);
 
@@ -311,30 +356,55 @@ export async function runRawLibrarySync(input: {
       librarySyncId: input.syncId,
       stage: "classification",
       level: "info",
-      message: `Classified ${classifications.length} tracks with metadata heuristics and structured OpenAI fallback.`
+      message: `Classified ${classifications.length} tracks with metadata heuristics and structured OpenAI fallback.`,
+      details: createPrivacySafeJobDetails({
+        eventType: "library_sync_classification_completed",
+        counts: {
+          classifiedTrackCount: classifications.length,
+          normalizedTrackCount: normalizedTracks.length
+        }
+      })
     });
     await input.store.createJobEvent({
       librarySyncId: input.syncId,
       stage: "library_sync",
       level: "info",
-      message: `Normalized ${normalizedTracks.length} tracks and removed ${duplicateCount} duplicates.`
+      message: `Normalized ${normalizedTracks.length} tracks and removed ${duplicateCount} duplicates.`,
+      details: createPrivacySafeJobDetails({
+        eventType: "library_sync_completed",
+        durationMs: getWorkflowDurationMs(startedAt),
+        counts: {
+          rawTrackCount: rawTracks.length,
+          normalizedTrackCount: normalizedTracks.length,
+          duplicateCount,
+          classifiedTrackCount: classifications.length
+        }
+      })
     });
   } catch (error) {
-    const errorSummary = error instanceof Error ? error.message : "Library sync failed.";
+    const failure = createPrivacySafeFailure({
+      workflowName: "Library sync",
+      error
+    });
 
     await input.store.markFailed({
       syncId: input.syncId,
       userId: input.userId,
-      errorSummary
+      errorSummary: failure.message
     });
     await input.store.createJobEvent({
       librarySyncId: input.syncId,
       stage: "library_sync",
       level: "error",
-      message: errorSummary
+      message: "Library sync failed.",
+      details: createPrivacySafeJobDetails({
+        eventType: "library_sync_failed",
+        durationMs: getWorkflowDurationMs(startedAt),
+        failureCategory: failure.category
+      })
     });
 
-    throw error;
+    throw new Error(failure.message);
   }
 }
 

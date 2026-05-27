@@ -8,7 +8,7 @@ import {
 import {
   PLAYLIST_CREATION_JOB_NAME,
   type PlaylistCreationJobData
-} from "@/modules/sorts/confirmation";
+} from "@/modules/sorts/export-selection";
 
 export async function registerPlaylistCreationWorker(boss: PgBoss) {
   await boss.createQueue(PLAYLIST_CREATION_JOB_NAME);

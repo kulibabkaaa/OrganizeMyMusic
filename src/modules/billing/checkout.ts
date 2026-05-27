@@ -1,14 +1,48 @@
 import { requireServerEnv } from "@/lib/env";
 import { env } from "@/lib/env";
 import { getStripe } from "@/modules/billing/stripe";
+import { getCheckoutMode } from "@/modules/payments/checkout";
 
-export async function createSortCheckoutSession(sortRunId: string) {
+export type SortCheckoutSession =
+  | {
+      mode: "disabled";
+      checkoutUrl: null;
+    }
+  | {
+      mode: "dev_bypass";
+      checkoutUrl: string;
+    }
+  | {
+      mode: "live";
+      checkoutUrl: string | null;
+    };
+
+export async function createSortCheckoutSession(
+  sortRunId: string,
+  config: Record<string, string | undefined> = env
+): Promise<SortCheckoutSession> {
+  const mode = getCheckoutMode(config);
+
+  if (mode === "disabled") {
+    return {
+      mode: "disabled",
+      checkoutUrl: null
+    };
+  }
+
+  if (mode === "dev_bypass") {
+    return {
+      mode: "dev_bypass",
+      checkoutUrl: `/sorts/${sortRunId}?payment=dev_bypass`
+    };
+  }
+
   const stripe = getStripe();
 
   if (!stripe) {
     return {
-      mode: "mock",
-      checkoutUrl: `/sorts/${sortRunId}?payment=mock`
+      mode: "disabled",
+      checkoutUrl: null
     };
   }
 

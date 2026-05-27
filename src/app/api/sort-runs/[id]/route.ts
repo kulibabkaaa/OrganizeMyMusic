@@ -30,7 +30,7 @@ export async function GET(
   });
 
   if (!sortRun) {
-    return NextResponse.json({ error: "Sort run not found." }, { status: 404 });
+    return NextResponse.json({ error: "Sort not found." }, { status: 404 });
   }
 
   return NextResponse.json({

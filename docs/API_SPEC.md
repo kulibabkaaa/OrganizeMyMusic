@@ -10,6 +10,16 @@
 
 ## Planned routes
 
+## Platform route migration
+
+Current MVP routes such as `/login`, `/dashboard`, `/sorts/[id]`, and
+`/api/sort-runs` stay valid during migration.
+
+Target platform routes live under `/auth` and `/app`. New API routes for Sorts,
+Playlist Recipes, preview, checkout, review, and export should prefer
+`/api/app/...` while existing endpoints remain as compatibility aliases until
+callers are moved.
+
 ## Auth/profile
 
 ### `GET /api/me`
@@ -147,9 +157,96 @@ Returns latest library sync summary and track count.
 
 ## Sort runs
 
+### `POST /api/app/sorts`
+
+Creates a platform Sort draft. This endpoint is used by the new `/app` flow and
+does not generate a preview.
+
+Request:
+
+```json
+{
+  "name": "Road trip cleanup",
+  "librarySyncId": "uuid-or-null",
+  "sourceProvider": "apple_music"
+}
+```
+
+Rules:
+
+- Requires authenticated user.
+- Uses only `apple_music` as `sourceProvider` for the MVP.
+- Allows `librarySyncId` to be omitted or to reference a running sync.
+- Returns preview readiness separately so the builder can disable `Preview Sort`
+  until the sync is completed.
+- Does not write to Apple Music.
+
+### `GET /api/app/sorts/:sortId`
+
+Returns Sort draft metadata, Playlist Recipes, and preview readiness for the
+authenticated owner.
+
+### `PATCH /api/app/sorts/:sortId`
+
+Updates Sort draft metadata such as name or linked library sync.
+
+### `/api/app/sorts/:sortId/recipes`
+
+Creates, lists, and reorders structured Playlist Recipes for a Sort draft.
+
+### `/api/app/sorts/:sortId/recipes/:recipeId`
+
+Updates or deletes a single Playlist Recipe. Recipe payloads are validated with
+the shared Playlist Recipe Zod schemas.
+
+### `POST /api/app/sorts/:sortId/preview`
+
+Generates or returns the platform lightweight preview for a Sort draft.
+
+Response:
+
+```json
+{
+  "status": "created",
+  "previewSnapshot": {
+    "sortRunId": "uuid",
+    "librarySyncId": "uuid",
+    "generatedAt": "2026-05-26T12:00:00.000Z",
+    "playlists": [
+      {
+        "id": "preview_recipe_1",
+        "recipeId": "recipe_1",
+        "playlistName": "Sad Ukrainian rap",
+        "tags": [],
+        "estimatedTrackCount": 32,
+        "confidenceLabel": "high",
+        "fitLabel": "strong",
+        "sampleTracks": [],
+        "lockedTrackCount": 22
+      }
+    ]
+  }
+}
+```
+
+Rules:
+
+- Requires authenticated user.
+- Requires the Sort to belong to the current user.
+- Requires a completed Apple Music library sync.
+- Requires at least one Playlist Recipe.
+- Stores only the lightweight preview snapshot on `sort_runs.preview_snapshot`.
+- Does not insert generated review playlists or playlist-track assignments.
+- Does not queue jobs or write to Apple Music.
+- Does not regenerate once payment or confirmation has started.
+
 ### `POST /api/sort-runs`
 
 Creates a draft sort run and stores parsed playlist requests.
+
+Compatibility note: the platform UI will introduce Playlist Recipes under
+`/api/app/sorts/:sortId/recipes`. Until that migration is complete, this
+endpoint remains the compatibility path for textarea playlist requests.
 
 Request:
 
@@ -257,9 +354,53 @@ Response:
 }
 ```
 
-### `POST /api/sort-runs/:sortRunId/confirm`
+### `POST /api/app/sorts/:sortId/checkout`
 
-Confirms selected playlists and queues Apple Music write-back.
+Starts checkout for a specific Sort.
+
+Rules:
+
+- Requires authenticated user.
+- If `PAYMENTS_ENABLED` is false and `PAYMENTS_DEV_BYPASS_ENABLED` is false,
+  returns `409` and does not mark payment paid.
+- With the explicitly approved local dev bypass, marks the Sort paid and queues
+  the `full-sort` worker job.
+- With real Stripe enabled, creates a Stripe Checkout session.
+- Does not export to Apple Music.
+
+Dev-bypass response:
+
+```json
+{
+  "status": "paid",
+  "mode": "dev_bypass",
+  "processingUrl": "/app/sorts/uuid/processing",
+  "fullSort": {
+    "status": "queued",
+    "jobId": "pgboss-job-id"
+  }
+}
+```
+
+### `full-sort` worker job
+
+Runs after payment confirmation.
+
+Rules:
+
+- Requires `sort_runs.state = paid` and `payment_status = paid`.
+- Requires at least one Playlist Recipe and a library sync.
+- Reads normalized tracks and classifications.
+- Generates full editable playlists from Playlist Recipes.
+- Stores generated playlists in `sort_playlists`.
+- Stores generated track assignments in `sort_playlist_tracks`.
+- Stores low-match diagnostics in `sort_playlists.playlist_rules`.
+- Records progress/failure in `job_events`.
+- Does not call Apple Music APIs.
+
+### `POST /api/app/sorts/:sortId/export`
+
+Exports reviewed playlists to Apple Music.
 
 Request:
 
@@ -268,6 +409,9 @@ Request:
   "selectedPlaylistIds": ["preview-playlist-id-1", "preview-playlist-id-2"],
   "removedTrackFingerprintsByPlaylistId": {
     "preview-playlist-id-1": ["track-fingerprint"]
+  },
+  "renamedPlaylistTitlesById": {
+    "preview-playlist-id-1": "Late night edits"
   }
 }
 ```
@@ -276,6 +420,7 @@ Response:
 
 ```json
 {
+  "status": "exporting",
   "sortRunId": "uuid",
   "state": "creating_playlists",
   "selectedPlaylistCount": 2,
@@ -288,12 +433,26 @@ Rules:
 
 - Must require explicit user action.
 - Must not run on page load.
-- Must not confirm runs owned by another user.
+- Must not export runs owned by another user.
 - Persists selected playlists in `sort_playlists.selected`.
+- Persists reviewed playlist titles in `sort_playlists.title`.
 - Persists removed tracks in `sort_playlist_tracks.removed_by_user`.
 - Queues `playlist-create` for the persistent worker.
+- Existing `/api/sort-runs/:sortRunId/confirm` no longer queues write-back;
+  platform callers must use this export endpoint.
 
 ## Job events
+
+## Export pages
+
+### `GET /app/sorts/:sortId/exporting`
+
+Shows refreshable Apple Music export progress for reviewed playlists.
+
+### `GET /app/sorts/:sortId/complete`
+
+Shows the final exported playlist names, track counts, export timestamp, and
+Apple Music playlist links when an Apple URL can be derived.
 
 ### `GET /api/sort-runs/:sortRunId/events`
 

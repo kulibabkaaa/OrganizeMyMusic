@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useDialogAccessibility } from "@/components/ui/dialog-accessibility";
 import { StatusPill } from "@/components/ui/status-pill";
 import type { PreviewSortRun } from "@/modules/sorts/preview-snapshot";
 import {
@@ -190,21 +191,33 @@ function ConfirmationDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const dialogRef = useRef<HTMLElement>(null);
+  const { onDialogKeyDown } = useDialogAccessibility({
+    isOpen: true,
+    dialogRef,
+    onClose: onCancel,
+    closeDisabled: pending
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/70 px-4 py-5 backdrop-blur-sm sm:items-center sm:justify-center">
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-playlists-title"
+        aria-describedby="confirm-playlists-description"
+        tabIndex={-1}
+        onKeyDown={onDialogKeyDown}
         className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-[#111] p-6 shadow-[0_24px_120px_rgba(0,0,0,0.55)]"
       >
         <p className="text-sm uppercase tracking-[0.18em] text-white/42">Explicit confirmation</p>
         <h2 id="confirm-playlists-title" className="mt-3 font-display text-3xl tracking-[0em]">
           Create selected Apple Music playlists?
         </h2>
-        <p className="mt-3 text-sm leading-7 text-white/62">
-          This will queue creation for exactly {selectedPlaylistCount} playlists and{" "}
-          {selectedTrackCount} tracks. The worker will perform the Apple Music write-back.
+        <p id="confirm-playlists-description" className="mt-3 text-sm leading-7 text-white/62">
+          This will create exactly {selectedPlaylistCount} playlists and {selectedTrackCount}{" "}
+          tracks in Apple Music after your confirmation.
         </p>
 
         {errorMessage ? (
@@ -369,7 +382,7 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
             <StatusPill label={formatStateLabel(sortRun.state)} tone="accent" />
             <StatusPill label={sortRun.paymentStatus} tone="inverse" />
             <StatusPill
-              label={confirmationQueued || retryQueued ? "creation queued" : "no write-back"}
+              label={confirmationQueued || retryQueued ? "export queued" : "review required"}
               tone={confirmationQueued || retryQueued ? "success" : "warning"}
             />
           </div>
@@ -392,7 +405,7 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
                 year: "numeric"
               })}
             </p>
-            <p className="mt-1 text-sm text-white/54">snapshot generated</p>
+            <p className="mt-1 text-sm text-white/54">preview ready</p>
           </div>
         </div>
 
@@ -401,6 +414,7 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
             type="button"
             onClick={() => setShowConfirmation(true)}
             disabled={!canConfirm}
+            aria-describedby={!canConfirm ? "sort-run-confirm-disabled-reason" : undefined}
             className="disabled:cursor-not-allowed disabled:opacity-55"
           >
             {confirmationQueued || retryQueued ? "Playlist creation queued" : "Review confirmation"}
@@ -413,7 +427,7 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
               disabled={isPending}
               className="border-white/12 bg-white/8 text-white disabled:cursor-not-allowed disabled:opacity-45"
             >
-              {isPending ? "Queueing retry..." : "Retry write-back"}
+              {isPending ? "Queueing retry..." : "Retry export"}
             </Button>
           ) : null}
           <Button
@@ -429,7 +443,7 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
 
         {retryQueued ? (
           <p className="mt-4 text-sm text-white/58" aria-live="polite">
-            Playlist write-back retry queued.
+            Playlist export retry queued.
           </p>
         ) : null}
         {retryError ? (
@@ -438,7 +452,7 @@ export function SortRunPanel({ sortRun }: { sortRun: PreviewSortRun }) {
           </p>
         ) : null}
         {!canConfirm && !confirmationQueued && !retryQueued && sortRun.state !== "failed" ? (
-          <p className="mt-4 text-sm text-white/50">
+          <p id="sort-run-confirm-disabled-reason" className="mt-4 text-sm text-white/50">
             Select at least one playlist with one track before confirmation.
           </p>
         ) : null}

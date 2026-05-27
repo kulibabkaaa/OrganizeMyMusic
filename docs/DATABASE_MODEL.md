@@ -209,6 +209,8 @@ Important fields:
 
 - `user_id`
 - `library_sync_id`
+- `name`
+- `source_provider`
 - `state`
 - `payment_status`
 - `preview_snapshot`
@@ -223,6 +225,44 @@ Rules:
 - Payment can remain unused until core MVP works.
 - MVP-018 stores `preview_snapshot` when playlist requests are planned.
 - Preview regeneration is blocked once state reaches `awaiting_payment`, `paid`, `creating_playlists`, or `completed`.
+
+Platform UI note: user-facing statuses should be derived through a UI adapter
+instead of renaming database states immediately. The target UI lifecycle is
+documented in `UI_PLATFORM_FLOW_ROADMAP.md`.
+
+FLOW-015 adds `name` and `source_provider` to support reusable Sort drafts
+before a completed library sync exists. `source_provider` is constrained to
+`apple_music` for the MVP.
+
+## `playlist_recipes`
+
+The platform UI roadmap adds structured Playlist Recipes as the replacement for
+textarea-only playlist requests. Keep existing `playlist_requests` rows for old
+Sorts and compatibility APIs.
+
+Implemented by `supabase/migrations/0002_playlist_recipes.sql`.
+
+Fields:
+
+- `user_id`
+- `sort_run_id`
+- `position`
+- `name`
+- `playlist_note`
+- target track min/max
+- duplicate policy
+- explicit-track preference
+- library-only preference
+- structured `tags` JSON
+
+RLS must scope recipes to the owning user. Tags and Tag Notes are private user
+sorting instructions and should not be logged with raw library data.
+
+Application code validates recipe create/update input with Zod in
+`src/modules/playlist-recipes/schema.ts`. The compatibility adapter in
+`src/modules/playlist-recipes/adapter.ts` converts structured Playlist Recipes
+into the existing parsed playlist request rules so old Sorts and the current
+planner path can continue to work during the UI migration.
 
 ## `sort_playlists`
 

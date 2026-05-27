@@ -17,14 +17,14 @@ export function SortRunActions({ sortRun }: { sortRun: SortRunSummary }) {
       const response = await fetch(`/api/sort-runs/${sortRun.id}/checkout`, {
         method: "POST"
       });
-      const payload = (await response.json()) as { checkoutUrl?: string };
+      const payload = (await response.json()) as { checkoutUrl?: string; error?: string };
 
-      if (payload.checkoutUrl) {
+      if (response.ok && payload.checkoutUrl) {
         window.location.href = payload.checkoutUrl;
         return;
       }
 
-      setMessage("Checkout session could not be created.");
+      setMessage(payload.error ?? "Checkout session could not be created.");
     });
   }
 

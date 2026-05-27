@@ -14,6 +14,7 @@ Required reading before editing:
 - docs/README.md
 - docs/PROJECT_BRIEF.md
 - docs/ROADMAP_TO_MVP.md
+- docs/UI_PLATFORM_FLOW_ROADMAP.md when working on UI routes, dashboard, Sorts, Playlist Recipes, preview, payment, review, or export
 - docs/CODEX_WORKFLOW.md
 - docs/MCP_AUTOMATION_RULES.md
 - docs/SUPABASE_MCP_SETUP.md
@@ -39,6 +40,9 @@ No YouTube Music.
 No custom model training.
 No automatic edits to existing Apple Music playlists.
 Do not write any playlists to Apple Music before explicit user confirmation.
+For the platform UI phase, preserve the public landing page visuals, use `/auth`
+and `/app` as canonical routes, keep legacy `/login` and `/dashboard` working,
+and treat Apple Music write-back as explicit review/export confirmation.
 
 Security:
 Never expose server secrets to browser code.
@@ -60,7 +64,7 @@ Run:
 If a command cannot run, explain why.
 
 MVP completion condition:
-The MVP is done only when a real user can sign in, connect Apple Music, sync tracks, request playlists, preview output, confirm, and see playlists created in Apple Music.
+The MVP is done only when a real user can sign in, connect Apple Music, sync tracks, request playlists or Playlist Recipes, preview output, review/export explicitly, and see playlists created in Apple Music.
 
 Start with the first incomplete ticket in docs/ROADMAP_TO_MVP.md.
 ```

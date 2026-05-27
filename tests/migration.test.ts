@@ -21,7 +21,15 @@ const uniqueAppleMusicConnectionMigration = readFileSync(
   ),
   "utf8"
 );
-const migration = `${initialMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
+const playlistRecipesMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0002_playlist_recipes.sql"),
+  "utf8"
+);
+const sortDraftsMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0003_sort_drafts.sql"),
+  "utf8"
+);
+const migration = `${initialMigration}\n${playlistRecipesMigration}\n${sortDraftsMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
 
 const userOwnedTables = [
   "profiles",
@@ -33,6 +41,7 @@ const userOwnedTables = [
   "track_classifications",
   "sort_runs",
   "playlist_requests",
+  "playlist_recipes",
   "sort_playlists",
   "sort_playlist_tracks",
   "payments",
@@ -64,6 +73,14 @@ describe("initial Supabase migration", () => {
     expect(uniqueAppleMusicConnectionMigration).toContain(
       "idx_apple_music_connections_unique_user"
     );
+    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_select_own");
+    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_insert_own");
+    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_update_own");
+    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_delete_own");
+    expect(playlistRecipesMigration).toContain("jsonb_typeof(tags) = 'array'");
+    expect(sortDraftsMigration).toContain("add column if not exists name text");
+    expect(sortDraftsMigration).toContain("add column if not exists source_provider text");
+    expect(sortDraftsMigration).toContain("sort_runs_source_provider_check");
     expect(migration).not.toMatch(/\bdrop\s+table\b/i);
     expect(migration).not.toMatch(/\bdisable\s+row\s+level\s+security\b/i);
   });

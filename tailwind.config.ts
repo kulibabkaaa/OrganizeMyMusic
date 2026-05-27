@@ -5,6 +5,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        platform: {
+          bg: "var(--bg)",
+          burgundy: "var(--burgundy)",
+          card: "var(--card)",
+          elevated: "var(--card-elevated)",
+          border: "var(--border)",
+          fg: "var(--fg)",
+          secondary: "var(--secondary)",
+          muted: "var(--muted)",
+          pink: "var(--pink)",
+          red: "var(--red)",
+          success: "var(--success)",
+          warning: "var(--warning)",
+          danger: "var(--danger)"
+        },
         ink: "#000000",
         paper: "#ffffff",
         blush: "#ff4e6b",
@@ -15,7 +30,8 @@ const config: Config = {
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],
-        body: ["var(--font-body)", "sans-serif"]
+        body: ["var(--font-body)", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"]
       },
       boxShadow: {
         pulse: "0 25px 90px rgba(255, 4, 54, 0.18)"
@@ -23,6 +39,8 @@ const config: Config = {
       backgroundImage: {
         "hero-bloom":
           "radial-gradient(circle at top left, rgba(255, 78, 107, 0.22), transparent 36%), radial-gradient(circle at bottom right, rgba(255, 4, 54, 0.18), transparent 40%)",
+        "platform-bloom":
+          "radial-gradient(circle at 78% 8%, rgba(255, 45, 85, 0.12), transparent 24rem), radial-gradient(circle at 12% 0%, rgba(25, 4, 10, 0.88), transparent 32rem), linear-gradient(180deg, var(--burgundy) 0%, var(--bg) 34rem)",
         "accent-sweep": "linear-gradient(135deg, #ff4e6b 0%, #ff0436 100%)"
       }
     }
@@ -31,4 +49,3 @@ const config: Config = {
 };
 
 export default config;
-

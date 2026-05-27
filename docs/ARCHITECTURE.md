@@ -33,13 +33,13 @@ pg-boss worker
 Responsibilities:
 
 - Landing page.
-- Dashboard.
+- Platform dashboard (`/app`) with `/dashboard` kept as a legacy redirect or alias during migration.
 - Auth UI.
 - Apple Music connect UI.
 - Library sync controls.
-- Playlist request UI.
-- Preview UI.
-- Confirmation UI.
+- Sort and Playlist Recipe UI.
+- Preview/paywall UI.
+- Review and export UI.
 - Status and error UI.
 
 ### API routes
@@ -52,7 +52,7 @@ Responsibilities:
 - Sync start endpoint.
 - Sort-run creation endpoint.
 - Preview endpoint.
-- Confirmation endpoint.
+- Review/export confirmation endpoint.
 - Status endpoints.
 
 API routes should be thin. Domain logic should live in reusable server modules.
@@ -81,7 +81,7 @@ Supabase Postgres stores:
 - Normalized track records.
 - User track ownership.
 - Classifications.
-- Playlist requests.
+- Playlist requests and, after the platform UI migration, structured Playlist Recipes.
 - Sort runs.
 - Generated playlists.
 - Playlist-track relationships.
@@ -138,23 +138,24 @@ Worker updates sync status
 Dashboard polls or refreshes status
 ```
 
-### Generate playlists
+### Preview a Sort
 
 ```text
-User enters desired playlists
-API creates sort_run and playlist_request rows
+User creates a Sort
+User adds playlist requests or Playlist Recipes
+API creates sort_run and playlist request/recipe rows
 Worker classifies tracks if needed
 Worker parses request into rules
 Worker plans playlists from classifications
 Worker stores preview snapshot
-Dashboard shows preview
+App shows preview
 ```
 
-### Confirm and write to Apple Music
+### Review and export to Apple Music
 
 ```text
-User reviews preview
-User confirms selected playlists
+User reviews generated playlists
+User confirms export of selected playlists
 API queues playlist creation job
 Worker decrypts Apple user token
 Worker creates Apple Music playlists
@@ -224,3 +225,25 @@ failed
 ```
 
 Payment state may remain unused until the core MVP flow works.
+
+## Platform UI routing target
+
+The product is moving to the route model in
+`docs/UI_PLATFORM_FLOW_ROADMAP.md`:
+
+```text
+/auth
+/app
+/app/sorts
+/app/sorts/[sortId]/builder
+/app/sorts/[sortId]/preview
+/app/sorts/[sortId]/checkout
+/app/sorts/[sortId]/processing
+/app/sorts/[sortId]/review
+/app/sorts/[sortId]/exporting
+/app/sorts/[sortId]/complete
+```
+
+Do not rename database states just to match UI labels. Use an adapter such as
+`getSortUiStatus()` so existing backend state remains stable while the product
+language changes.

@@ -1,13 +1,16 @@
 "use server";
 
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { parseEmailPasswordForm } from "@/lib/auth/credentials";
+import { getOAuthProviderAvailability, type OAuthProvider } from "@/lib/auth/oauth";
+import { env } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function redirectWithMessage(message: string): never {
-  redirect(`/login?message=${encodeURIComponent(message)}`);
+  redirect(`/auth?message=${encodeURIComponent(message)}`);
 }
 
 async function getActionClient() {
@@ -18,6 +21,36 @@ async function getActionClient() {
   }
 
   return supabase;
+}
+
+async function signInWithOAuthProvider(provider: OAuthProvider) {
+  const availability = getOAuthProviderAvailability();
+
+  if (!availability[provider].enabled) {
+    redirectWithMessage(availability[provider].disabledReason ?? "OAuth provider is not configured.");
+  }
+
+  const supabase = await getActionClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/app`
+    }
+  });
+
+  if (error || !data.url) {
+    redirectWithMessage(error?.message ?? "Unable to start OAuth sign-in.");
+  }
+
+  redirect(data.url as Route);
+}
+
+export async function signInWithApple() {
+  await signInWithOAuthProvider("apple");
+}
+
+export async function signInWithGoogle() {
+  await signInWithOAuthProvider("google");
 }
 
 export async function signInWithPassword(formData: FormData) {
@@ -35,7 +68,7 @@ export async function signInWithPassword(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect("/app");
 }
 
 export async function signUpWithPassword(formData: FormData) {
@@ -53,5 +86,5 @@ export async function signUpWithPassword(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect("/app");
 }

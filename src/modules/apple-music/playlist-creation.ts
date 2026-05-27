@@ -8,7 +8,7 @@ import { createAppleDeveloperToken } from "@/modules/apple-music/developer-token
 import type {
   AppleMusicConnectionSummary
 } from "@/modules/library-syncs/queue";
-import type { PlaylistCreationJobData } from "@/modules/sorts/confirmation";
+import type { PlaylistCreationJobData } from "@/modules/sorts/export-selection";
 
 export interface ConfirmedSortRunForPlaylistCreation {
   id: string;

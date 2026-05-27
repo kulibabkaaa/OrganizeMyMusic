@@ -10,7 +10,17 @@ export async function POST(
   const { id } = await context.params;
   const session = await createSortCheckoutSession(id);
 
-  if (session.mode === "mock") {
+  if (session.mode === "disabled") {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Checkout is disabled."
+      },
+      { status: 409 }
+    );
+  }
+
+  if (session.mode === "dev_bypass") {
     markSortRunPaid(id);
   }
 

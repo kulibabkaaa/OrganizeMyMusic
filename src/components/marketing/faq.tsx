@@ -12,7 +12,7 @@ const faqs = [
   {
     question: "What happens if Apple Music auth expires?",
     answer:
-      "The sort run stays on your account. If the Apple token is stale at creation time, you reconnect and resume the same paid run."
+      "The Sort stays on your account. If Apple Music access needs to be refreshed, you reconnect and resume the same paid Sort."
   }
 ];
 
@@ -40,4 +40,3 @@ export function Faq() {
     </section>
   );
 }
-

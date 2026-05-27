@@ -1,10 +1,24 @@
-import { env } from "@/lib/env";
-import { logger } from "@/lib/logger";
-import { createPgBoss } from "@/lib/pg-boss";
-import { registerLibrarySyncWorker } from "@/worker/library-sync";
-import { registerPlaylistCreationWorker } from "@/worker/playlist-creation";
+import { loadRuntimeEnv } from "@/lib/load-runtime-env";
+
+loadRuntimeEnv();
 
 async function bootstrap() {
+  const [
+    { env },
+    { logger },
+    { createPgBoss },
+    { registerLibrarySyncWorker },
+    { registerCreateApplePlaylistsWorker },
+    { registerFullSortWorker }
+  ] = await Promise.all([
+    import("@/lib/env"),
+    import("@/lib/logger"),
+    import("@/lib/pg-boss"),
+    import("@/worker/library-sync"),
+    import("@/worker/jobs/create-apple-playlists"),
+    import("@/worker/jobs/full-sort")
+  ]);
+
   if (!env.DATABASE_URL) {
     logger.warn("DATABASE_URL missing, worker boot skipped.");
     return;
@@ -19,12 +33,29 @@ async function bootstrap() {
 
   await boss.start();
   await registerLibrarySyncWorker(boss);
-  await registerPlaylistCreationWorker(boss);
+  await registerFullSortWorker(boss);
+  await registerCreateApplePlaylistsWorker(boss);
 
-  logger.info("Worker started and ready for library sync and playlist creation jobs.");
+  logger.info("Worker started and ready for library sync, full Sort, and playlist creation jobs.");
 }
 
-bootstrap().catch((error) => {
-  logger.error(error, "Worker failed to boot.");
+bootstrap().catch(async (error) => {
+  const [{ logger }, { createPrivacySafeFailure }] = await Promise.all([
+    import("@/lib/logger"),
+    import("@/modules/activity/privacy-safe-observability")
+  ]);
+
+  const failure = createPrivacySafeFailure({
+    workflowName: "Worker boot",
+    error
+  });
+
+  logger.error(
+    {
+      eventType: "worker_boot_failed",
+      failureCategory: failure.category
+    },
+    "Worker failed to boot."
+  );
   process.exit(1);
 });

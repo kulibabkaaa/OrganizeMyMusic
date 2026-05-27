@@ -13,6 +13,8 @@ export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
 export type AppleMusicConnectionStatus = "disconnected" | "connected" | "expired";
 
+export type SortSourceProvider = "apple_music";
+
 export type PlaylistDimension = "language" | "genre" | "mood" | "request";
 
 export type TrackLanguage =
@@ -63,6 +65,43 @@ export type MoodLabel =
   | "Party"
   | "Driving"
   | "Late-Night";
+
+export type PlaylistRecipeTagCategory =
+  | "mood"
+  | "genre"
+  | "language"
+  | "era"
+  | "region"
+  | "energy"
+  | "activity"
+  | "artist_style"
+  | "custom";
+
+export type PlaylistRecipeDuplicatePolicy = "avoid_duplicates" | "allow_duplicates";
+
+export interface PlaylistRecipeTag {
+  id: string;
+  category: PlaylistRecipeTagCategory;
+  value: string;
+  note?: string;
+}
+
+export interface PlaylistRecipe {
+  id: string;
+  userId: string;
+  sortRunId: string;
+  position: number;
+  name: string;
+  playlistNote: string | null;
+  targetTrackMin: number | null;
+  targetTrackMax: number | null;
+  duplicatePolicy: PlaylistRecipeDuplicatePolicy;
+  allowExplicit: boolean;
+  includeLibraryOnly: boolean;
+  tags: PlaylistRecipeTag[];
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface RawAppleTrack {
   id: string;
@@ -160,5 +199,6 @@ export interface JobEvent {
   stage: string;
   level: "info" | "warn" | "error";
   message: string;
+  details?: Record<string, unknown> | null;
   createdAt: string;
 }

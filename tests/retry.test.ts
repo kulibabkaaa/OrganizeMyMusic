@@ -8,8 +8,8 @@ import {
 } from "@/modules/recovery/retry";
 import {
   PLAYLIST_CREATION_JOB_NAME,
-  type PlaylistCreationQueue
-} from "@/modules/sorts/confirmation";
+  type PlaylistExportQueue
+} from "@/modules/sorts/export-selection";
 import type { LibrarySyncSummary } from "@/modules/library-syncs/queue";
 import type { SortRunState } from "@/types/domain";
 
@@ -76,7 +76,7 @@ function createPlaylistCreationQueue() {
   return {
     createQueue: vi.fn(async () => undefined),
     send: vi.fn(async () => "playlist_job_1")
-  } satisfies PlaylistCreationQueue;
+  } satisfies PlaylistExportQueue;
 }
 
 describe("retryLibrarySync", () => {

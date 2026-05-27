@@ -88,6 +88,18 @@ SENTRY_DSN
 it as configuration. Do not add service role, database, Apple, OpenAI, Stripe,
 or encryption values to `NEXT_PUBLIC_*` variables.
 
+Production worker env checklist:
+
+- `DATABASE_URL` points at the intended Supabase Postgres database.
+- `NEXT_PUBLIC_SUPABASE_URL` points at the same Supabase project used by Vercel.
+- `SUPABASE_SERVICE_ROLE_KEY` is present only on server/worker hosts.
+- `APPLE_TEAM_ID`, `APPLE_KEY_ID`, and `APPLE_PRIVATE_KEY` are present together.
+- `OPENAI_API_KEY` is present if classification can call OpenAI.
+- `ENCRYPTION_KEY` matches the Vercel server value used to encrypt/decrypt
+  Apple Music user tokens.
+- `PAYMENTS_DEV_BYPASS_ENABLED` is absent or false in production.
+- No raw Apple Music user token is configured as an environment variable.
+
 ## Deployment Steps
 
 1. Create a Railway project.
@@ -97,11 +109,45 @@ or encryption values to `NEXT_PUBLIC_*` variables.
 5. Add the required environment variables above.
 6. Run `npm run worker:check` in the Railway shell or one-off command runner.
 7. Start the worker service.
-8. Confirm logs contain `Worker started and ready for library sync and playlist creation jobs.`
+8. Confirm logs contain `Worker started and ready for library sync, full Sort, and playlist creation jobs.`
 9. Confirm logs contain `Worker deployment revision.` with the expected commit
    SHA or branch.
 10. Trigger one safe sync job from the web app after Apple Music auth works.
 11. Confirm `job_events` receives worker progress without logging tokens.
+
+## Health Check Steps
+
+Run these before processing real user jobs:
+
+1. Confirm the worker host has the expected environment variables from the
+   checklist above.
+2. Run:
+
+   ```bash
+   npm run worker:check
+   ```
+
+3. Confirm the command exits `0`.
+4. Confirm logs include `Worker deployment revision.`.
+5. Compare the logged `commitSha` or branch with the Vercel deployment.
+6. Confirm the command does not log `DATABASE_URL`, service role, Apple private
+   key, OpenAI key, encryption key, Stripe secret, or Apple Music user tokens.
+7. Start or restart the persistent worker:
+
+   ```bash
+   npm run worker
+   ```
+
+8. Confirm logs include:
+
+   ```text
+   Worker started and ready for library sync, full Sort, and playlist creation jobs.
+   ```
+
+9. Queue one safe library sync from the app.
+10. Confirm `job_events` records queued, started, and completed/failed stages
+    with event types, counts, duration, and failure category if any.
+11. Confirm no Apple Music write-back job runs until review/export confirmation.
 
 ## Verification Status
 
@@ -118,7 +164,13 @@ As of 2026-05-23:
 - `npm run worker:check` exists for non-destructive database connectivity
   checks when a usable `DATABASE_URL` is available locally or in the host shell.
 - `npm run worker:check` now reports sanitized deployment revision metadata
+  before checking pg-boss connectivity.
+- The worker registers three pg-boss queues: library sync, full Sort generation,
+  and reviewed Apple Music playlist creation.
   before testing database connectivity.
+- Standalone worker commands load Next-style env files before validating worker
+  configuration, so local `.env.local` values are available to the health check
+  when they are populated.
 
 ## Stop Conditions
 
@@ -129,3 +181,5 @@ Stop instead of deploying when:
 - `npm run worker:check` fails.
 - Logs expose Apple Music user tokens or server secrets.
 - The worker would create Apple Music playlists without confirmed sort runs.
+- Worker revision does not match the intended web deployment and the mismatch
+  is not explicitly approved.

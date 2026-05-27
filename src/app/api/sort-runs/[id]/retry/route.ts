@@ -20,7 +20,7 @@ export async function POST(
 
   if (!supabase) {
     return NextResponse.json(
-      { error: "Sort run retry storage is not configured." },
+      { error: "Retry is unavailable right now." },
       { status: 503 }
     );
   }
@@ -37,7 +37,7 @@ export async function POST(
 
   if (!result) {
     return NextResponse.json(
-      { error: "Playlist creation queue is not configured." },
+      { error: "Retry is unavailable right now." },
       { status: 503 }
     );
   }

@@ -10,7 +10,8 @@ The app needs to:
 2. Let users authorize Apple Music through MusicKit in the browser.
 3. Store the user's Apple Music token encrypted.
 4. Fetch the user's library songs.
-5. Create playlists in the user's Apple Music account after confirmation.
+5. Create playlists in the user's Apple Music account after explicit
+   confirmation. In the platform UI roadmap this action is called export.
 6. Add selected tracks to those playlists.
 
 ## Token types
@@ -37,6 +38,10 @@ APPLE_TEAM_ID
 APPLE_KEY_ID
 APPLE_PRIVATE_KEY
 ```
+
+`APPLE_PRIVATE_KEY` must contain the full `.p8` private key. The app accepts
+normal PEM newlines or escaped `\n` sequences, but a short key ID or MusicKit
+identifier cannot sign the developer token.
 
 ## Music user token
 
@@ -149,7 +154,7 @@ At minimum:
 
 ## Playlist creation requirements
 
-The write-back worker should:
+The export/write-back worker should:
 
 1. Load confirmed sort run.
 2. Load selected generated playlists.
@@ -161,7 +166,12 @@ The write-back worker should:
 8. Emit job events.
 9. Mark run completed or failed.
 
-`MVP-021` registers the `playlist-create` worker job. It loads a confirmed
+The platform export endpoint is `POST /api/app/sorts/:sortId/export`. It
+persists the reviewed playlist selection, removed tracks, and reviewed playlist
+titles, then queues the `playlist-create` worker job. Legacy confirmation
+endpoints must not queue Apple Music write-back.
+
+`MVP-021` registers the `playlist-create` worker job. It loads an exported
 `creating_playlists` sort run, decrypts the Apple Music user token server-side,
 creates only the selected playlist shells in Apple Music, stores each returned
 `sort_playlists.apple_playlist_id`, skips playlists that already have an Apple
@@ -203,7 +213,7 @@ Handle:
 
 ## What not to do
 
-- Do not write playlists before confirmation.
+- Do not write playlists before explicit confirmation/export.
 - Do not modify or delete existing Apple Music playlists in MVP.
 - Do not try to sync Spotify or YouTube Music in MVP.
 - Do not expose Apple private key in client bundle.

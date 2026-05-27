@@ -6,7 +6,7 @@ OrganizeMyMusic
 
 ## Core idea
 
-A web app that connects to a user's Apple Music library, analyzes their existing saved tracks, proposes better playlists, shows the user the exact planned output, and writes the confirmed playlists back into their Apple Music account.
+A web app that connects to a user's Apple Music library, analyzes their existing saved tracks, lets them create reusable Sorts with Playlist Recipes, previews likely output, and writes reviewed playlists back into their Apple Music account only after explicit export confirmation.
 
 ## MVP focus
 
@@ -37,9 +37,10 @@ show me the proposed playlists, then create them in Apple Music if I confirm.
 5. Classify tracks by metadata, language, genre, mood, and practical use case.
 6. Let the user describe or select desired playlists.
 7. Generate proposed playlists from the user's existing tracks.
-8. Show the user the playlists and included tracks before writing anything.
-9. Let the user approve, edit, or reject the proposed output.
-10. Create approved playlists in Apple Music.
+8. Show the user a lightweight preview before payment.
+9. Unlock a specific Sort with payment when payment is enabled.
+10. Let the user review, edit, or reject the generated output.
+11. Create reviewed playlists in Apple Music only after explicit export.
 
 ## MVP definition
 
@@ -48,11 +49,12 @@ The MVP is complete when one real user can:
 1. Sign up or sign in.
 2. Connect Apple Music.
 3. Sync at least 500 saved library tracks.
-4. Request at least three custom playlists.
-5. See a preview with track names, artists, playlist names, and track counts.
-6. Confirm the preview.
-7. Have the playlists created in their real Apple Music account.
-8. See completion status and any errors.
+4. Request at least three custom playlists, or create at least three Playlist Recipes once the platform UI is implemented.
+5. See a preview with playlist names, sample or full track rows, and track counts.
+6. Review the generated output.
+7. Explicitly export the reviewed playlists.
+8. Have the playlists created in their real Apple Music account.
+9. See completion status and any errors.
 
 ## Non-goals for MVP
 
@@ -75,6 +77,7 @@ The MVP succeeds if:
 
 - A real Apple Music user can complete the full flow without developer intervention.
 - The app never writes to Apple Music before confirmation.
+- The app treats payment as an unlock for one Sort, not as a required signup or connection step.
 - The app can recover from failed sync/classification/write-back jobs.
 - The generated playlists are plausible enough that the user keeps at least some of them.
 - The codebase is structured so Spotify and YouTube Music can be added later without rewriting the whole app.

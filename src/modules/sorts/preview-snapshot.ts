@@ -20,7 +20,7 @@ export interface PreviewSnapshot {
 export interface PreviewSortRun {
   id: string;
   userId: string;
-  librarySyncId: string;
+  librarySyncId: string | null;
   state: SortRunState;
   paymentStatus: PaymentStatus;
   previewSnapshot: PreviewSnapshot | null;
@@ -75,6 +75,9 @@ export type PreviewSnapshotResult =
     }
   | {
       status: "not_found";
+    }
+  | {
+      status: "missing_library_sync";
     };
 
 const immutablePreviewStates = new Set<SortRunState>([
@@ -83,6 +86,13 @@ const immutablePreviewStates = new Set<SortRunState>([
   "creating_playlists",
   "completed"
 ]);
+
+export function isPreviewImmutable(input: {
+  state: SortRunState;
+  paymentStatus: PaymentStatus;
+}) {
+  return immutablePreviewStates.has(input.state) || input.paymentStatus !== "pending";
+}
 
 export async function generateAndStorePreviewSnapshot(input: {
   store: PreviewSnapshotStore;
@@ -99,7 +109,7 @@ export async function generateAndStorePreviewSnapshot(input: {
     return { status: "not_found" };
   }
 
-  if (immutablePreviewStates.has(sortRun.state)) {
+  if (isPreviewImmutable(sortRun)) {
     return {
       status: "immutable",
       snapshot: sortRun.previewSnapshot
@@ -111,6 +121,10 @@ export async function generateAndStorePreviewSnapshot(input: {
       status: "existing",
       snapshot: sortRun.previewSnapshot
     };
+  }
+
+  if (!sortRun.librarySyncId) {
+    return { status: "missing_library_sync" };
   }
 
   const tracks = await input.store.listTracksForPreview({
@@ -147,6 +161,34 @@ export async function generateAndStorePreviewSnapshot(input: {
       snapshot
     })
   };
+}
+
+export async function saveSortRunPreviewSnapshotOnly<TSnapshot>(input: {
+  supabase: SupabaseClient;
+  sortRun: Pick<PreviewSortRun, "id" | "userId" | "state" | "paymentStatus">;
+  snapshot: TSnapshot;
+}): Promise<TSnapshot> {
+  if (isPreviewImmutable(input.sortRun)) {
+    return input.snapshot;
+  }
+
+  const { error } = await input.supabase
+    .from("sort_runs")
+    .update({
+      state: "preview_ready",
+      preview_snapshot: input.snapshot,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", input.sortRun.id)
+    .eq("user_id", input.sortRun.userId)
+    .eq("state", input.sortRun.state)
+    .eq("payment_status", "pending");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return input.snapshot;
 }
 
 type SortRunRow = {

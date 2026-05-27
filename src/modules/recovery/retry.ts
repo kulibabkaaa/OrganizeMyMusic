@@ -7,8 +7,8 @@ import {
 import {
   PLAYLIST_CREATION_JOB_NAME,
   type PlaylistCreationJobData,
-  type PlaylistCreationQueue
-} from "@/modules/sorts/confirmation";
+  type PlaylistExportQueue
+} from "@/modules/sorts/export-selection";
 import type { SortRunState } from "@/types/domain";
 
 export type RetryLibrarySyncResult =
@@ -119,7 +119,7 @@ export async function retryLibrarySync(input: {
 
 export async function retrySortRunWriteBack(input: {
   store: SortRunRetryStore;
-  queue: PlaylistCreationQueue;
+  queue: PlaylistExportQueue;
   sortRunId: string;
   userId: string;
 }): Promise<RetrySortRunResult> {

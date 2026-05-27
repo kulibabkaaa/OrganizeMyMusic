@@ -9,8 +9,9 @@ The MVP is done only when a real user can complete the full flow:
 3. Sync their Apple Music saved library.
 4. Request custom playlists.
 5. See a preview.
-6. Confirm the output.
-7. See playlists appear in their Apple Music account.
+6. Review the output.
+7. Explicitly confirm/export the reviewed playlists.
+8. See playlists appear in their Apple Music account.
 
 ## Required user flow
 
@@ -18,7 +19,9 @@ The MVP is done only when a real user can complete the full flow:
 
 - User can sign up or sign in.
 - User has a profile row.
-- User can access `/dashboard`.
+- User can access the private dashboard.
+- During the platform UI migration, `/app` becomes the canonical dashboard and
+  `/dashboard` remains a redirect or alias.
 - Signed-out users cannot access private user data.
 
 ### 2. Apple Music connection
@@ -60,11 +63,11 @@ The MVP is done only when a real user can complete the full flow:
 - User can remove tracks if implemented.
 - Preview snapshot is stable after confirmation/payment state begins.
 
-### 7. Confirmation
+### 7. Review and export confirmation
 
-- App requires explicit confirmation.
+- App requires explicit review/export confirmation.
 - App clearly states how many playlists and tracks will be created.
-- No Apple Music writes happen before confirmation.
+- No Apple Music writes happen before confirmation/export.
 
 ### 8. Apple Music write-back
 
@@ -81,6 +84,19 @@ The MVP is done only when a real user can complete the full flow:
 - Apple private key is never exposed to browser code.
 - Users cannot access other users' music data.
 - Failed jobs can be retried without duplicating already created playlists.
+
+## Platform UI acceptance layer
+
+After the working Apple Music MVP, UI work should follow
+`UI_PLATFORM_FLOW_ROADMAP.md`:
+
+- Preserve the public landing page visuals.
+- Route users through `/auth` and `/app`.
+- Use Sorts and Playlist Recipes as product terms.
+- Show preview before payment.
+- Scope payment to one Sort.
+- Keep review separate from export.
+- Export creates new Apple Music playlists only after explicit user action.
 
 ## MVP is not done if
 

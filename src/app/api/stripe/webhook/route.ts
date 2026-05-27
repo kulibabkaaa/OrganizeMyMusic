@@ -8,10 +8,13 @@ export async function POST(request: Request) {
   const stripe = getStripe();
 
   if (!stripe || !env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({
-      ok: true,
-      mode: "mock"
-    });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Stripe webhook is not configured."
+      },
+      { status: 503 }
+    );
   }
 
   const body = await request.text();
@@ -28,4 +31,3 @@ export async function POST(request: Request) {
     type: event.type
   });
 }
-

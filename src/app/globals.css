@@ -3,9 +3,23 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  --font-body: "Inter", "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Space Grotesk", "Avenir Next", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+  --bg: #030103;
+  --burgundy: #19040a;
+  --card: rgba(255, 255, 255, 0.055);
+  --card-elevated: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.12);
+  --fg: #ffffff;
+  --secondary: #b9aeb5;
+  --muted: #7e747a;
+  --pink: #ff2d55;
+  --red: #ff174c;
+  --success: #39d98a;
+  --warning: #ffb020;
+  --danger: #ff4d6d;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Geist", "Inter", system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 
 html {
@@ -14,8 +28,11 @@ html {
 
 body {
   margin: 0;
-  background: #ffffff;
-  color: #000000;
+  background:
+    radial-gradient(circle at 78% 8%, rgba(255, 45, 85, 0.12), transparent 24rem),
+    radial-gradient(circle at 12% 0%, rgba(25, 4, 10, 0.88), transparent 32rem),
+    linear-gradient(180deg, var(--burgundy) 0%, var(--bg) 34rem);
+  color: var(--fg);
   font-family: var(--font-body), sans-serif;
 }
 
@@ -29,5 +46,6 @@ a {
 }
 
 ::selection {
-  background: rgba(255, 4, 54, 0.16);
+  background: rgba(255, 45, 85, 0.24);
+  color: var(--fg);
 }

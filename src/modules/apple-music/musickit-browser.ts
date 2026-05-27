@@ -42,7 +42,18 @@ export async function fetchAppleDeveloperToken(fetcher: typeof fetch = fetch) {
   });
 
   if (!response.ok) {
-    throw new Error("Unable to fetch Apple Music developer token.");
+    const payload = z
+      .object({
+        error: z.string().optional(),
+        missing: z.array(z.string()).optional()
+      })
+      .catch({})
+      .parse(await response.json().catch(() => ({})));
+    const missing = payload.missing?.length ? ` Missing: ${payload.missing.join(", ")}.` : "";
+
+    throw new Error(
+      `${payload.error ?? "Unable to fetch Apple Music developer token."}${missing}`
+    );
   }
 
   return developerTokenResponseSchema.parse(await response.json());

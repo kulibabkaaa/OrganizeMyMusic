@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -74,12 +75,12 @@ export function PlaylistRequestCard({
             Define the playlists you want.
           </h2>
         </div>
-        <StatusPill label={sortRunId ? "Requests saved" : "Parser ready"} tone={sortRunId ? "success" : "inverse"} />
+        <StatusPill label={sortRunId ? "Requests saved" : "Create a Sort"} tone={sortRunId ? "success" : "inverse"} />
       </div>
 
       <p className="mt-3 max-w-2xl text-sm leading-7 text-white/62">
-        Add at least three playlist ideas. This saves structured rules only; Apple Music write-back
-        remains blocked until preview and confirmation.
+        Add at least three playlist ideas. You can preview results before anything is exported to
+        Apple Music.
       </p>
 
       <label className="mt-5 block text-sm font-medium text-white/72" htmlFor="playlist-requests">
@@ -111,7 +112,7 @@ export function PlaylistRequestCard({
             <Link href={`/sorts/${sortRunId}`} className="inline-flex">
               <Button variant="secondary">Review preview</Button>
             </Link>
-            <span className="text-sm text-white/48">Sort run: {sortRunId}</span>
+            <span className="text-sm text-white/48">Preview ready.</span>
           </>
         ) : null}
       </div>
