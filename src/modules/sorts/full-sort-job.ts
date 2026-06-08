@@ -150,7 +150,7 @@ export async function queueFullSortAfterPayment(input: {
   if (!sortRun) {
     return {
       status: "not_ready",
-      message: "Paid Sort is not ready for full organization."
+      message: "Organization is not ready to start."
     };
   }
 
@@ -203,7 +203,7 @@ export async function handleFullSortJob(input: {
   const sortRun = await input.store.getPaidSortRunForFullSort(input.data);
 
   if (!sortRun) {
-    throw new Error("Paid Sort is not ready for full organization.");
+    throw new Error("Organization is not ready to start.");
   }
 
   if (sortRun.generatedPlaylistCount > 0) {

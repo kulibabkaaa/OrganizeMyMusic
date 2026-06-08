@@ -56,10 +56,11 @@ describe("billing page", () => {
     expect(markup).not.toContain("subscription plan");
     expect(markup).not.toContain("Pay per Sort");
     expect(markup).not.toContain("checkout controls");
-    expect(markup).not.toContain("Historical paid Sorts");
+    expect(markup).not.toContain("Pay per Sort");
+    expect(markup).toContain("Historical organization billing records will appear here");
   });
 
-  it("renders paid Sorts, payment history, and receipt links", () => {
+  it("renders historical organization billing records, payment history, and receipt links", () => {
     const markup = renderToStaticMarkup(<BillingPage summary={paidSummary} />);
 
     expect(markup).toContain("My Apple Music cleanup");

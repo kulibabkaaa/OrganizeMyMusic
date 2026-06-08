@@ -181,7 +181,7 @@ The target route structure should use `/app` as the platform home. Keep redirect
 /app/sorts/[sortId]/complete       Export complete
 /app/library                       Connected library overview
 /app/settings/libraries            Provider management
-/app/billing                       Billing and paid Sorts
+/app/billing                       Deferred billing and historical records
 /admin/sort-runs                   Admin/developer diagnostics only
 ```
 
@@ -405,7 +405,7 @@ processing.html               FLOW-022 processing page.
 review-playlists.html         FLOW-023 three-pane review workspace.
 export-complete.html          FLOW-025 complete state.
 settings-libraries.html       FLOW-012 library/settings page.
-billing.html                  FLOW-026 pay-per-Sort billing.
+billing.html                  FLOW-026 historical billing surface.
 ```
 
 Reference interpretation rules:
@@ -634,7 +634,7 @@ export type SortUiStatus =
 Acceptance criteria:
 
 - Draft Sorts route to builder.
-- Preview-ready unpaid Sorts route to preview.
+- Preview-ready Sorts route to preview.
 - Paid/processing Sorts route to processing.
 - Ready-for-review Sorts route to review.
 - Exporting Sorts route to exporting.
@@ -1877,10 +1877,10 @@ Tasks:
 ```text
 Pay per Sort
 No active subscription.
-Each paid Sort unlocks full analysis, editable results, and Apple Music export for that Sort.
+Historical billing records remain visible for existing accounts while new billing is deferred.
 ```
 
-- Show paid Sorts.
+- Show historical organization billing records.
 - Show payment history.
 - Show receipts if Stripe provides them.
 - Add Manage billing settings placeholder or Stripe customer portal if configured.
@@ -1889,7 +1889,7 @@ Acceptance criteria:
 
 - No subscription-first wording.
 - Empty billing state works.
-- Paid Sorts appear when payment rows exist.
+- Historical organization billing records appear when payment rows exist.
 
 ---
 
@@ -2020,13 +2020,13 @@ Safe preflight completed:
   create its IPC pipe.
 - Supabase MCP aggregate preflight found one target profile, one connected
   Apple Music connection, two completed syncs, max 378 raw tracks, max 360
-  normalized tracks, two Sorts, zero paid Sorts, four generated playlists, and
+  normalized tracks, two Sorts, zero historical billing records, four generated playlists, and
   six generated playlist tracks.
 - No Apple Music export smoke was attempted.
 - The user completed real Apple Music sign-in in Safari and local sync now
   works. Supabase aggregate preflight found one connected Apple Music
   connection, five completed syncs, max 378 raw tracks, max 360 normalized
-  tracks, two Sorts, zero paid Sorts, and one historical export-started Sort.
+  tracks, two Sorts, zero historical billing records, and one historical export-started Sort.
 
 Goal: verify the redesigned platform flow works with the real backend.
 

@@ -134,7 +134,7 @@ describe("full sort job", () => {
       })
     ).resolves.toEqual({
       status: "not_ready",
-      message: "Paid Sort is not ready for full organization."
+      message: "Organization is not ready to start."
     });
 
     expect(queue.send).not.toHaveBeenCalled();

@@ -29,10 +29,10 @@ export function PaymentHistoryTable({
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-            <caption className="sr-only">Payment history for Sort billing records</caption>
+            <caption className="sr-only">Payment history for organization billing records</caption>
             <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-platform-muted">
               <tr>
-                <th scope="col" className="px-3 py-3 font-medium">Sort</th>
+                <th scope="col" className="px-3 py-3 font-medium">Organization</th>
                 <th scope="col" className="px-3 py-3 font-medium">Date</th>
                 <th scope="col" className="px-3 py-3 font-medium">Amount</th>
                 <th scope="col" className="px-3 py-3 font-medium">Status</th>

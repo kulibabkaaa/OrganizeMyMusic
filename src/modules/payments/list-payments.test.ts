@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { summarizeBillingData } from "@/modules/payments/list-payments";
 
 describe("billing summary", () => {
-  it("lists historical paid Sorts and payment history with deferred billing copy", () => {
+  it("lists historical organization billing records with deferred billing copy", () => {
     const summary = summarizeBillingData({
       sortRuns: [
         {

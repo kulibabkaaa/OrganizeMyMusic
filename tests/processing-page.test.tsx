@@ -21,7 +21,7 @@ const progress = getSortProcessingProgress({
 });
 
 describe("processing page", () => {
-  it("renders the paid Sort processing state and dashboard return action", () => {
+  it("renders the full-organization processing state and dashboard return action", () => {
     const markup = renderToStaticMarkup(
       <ProcessingPage
         sortId="33333333-3333-4333-8333-333333333333"
