@@ -45,6 +45,9 @@ Latest local audit on 2026-06-08:
   playlists through the public API.
 - Playlist generation export now requires a saved track review before queuing
   Apple Music writes; `ready_for_review` generations cannot be exported.
+- Individual playlist track toggles now save keep/remove decisions without
+  prematurely marking the whole generation reviewed; only `Mark Review Complete`
+  unlocks export.
 - Sort batch export now mirrors reviewed keep/remove choices into persistent
   playlist generation tracks, so Playlist Hub review state matches the exported
   Sort selection.

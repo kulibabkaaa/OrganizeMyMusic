@@ -475,10 +475,55 @@ describe("platform playlist API routes", () => {
       userId: "user_1",
       playlistId: playlist.id,
       generationId: generation.generation.id,
+      markReviewed: false,
       decisions: [
         {
           trackId: generation.tracks[0].id,
           decision: "remove"
+        }
+      ]
+    });
+  });
+
+  it("marks a generated playlist reviewed only when review completion is explicit", async () => {
+    const response = await PATCH_GENERATION_TRACKS(
+      new Request("http://test.local", {
+        method: "PATCH",
+        body: JSON.stringify({
+          markReviewed: true,
+          decisions: [
+            {
+              trackId: generation.tracks[0].id,
+              decision: "keep"
+            }
+          ]
+        })
+      }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      generation: {
+        generation: {
+          id: generation.generation.id
+        }
+      }
+    });
+    expect(response.status).toBe(200);
+    expect(generationStore.updateTrackDecisions).toHaveBeenCalledWith({
+      userId: "user_1",
+      playlistId: playlist.id,
+      generationId: generation.generation.id,
+      markReviewed: true,
+      decisions: [
+        {
+          trackId: generation.tracks[0].id,
+          decision: "keep"
         }
       ]
     });

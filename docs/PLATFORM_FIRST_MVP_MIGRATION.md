@@ -244,6 +244,8 @@ Current MVP implementation:
 - Sort export queues `playlist-create`; the worker writes Apple playlist IDs back to persistent playlist records.
 - Individual playlist export requires the user to save the track review before
   Apple Music export can be queued.
+- Individual track toggles persist keep/remove decisions but do not mark the
+  generation reviewed until the user clicks `Mark Review Complete`.
 - Individual playlist export failure summaries are privacy-safe and do not persist raw Apple Music tokens or track names.
 
 ### PFM-008 New music processing
