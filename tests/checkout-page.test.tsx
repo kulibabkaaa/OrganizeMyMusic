@@ -50,8 +50,8 @@ describe("CheckoutPage", () => {
       />
     );
 
-    expect(markup).toContain("Payment paused");
-    expect(markup).toContain("Full Sort processing is disabled in this environment.");
+    expect(markup).toContain("Full Sort paused");
+    expect(markup).toContain("Full Sort processing is paused in this environment.");
     expect(markup).toContain('id="checkout-disabled-reason"');
     expect(markup).toContain('aria-describedby="checkout-disabled-reason"');
     expect(markup).toContain("disabled");

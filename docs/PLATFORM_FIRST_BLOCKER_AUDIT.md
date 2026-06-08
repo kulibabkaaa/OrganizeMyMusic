@@ -17,6 +17,8 @@ Latest local audit on 2026-06-08:
 - Legacy `/sorts/:id` page links now redirect into `/app/sorts/:id` instead of
   rendering the old standalone preview UI.
 - Legacy payment-first Sort copy has been softened for deferred billing.
+- Preview and full-Sort start copy now avoids checkout-first language while
+  billing is deferred.
 - Full Sort checkout now defaults to billing-deferred unlock so a real MVP user
   can start full-library organization without enabling Stripe or dev bypass.
 - `GET /api/apple/connection` now exposes authenticated Apple Music connection

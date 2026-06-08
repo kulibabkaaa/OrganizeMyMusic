@@ -29,7 +29,7 @@ export function CheckoutAction({
         | null;
 
       if (!response.ok) {
-        setError(payload?.error ?? "Checkout could not start.");
+        setError(payload?.error ?? "Full Sort could not start.");
         return;
       }
 

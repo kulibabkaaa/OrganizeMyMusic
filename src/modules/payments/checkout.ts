@@ -61,7 +61,7 @@ export function summarizeCheckout(input: {
   const estimatedTrackCount = input.estimatedTrackCount ?? input.recipeCount * 30;
 
   return {
-    title: input.mode === "deferred" ? "Start full Sort" : "Unlock this Sort",
+    title: input.mode === "deferred" ? "Start full Sort" : "Start this Sort",
     description:
       "Generate full playlists from your Apple Music library, review the results, and export them to Apple Music.",
     sortName: input.sortName,
