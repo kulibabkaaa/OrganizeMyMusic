@@ -254,7 +254,7 @@ Rules:
 
 - Requires authenticated user.
 - Requires explicit user action.
-- Persists selected playlists and removed tracks.
+- Persists playlists approved for export and removed tracks.
 - Queues `playlist-create` for the persistent worker.
 - Does not promise exact replacement, reorder, or automatic removal in Apple Music.
 
@@ -381,7 +381,7 @@ Response:
 
 ### `POST /api/sort-runs/:sortRunId/confirm`
 
-Confirms selected playlists and queues Apple Music write-back.
+Confirms playlists approved for export and queues Apple Music write-back.
 
 Request:
 
@@ -411,7 +411,7 @@ Rules:
 - Must require explicit user action.
 - Must not run on page load.
 - Must not confirm runs owned by another user.
-- Persists selected playlists in `sort_playlists.selected`.
+- Persists playlists approved for export in `sort_playlists.selected`.
 - Persists removed tracks in `sort_playlist_tracks.removed_by_user`.
 - Queues `playlist-create` for the persistent worker.
 

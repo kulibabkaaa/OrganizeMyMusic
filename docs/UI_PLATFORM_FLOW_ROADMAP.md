@@ -1552,7 +1552,7 @@ Generate full playlists from your Apple Music library, review the results, and e
   - Full library analysis
   - Generated playlists from your recipes
   - Track-level review before export
-  - Create playlists in Apple Music
+  - Create Apple Music playlists and add approved tracks
 - CTA:
 
 ```text
@@ -1739,7 +1739,7 @@ Playlist actions:
 Primary CTA:
 
 ```text
-Create playlists in Apple Music
+Create Apple Music playlists
 ```
 
 Secondary CTA:
@@ -1751,7 +1751,7 @@ Save for later
 Trust copy:
 
 ```text
-Nothing is exported automatically. Existing Apple Music playlists will not be modified.
+Nothing is exported automatically. Export creates Apple Music playlists and adds approved tracks.
 ```
 
 Acceptance criteria:
