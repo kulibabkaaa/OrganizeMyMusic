@@ -18,6 +18,9 @@ Latest local audit on 2026-06-08:
   always-visible metrics, safety panels, and history blocks.
 - Logger redaction now recursively sanitizes token-like, secret-like, private
   key, cookie, and authorization fields before logs are emitted.
+- Export safety tests now cover both disabled legacy write endpoints and
+  invalid playlist-generation export states before any export row or queue job
+  is created.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` pass locally.

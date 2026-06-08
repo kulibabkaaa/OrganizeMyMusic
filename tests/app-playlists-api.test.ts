@@ -445,4 +445,26 @@ describe("platform playlist API routes", () => {
       generationId: generation.generation.id
     });
   });
+
+  it("returns conflict when a playlist generation has not reached reviewable export state", async () => {
+    queuePlaylistGenerationExportMock.mockResolvedValueOnce({
+      status: "invalid_state",
+      message: "Review the generated playlist before export."
+    });
+
+    const response = await EXPORT_GENERATION(
+      new Request("http://test.local", { method: "POST" }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Review the generated playlist before export."
+    });
+    expect(response.status).toBe(409);
+  });
 });

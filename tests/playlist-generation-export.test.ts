@@ -86,6 +86,36 @@ describe("playlist generation export", () => {
     );
   });
 
+  it("does not create an export row or queue a job before reviewable state", async () => {
+    vi.clearAllMocks();
+    vi.mocked(store.getGeneration).mockResolvedValueOnce({
+      id: "generation_1",
+      user_id: "user_1",
+      playlist_id: "playlist_1",
+      status: "failed" as const
+    });
+    const queue = {
+      createQueue: vi.fn(),
+      send: vi.fn(async () => "job_1")
+    };
+
+    const result = await queuePlaylistGenerationExport({
+      store,
+      queue,
+      userId: "user_1",
+      playlistId: "playlist_1",
+      generationId: "generation_1"
+    });
+
+    expect(result).toEqual({
+      status: "invalid_state",
+      message: "Review the generated playlist before export."
+    });
+    expect(store.createExportRow).not.toHaveBeenCalled();
+    expect(store.markExporting).not.toHaveBeenCalled();
+    expect(queue.send).not.toHaveBeenCalled();
+  });
+
   it("creates an Apple Music playlist and adds only approved addable tracks", async () => {
     vi.clearAllMocks();
     const createLibraryPlaylist = vi.fn(async () => ({ id: "apple_playlist_1" }));
