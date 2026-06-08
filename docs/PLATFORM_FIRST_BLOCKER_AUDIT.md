@@ -356,11 +356,11 @@ syncs to count newly added songs, then stores
 `playlists.last_processed_new_music_sync_id` after user-triggered processing so
 the same latest sync is not repeatedly treated as pending for a saved playlist.
 
-Remaining follow-up:
+Resolved follow-up on 2026-06-08:
 
-- Decide whether new-music generations should be visually labeled as
-  incremental suggestions versus full playlist regenerations in the playlist
-  workspace history.
+- New-music generations are visually labeled as `New music suggestions` in the
+  active review panel and `new music suggestions` in playlist history, separate
+  from full playlist generations.
 
 ### 6. AI quality and cost
 

@@ -349,7 +349,8 @@ describe("playlists page", () => {
     expect(markup).toContain("New music suggestions");
     expect(markup).toContain("Review new music suggestions");
     expect(markup).toContain("These tracks were suggested from your latest library sync.");
-    expect(markup).toContain("new music");
+    expect(markup).toContain("Full playlist generations and new-music suggestion runs stay visible separately.");
+    expect(markup).toContain("new music suggestions");
   });
 
   it("renders an explicit playlist export confirmation dialog", () => {

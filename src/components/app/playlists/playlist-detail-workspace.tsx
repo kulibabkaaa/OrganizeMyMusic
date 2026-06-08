@@ -609,8 +609,8 @@ export function PlaylistDetailWorkspace({
               Generation history
             </span>
             <span className="mt-2 block max-w-3xl text-sm leading-7 text-platform-secondary">
-              Regenerate this playlist anytime. Previous generation records stay visible so users
-              can see when the recipe last produced tracks.
+              Regenerate this playlist anytime. Full playlist generations and new-music
+              suggestion runs stay visible separately.
             </span>
           </span>
           <StatusPill
@@ -639,7 +639,7 @@ export function PlaylistDetailWorkspace({
                 <StatusPill
                   label={
                     getGenerationKind(item.generation.recipeSnapshot) === "new_music"
-                      ? "new music"
+                      ? "new music suggestions"
                       : item.generation.status.replaceAll("_", " ")
                   }
                   tone={item.generation.status === "exported" ? "success" : "warning"}
