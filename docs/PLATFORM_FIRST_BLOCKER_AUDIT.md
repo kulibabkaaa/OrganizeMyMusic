@@ -13,6 +13,11 @@ Latest local audit on 2026-06-08:
 - `/api/app/sorts/*` and playlist generation/export API docs match the implemented routes.
 - Legacy Sort preview navigation points into `/app/sorts/*`.
 - Legacy payment-first Sort copy has been softened for deferred billing.
+- `/app` is the canonical dashboard route and `/dashboard` redirects there.
+- The playlist hub and playlist detail screens were simplified to reduce
+  always-visible metrics, safety panels, and history blocks.
+- Logger redaction now recursively sanitizes token-like, secret-like, private
+  key, cookie, and authorization fields before logs are emitted.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` pass locally.

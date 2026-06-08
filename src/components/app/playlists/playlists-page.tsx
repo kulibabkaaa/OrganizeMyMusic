@@ -26,41 +26,15 @@ export function PlaylistsPage({ playlists }: { playlists: PersistentPlaylist[] }
             Define the playlist, keep the recipe simple, generate proposed tracks, review every
             track, then export approved tracks to Apple Music.
           </p>
+          <p className="mt-2 max-w-2xl text-xs leading-6 text-platform-muted">
+            MVP safety: Organize Your Music only manages playlists created here. Existing Apple
+            Music playlists stay untouched.
+          </p>
         </div>
         <Link href="/app/playlists/new" className="inline-flex">
           <Button className="min-w-40">Create Playlist</Button>
         </Link>
       </section>
-
-      <section className="mt-6 grid gap-4 md:grid-cols-3">
-        <MetricCard label="Saved playlists" value={playlists.length.toString()} />
-        <MetricCard
-          label="Ready to manage"
-          value={playlists.filter((playlist) => playlist.status === "active").length.toString()}
-        />
-        <MetricCard
-          label="Apple Music exports"
-          value={playlists.filter((playlist) => playlist.applePlaylistId).length.toString()}
-        />
-      </section>
-
-      <Card as="section" className="mt-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <StatusPill label="MVP safety" tone="warning" />
-            <h2 className="mt-4 font-display text-2xl font-semibold tracking-[0em] text-white">
-              App-created playlists only
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-platform-secondary">
-              The MVP manages playlists created here. Existing Apple Music playlists stay untouched
-              unless the user explicitly exports approved tracks through this app.
-            </p>
-          </div>
-          <Link href="/app/sorts/new" className="inline-flex">
-            <Button variant="glass">Organize My Library</Button>
-          </Link>
-        </div>
-      </Card>
 
       <section className="mt-6">
         {playlists.length === 0 ? (
@@ -107,17 +81,6 @@ function PlaylistCard({ playlist }: { playlist: PersistentPlaylist }) {
           Open
         </Button>
       </Link>
-    </Card>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card as="article" className="min-h-32">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-platform-muted">
-        {label}
-      </p>
-      <p className="mt-3 font-display text-4xl font-semibold tracking-[0em] text-white">{value}</p>
     </Card>
   );
 }

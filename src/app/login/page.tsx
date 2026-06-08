@@ -15,7 +15,7 @@ export default async function LoginPage({
   const session = await getAuthenticatedSession();
 
   if (session.status === "authenticated") {
-    redirect("/dashboard");
+    redirect("/app");
   }
 
   const { message } = await searchParams;

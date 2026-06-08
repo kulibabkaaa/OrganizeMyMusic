@@ -17,7 +17,7 @@ export function SiteHeader() {
           <a href="#faq">FAQ</a>
         </nav>
 
-        <Link href="/dashboard">
+        <Link href="/app">
           <Button className="bg-white text-black shadow-none">Open app</Button>
         </Link>
       </div>
