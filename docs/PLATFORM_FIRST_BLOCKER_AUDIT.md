@@ -83,6 +83,9 @@ Latest local audit on 2026-06-08:
 - Admin Sort-run inspection now requires an authenticated admin profile and
   reads Sort runs, playlist counts, owner profiles, and job events from
   Supabase instead of demo Sort data.
+- Full-organization start and preview screens now avoid checkout-first wording
+  in the billing-deferred MVP path; copy uses organization, generation, review,
+  `Create Apple Music playlists`, and `add approved tracks` language.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - Supabase MCP read-only check on 2026-06-08 confirmed project
@@ -193,7 +196,7 @@ Current MVP behavior:
 - `PAYMENTS_DEV_BYPASS_ENABLED=true` uses the explicitly approved development
   bypass.
 - With both flags unset or false, full Sort processing uses billing-deferred
-  unlock after the user clicks `Start full Sort`.
+  unlock after the user clicks `Generate full results`.
 
 Decision needed later:
 

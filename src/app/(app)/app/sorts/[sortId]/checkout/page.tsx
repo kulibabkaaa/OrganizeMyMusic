@@ -50,7 +50,7 @@ export default async function SortCheckoutPage({
 
   return (
     <AppShell
-      title="Start full Sort"
+      title="Start full library organization"
       subtitle="Review the full-library organization plan before processing starts."
     >
       <CheckoutPage sortId={sort.id} mode={mode} summary={summary} />

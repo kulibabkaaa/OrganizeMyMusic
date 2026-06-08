@@ -49,12 +49,14 @@ describe("billing page", () => {
     expect(markup).toContain("No active subscription or paid plan.");
     expect(markup).toContain("Billing is paused while the Apple Music platform workflow is verified.");
     expect(markup).toContain("playlist recipes, review, and app-created playlist export");
-    expect(markup).toContain("No paid Sorts yet.");
+    expect(markup).toContain("No billing records yet.");
     expect(markup).toContain("No payment history yet.");
-    expect(markup).toContain("Billing settings paused");
+    expect(markup).toContain("Billing controls paused");
     expect(markup).not.toContain("monthly");
     expect(markup).not.toContain("subscription plan");
     expect(markup).not.toContain("Pay per Sort");
+    expect(markup).not.toContain("checkout controls");
+    expect(markup).not.toContain("Historical paid Sorts");
   });
 
   it("renders paid Sorts, payment history, and receipt links", () => {

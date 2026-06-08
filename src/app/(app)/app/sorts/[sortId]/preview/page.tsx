@@ -51,7 +51,7 @@ export default async function SortPreviewPage({
     return (
       <AppShell
         title="Preview Sort"
-        subtitle="Review likely playlist output before starting full processing."
+        subtitle="Review likely playlist output before starting full organization."
       >
         <PreviewPaywallPage sortName={sort.name} snapshot={preview.snapshot} />
       </AppShell>
@@ -62,7 +62,7 @@ export default async function SortPreviewPage({
     return (
       <AppShell
         title="Preview Sort"
-        subtitle="Review likely playlist output before starting full processing."
+        subtitle="Review likely playlist output before starting full organization."
       >
         <PreviewPaywallPage sortName={sort.name} snapshot={preview.snapshot} />
       </AppShell>

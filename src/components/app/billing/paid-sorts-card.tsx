@@ -12,17 +12,17 @@ export function PaidSortsCard({ paidSorts }: { paidSorts: PaidSortSummary[] }) {
     <Card className="space-y-5">
       <div>
         <h2 className="font-display text-2xl font-semibold tracking-[0em] text-white">
-          Historical paid Sorts
+          Historical billing records
         </h2>
         <p className="mt-2 text-sm leading-6 text-platform-secondary">
-          Previous one-time Sort purchases remain visible for existing records.
+          Previous Sort billing records remain visible for existing accounts.
         </p>
       </div>
 
       {paidSorts.length === 0 ? (
         <EmptyState
-          title="No paid Sorts yet."
-          description="Historical paid Sorts will appear here if paid records exist."
+          title="No billing records yet."
+          description="Historical Sort billing records will appear here if records exist."
         />
       ) : (
         <div className="grid gap-3">
