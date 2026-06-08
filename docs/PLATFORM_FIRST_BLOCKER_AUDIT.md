@@ -85,6 +85,12 @@ Latest local audit on 2026-06-08:
   Supabase instead of demo Sort data.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
+- Supabase MCP read-only check on 2026-06-08 confirmed project
+  `lxkinmyfcarpnynapewt` is `ACTIVE_HEALTHY` and migrations through
+  `playlist_new_music_processing` are applied.
+- Vercel MCP read-only log checks on 2026-06-08 found no preview error/fatal
+  runtime logs in the prior 2 hours and no production error/fatal runtime logs
+  in the prior 24 hours.
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
 - `npm run platform:check` passes with required env, migrations, RLS, linking
   columns, recipe scope, worker queue registration, and no queued MVP jobs.
