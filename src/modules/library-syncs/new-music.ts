@@ -41,6 +41,12 @@ export interface NewMusicStore {
     playlistIds: string[];
     syncId: string;
   }): Promise<void>;
+  storeNewMusicGenerations?(input: {
+    userId: string;
+    syncId: string;
+    playlistRecipes: NewMusicPlaylistRecipe[];
+    recommendations: NewMusicPlaylistRecommendation[];
+  }): Promise<void>;
 }
 
 export interface NewMusicPlaylistRecipe {
@@ -299,6 +305,13 @@ export async function processNewMusic(input: {
     };
   }
 
+  await input.store.storeNewMusicGenerations?.({
+    userId: input.userId,
+    syncId: summary.latestSyncId,
+    playlistRecipes,
+    recommendations
+  });
+
   await markProcessedIfConfigured({
     store: input.store,
     userId: input.userId,
@@ -453,6 +466,79 @@ export function createSupabaseNewMusicStore(supabase: SupabaseClient): NewMusicS
       if (error) {
         throw new Error(error.message);
       }
+    },
+
+    async storeNewMusicGenerations(input) {
+      if (input.recommendations.length === 0) {
+        return;
+      }
+
+      const recipeById = new Map(input.playlistRecipes.map((item) => [item.recipe.id, item.recipe]));
+      const generatedAt = new Date().toISOString();
+
+      await Promise.all(
+        input.recommendations.map(async (recommendation) => {
+          const recipe = recipeById.get(recommendation.recipeId) ?? null;
+          const { data: generation, error: generationError } = await supabase
+            .from("playlist_generations")
+            .insert({
+              user_id: input.userId,
+              playlist_id: recommendation.playlistId,
+              recipe_id: recommendation.recipeId,
+              sort_run_id: null,
+              library_sync_id: input.syncId,
+              status: "ready_for_review",
+              recipe_snapshot: {
+                source: "new_music",
+                recipeId: recommendation.recipeId,
+                recipeName: recommendation.recipeName,
+                playlistNote: recipe?.playlistNote ?? null,
+                tags: recipe?.tags ?? [],
+                targetTrackMin: recipe?.targetTrackMin ?? null,
+                targetTrackMax: recipe?.targetTrackMax ?? null,
+                newTrackCount: recommendation.trackCount
+              },
+              generated_at: generatedAt
+            })
+            .select("id")
+            .single();
+
+          if (generationError || !generation) {
+            throw new Error(generationError?.message ?? "Unable to store new-music generation.");
+          }
+
+          const { error: tracksError } = await supabase.from("playlist_generation_tracks").insert(
+            recommendation.tracks.map((track, position) => ({
+              generation_id: (generation as { id: string }).id,
+              normalized_track_id: track.normalizedTrackId,
+              position,
+              score: track.score,
+              reason: track.reason,
+              decision: "keep"
+            }))
+          );
+
+          if (tracksError) {
+            throw new Error(tracksError.message);
+          }
+
+          const { error: playlistError } = await supabase
+            .from("playlists")
+            .update({
+              status: "active",
+              latest_library_sync_id: input.syncId,
+              last_generated_at: generatedAt,
+              updated_at: generatedAt
+            })
+            .eq("id", recommendation.playlistId)
+            .eq("user_id", input.userId)
+            .neq("status", "archived");
+
+          if (playlistError) {
+            throw new Error(playlistError.message);
+          }
+        })
+      );
     }
   };
 }

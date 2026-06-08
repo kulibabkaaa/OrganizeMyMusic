@@ -45,8 +45,9 @@ Latest local audit on 2026-06-08:
   creating duplicates, and the user can open the playlist to finish setup.
 - Playlist detail now exposes app-only playlist archive with copy that Apple
   Music playlists and tracks are not changed.
-- New-music recommendations are review-only and link back to the playlist
-  workspace for recipe adjustment, regeneration, review, and explicit export.
+- New-music recommendations are stored as reviewable playlist generations and
+  link back to the playlist workspace for recipe adjustment, review, and
+  explicit export.
 - Saved playlists now store `last_processed_new_music_sync_id` for
   user-triggered new-music checks, and the hosted Supabase migration
   `playlist_new_music_processing` is applied.
@@ -201,8 +202,9 @@ the same latest sync is not repeatedly treated as pending for a saved playlist.
 
 Remaining follow-up:
 
-- Persist new-music suggestion history if recommendations need to survive page
-  refreshes before the user opens the playlist workspace.
+- Decide whether new-music generations should be visually labeled as
+  incremental suggestions versus full playlist regenerations in the playlist
+  workspace history.
 
 ### 6. AI quality and cost
 

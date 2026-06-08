@@ -100,6 +100,7 @@ describe("new music summary", () => {
 
   it("processes new tracks into review-only playlist recommendations", async () => {
     const markNewMusicProcessed = vi.fn().mockResolvedValue(undefined);
+    const storeNewMusicGenerations = vi.fn().mockResolvedValue(undefined);
     const store = createStore({
       listPlaylistRecipesForNewMusic: vi.fn().mockResolvedValue([
         {
@@ -108,6 +109,7 @@ describe("new music summary", () => {
         }
       ]),
       markNewMusicProcessed,
+      storeNewMusicGenerations,
       listTracksByIds: vi.fn().mockResolvedValue([track]),
       listClassificationsByTrackIds: vi.fn().mockResolvedValue([
         {
@@ -148,6 +150,28 @@ describe("new music summary", () => {
       userId: "user_1",
       playlistIds: [playlist.id],
       syncId: "sync_latest"
+    });
+    expect(storeNewMusicGenerations).toHaveBeenCalledWith({
+      userId: "user_1",
+      syncId: "sync_latest",
+      playlistRecipes: [
+        {
+          playlist,
+          recipe
+        }
+      ],
+      recommendations: [
+        expect.objectContaining({
+          playlistId: playlist.id,
+          recipeId: recipe.id,
+          trackCount: 1,
+          tracks: [
+            expect.objectContaining({
+              normalizedTrackId: track.id
+            })
+          ]
+        })
+      ]
     });
   });
 
