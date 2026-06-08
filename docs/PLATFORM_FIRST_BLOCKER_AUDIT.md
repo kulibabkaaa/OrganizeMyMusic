@@ -89,6 +89,10 @@ Latest local audit on 2026-06-08:
   targets instead of requeuing old playlist creation directly.
 - Legacy Sort read responses now preserve read compatibility while returning
   platform `nextPath` and `nextApiPath` targets for stale clients.
+- `docs/API_SPEC.md` now matches the implemented platform route contract:
+  legacy Sort confirmation is documented as disabled, missing legacy preview
+  and event subroutes are listed as unsupported, and the spec points previews
+  to `/api/app/sorts/:sortId/preview`.
 - Playlist PATCH now rejects client attempts to set server-managed Apple Music
   export fields, so MVP exports cannot be redirected to arbitrary Apple Music
   playlists through the public API.
@@ -210,13 +214,14 @@ Mitigation:
 - Apply through Supabase MCP when ready.
 - Inspect applied migration history before applying.
 
-### 3. Dirty worktree
+### 3. Worktree hygiene
 
-Risk: the repository currently has many untracked app-platform files. They look like prior work, not files created in this blocker audit.
+Status: resolved in the current platform-first branch. The previous dirty
+worktree risk was from untracked app-platform implementation files during the
+migration, but the current audited branch is clean after committed slices.
 
 Mitigation:
 
-- Do not revert untracked files.
 - Keep changes scoped.
 - Before a commit, explicitly review `git status` and stage only intended files.
 

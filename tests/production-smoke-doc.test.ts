@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const doc = readFileSync(join(process.cwd(), "docs/PRODUCTION_SMOKE_TEST.md"), "utf8");
+const acceptanceDoc = readFileSync(join(process.cwd(), "docs/MVP_ACCEPTANCE_CRITERIA.md"), "utf8");
 
 describe("production smoke checklist doc", () => {
   it("covers the full platform flow and reset notes", () => {
@@ -48,5 +49,9 @@ describe("production smoke checklist doc", () => {
     expect(doc).toContain("App queues playlist creation only after confirmation.");
     expect(doc).toContain("Existing Apple Music playlists are not edited or deleted.");
     expect(doc).toContain("Any product copy promises exact replacement, reorder, automatic sync, or");
+    expect(acceptanceDoc).toContain(
+      "Playlists can be written without review and explicit export confirmation."
+    );
+    expect(acceptanceDoc).not.toContain("Playlists are written without confirmation.");
   });
 });
