@@ -5,12 +5,24 @@ import { requireServerEnv } from "@/lib/env";
 const ALGORITHM = "aes-256-gcm";
 const MIN_ENCRYPTION_KEY_BYTES = 32;
 
-function getKey(encryptionKey: string) {
+export function getEncryptionKeyValidationError(encryptionKey: string) {
   const normalizedKey = encryptionKey.trim();
 
   if (Buffer.byteLength(normalizedKey, "utf8") < MIN_ENCRYPTION_KEY_BYTES) {
-    throw new Error("ENCRYPTION_KEY must be at least 32 bytes.");
+    return "ENCRYPTION_KEY must be at least 32 bytes.";
   }
+
+  return null;
+}
+
+function getKey(encryptionKey: string) {
+  const validationError = getEncryptionKeyValidationError(encryptionKey);
+
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const normalizedKey = encryptionKey.trim();
 
   return createHash("sha256").update(normalizedKey).digest();
 }

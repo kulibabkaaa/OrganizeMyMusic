@@ -35,10 +35,10 @@ Platform readiness check:
 npm run platform:check
 ```
 
-`platform:check` is read-only. It verifies required server env presence, hosted
-platform migrations, platform table RLS, playlist recipe scope, pg-boss queues,
-and current MVP worker job backlog without logging secret values or processing
-jobs.
+`platform:check` is read-only. It verifies required server env presence,
+`ENCRYPTION_KEY` minimum strength, hosted platform migrations, platform table
+RLS, playlist recipe scope, pg-boss queues, and current MVP worker job backlog
+without logging secret values or processing jobs.
 
 The health check logs deployment revision metadata when the host exposes it.
 For Railway, check the log line named `Worker deployment revision.` and compare
