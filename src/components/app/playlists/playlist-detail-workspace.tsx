@@ -63,6 +63,7 @@ export function PlaylistDetailWorkspace({
     generation?.generation.status === "reviewed" ||
     generation?.generation.status === "exporting" ||
     generation?.generation.status === "exported";
+  const activeGenerationKind = getGenerationKind(generation?.generation.recipeSnapshot);
   const canExport =
     Boolean(generation) &&
     keptCount > 0 &&
@@ -414,16 +415,24 @@ export function PlaylistDetailWorkspace({
         </Card>
 
         <Card className="p-7">
-          <StatusPill
-            label={generation ? generation.generation.status.replaceAll("_", " ") : "Not generated"}
-            tone={generation ? "warning" : "muted"}
-          />
+          <div className="flex flex-wrap gap-2">
+            <StatusPill
+              label={generation ? generation.generation.status.replaceAll("_", " ") : "Not generated"}
+              tone={generation ? "warning" : "muted"}
+            />
+            {activeGenerationKind === "new_music" ? (
+              <StatusPill label="New music suggestions" tone="success" />
+            ) : null}
+          </div>
           <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0em] text-white">
-            Review proposed tracks
+            {activeGenerationKind === "new_music"
+              ? "Review new music suggestions"
+              : "Review proposed tracks"}
           </h2>
           <p className="mt-3 text-sm leading-7 text-platform-secondary">
-            Edit every track before Apple Music export. Removed tracks stay out of the approved
-            list for this generation.
+            {activeGenerationKind === "new_music"
+              ? "These tracks were suggested from your latest library sync. Edit every track before adding approved songs to Apple Music."
+              : "Edit every track before Apple Music export. Removed tracks stay out of the approved list for this generation."}
           </p>
           <p className="mt-2 text-xs leading-6 text-platform-muted">
             Export creates an Apple Music playlist and adds approved tracks. It does not replace,
@@ -600,7 +609,11 @@ export function PlaylistDetailWorkspace({
                   </p>
                 </div>
                 <StatusPill
-                  label={item.generation.status.replaceAll("_", " ")}
+                  label={
+                    getGenerationKind(item.generation.recipeSnapshot) === "new_music"
+                      ? "new music"
+                      : item.generation.status.replaceAll("_", " ")
+                  }
                   tone={item.generation.status === "exported" ? "success" : "warning"}
                 />
               </li>
@@ -623,6 +636,10 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-2 font-display text-3xl font-semibold tracking-[0em] text-white">{value}</p>
     </div>
   );
+}
+
+function getGenerationKind(recipeSnapshot: Record<string, unknown> | undefined) {
+  return recipeSnapshot?.source === "new_music" ? "new_music" : "playlist";
 }
 
 const recipeInputClassName =

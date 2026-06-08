@@ -207,4 +207,34 @@ describe("playlists page", () => {
     expect(markup).toContain("2 runs");
     expect(markup).toContain("12 proposed tracks");
   });
+
+  it("labels new-music generations as incremental suggestions", () => {
+    const newMusicGeneration = {
+      ...latestGeneration,
+      generation: {
+        ...latestGeneration.generation,
+        recipeSnapshot: {
+          source: "new_music"
+        }
+      }
+    };
+    const markup = renderToStaticMarkup(
+      <PlaylistDetailWorkspace
+        playlist={playlist}
+        recipe={recipe}
+        latestGeneration={newMusicGeneration}
+        generationHistory={[
+          {
+            generation: newMusicGeneration.generation,
+            trackCount: newMusicGeneration.tracks.length
+          }
+        ]}
+      />
+    );
+
+    expect(markup).toContain("New music suggestions");
+    expect(markup).toContain("Review new music suggestions");
+    expect(markup).toContain("These tracks were suggested from your latest library sync.");
+    expect(markup).toContain("new music");
+  });
 });
