@@ -209,6 +209,8 @@ Acceptance:
 
 Current MVP implementation:
 
+- Playlist hub cards show the latest generation state so review/export work is
+  visible before opening a playlist.
 - Playlist detail lets users edit and save the playlist-owned recipe inline
   before regenerating.
 - Playlist detail shows the latest generation for track-level review.

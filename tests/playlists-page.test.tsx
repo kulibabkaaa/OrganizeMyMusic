@@ -34,6 +34,13 @@ const playlists: PersistentPlaylist[] = [
     archivedAt: null
   }
 ];
+const playlistGenerationSummaries = {
+  playlist_1: {
+    status: "ready_for_review" as const,
+    trackCount: 14,
+    generatedAt: "2026-06-01T10:00:00.000Z"
+  }
+};
 
 const playlist = playlists[0];
 const recipe = {
@@ -127,15 +134,31 @@ describe("playlists page", () => {
     expect(markup).toContain("review the result before export");
   });
 
-  it("renders saved app-created playlists and export status", () => {
-    const markup = renderToStaticMarkup(<PlaylistsPage playlists={playlists} />);
+  it("renders saved app-created playlists with review queue status", () => {
+    const markup = renderToStaticMarkup(
+      <PlaylistsPage
+        playlists={playlists}
+        generationSummariesByPlaylistId={playlistGenerationSummaries}
+      />
+    );
 
     expect(markup).toContain("Ukrainian Rap");
     expect(markup).toContain("High-energy Ukrainian rap from my saved library.");
     expect(markup).toContain("Build playlists from your library");
-    expect(markup).toContain("Exported");
+    expect(markup).toContain("Latest generation");
+    expect(markup).toContain("Review needed");
+    expect(markup).toContain("Proposed tracks are waiting for review.");
+    expect(markup).toContain("14 tracks");
     expect(markup).toContain("/app/playlists/playlist_1");
     expect(markup).not.toContain("No saved playlists yet");
+  });
+
+  it("renders playlist cards without a generation as recipe work", () => {
+    const markup = renderToStaticMarkup(<PlaylistsPage playlists={playlists} />);
+
+    expect(markup).toContain("Recipe needed");
+    expect(markup).toContain("Generate this playlist to create a review queue.");
+    expect(markup).toContain("No tracks");
   });
 
   it("renders a form-based playlist creation workflow", () => {

@@ -6,9 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusPill } from "@/components/ui/status-pill";
-import type { PersistentPlaylist, PlaylistStatus } from "@/types/domain";
+import type { PersistentPlaylist, PlaylistGenerationStatus, PlaylistStatus } from "@/types/domain";
 
-export function PlaylistsPage({ playlists }: { playlists: PersistentPlaylist[] }) {
+export interface PlaylistCardGenerationSummary {
+  status: PlaylistGenerationStatus;
+  trackCount: number | null;
+  generatedAt: string | null;
+}
+
+export function PlaylistsPage({
+  playlists,
+  generationSummariesByPlaylistId = {}
+}: {
+  playlists: PersistentPlaylist[];
+  generationSummariesByPlaylistId?: Record<string, PlaylistCardGenerationSummary | undefined>;
+}) {
   return (
     <AppShell
       title="Playlists"
@@ -50,7 +62,11 @@ export function PlaylistsPage({ playlists }: { playlists: PersistentPlaylist[] }
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {playlists.map((playlist) => (
-              <PlaylistCard key={playlist.id} playlist={playlist} />
+              <PlaylistCard
+                key={playlist.id}
+                playlist={playlist}
+                generationSummary={generationSummariesByPlaylistId[playlist.id]}
+              />
             ))}
           </div>
         )}
@@ -59,12 +75,20 @@ export function PlaylistsPage({ playlists }: { playlists: PersistentPlaylist[] }
   );
 }
 
-function PlaylistCard({ playlist }: { playlist: PersistentPlaylist }) {
+function PlaylistCard({
+  playlist,
+  generationSummary
+}: {
+  playlist: PersistentPlaylist;
+  generationSummary?: PlaylistCardGenerationSummary;
+}) {
+  const reviewState = getReviewState(generationSummary);
+
   return (
     <Card as="article" className="min-h-64">
       <div className="flex items-start justify-between gap-3">
         <StatusPill label={formatStatus(playlist.status)} tone={getStatusTone(playlist.status)} />
-        {playlist.applePlaylistId ? <StatusPill label="Exported" tone="success" /> : null}
+        <StatusPill label={reviewState.label} tone={reviewState.tone} />
       </div>
       <h3 className="mt-4 break-words font-display text-2xl font-semibold tracking-[0em] text-white">
         {playlist.name}
@@ -72,6 +96,19 @@ function PlaylistCard({ playlist }: { playlist: PersistentPlaylist }) {
       <p className="mt-2 min-h-14 text-sm leading-7 text-platform-secondary">
         {playlist.description ?? "No description yet."}
       </p>
+      <div className="mt-4 rounded-[1.25rem] border border-white/10 bg-black/16 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-platform-muted">
+              Latest generation
+            </p>
+            <p className="mt-2 text-sm font-medium text-white">{reviewState.detail}</p>
+          </div>
+          <span className="text-right text-sm text-platform-secondary">
+            {formatTrackCount(generationSummary?.trackCount)}
+          </span>
+        </div>
+      </div>
       <dl className="mt-5 grid gap-3 text-sm text-platform-secondary">
         <MetaRow label="Last generated" value={formatDate(playlist.lastGeneratedAt)} />
         <MetaRow label="Last exported" value={formatDate(playlist.lastExportedAt)} />
@@ -98,6 +135,74 @@ function getStatusTone(status: PlaylistStatus) {
   if (status === "active") return "success";
   if (status === "archived") return "muted";
   return "pink";
+}
+
+function getReviewState(summary?: PlaylistCardGenerationSummary): {
+  label: string;
+  detail: string;
+  tone: React.ComponentProps<typeof StatusPill>["tone"];
+} {
+  if (!summary) {
+    return {
+      label: "Recipe needed",
+      detail: "Generate this playlist to create a review queue.",
+      tone: "muted"
+    };
+  }
+
+  if (summary.status === "ready_for_review") {
+    return {
+      label: "Review needed",
+      detail: "Proposed tracks are waiting for review.",
+      tone: "warning"
+    };
+  }
+
+  if (summary.status === "reviewed") {
+    return {
+      label: "Ready to export",
+      detail: "Reviewed tracks can be exported to Apple Music.",
+      tone: "pink"
+    };
+  }
+
+  if (summary.status === "exporting") {
+    return {
+      label: "Exporting",
+      detail: "Apple Music export is queued or running.",
+      tone: "warning"
+    };
+  }
+
+  if (summary.status === "exported") {
+    return {
+      label: "Exported",
+      detail: "Approved tracks were sent to Apple Music.",
+      tone: "success"
+    };
+  }
+
+  if (summary.status === "failed") {
+    return {
+      label: "Needs attention",
+      detail: "Generation or export failed. Open the playlist to retry.",
+      tone: "danger"
+    };
+  }
+
+  return {
+    label: "Generating",
+    detail: "Proposed tracks are being generated.",
+    tone: "warning"
+  };
+}
+
+function formatTrackCount(value: number | null | undefined) {
+  if (value == null) {
+    return "No tracks";
+  }
+
+  return `${value} ${value === 1 ? "track" : "tracks"}`;
 }
 
 function formatStatus(status: PlaylistStatus) {
