@@ -124,6 +124,9 @@ Latest local audit on 2026-06-08:
 - Full-organization start and preview screens now avoid checkout-first wording
   in the billing-deferred MVP path; copy uses organization, generation, review,
   `Create Apple Music playlists`, and `add approved tracks` language.
+- Full-organization processing copy now says `Organization started` instead of
+  `Payment confirmed`, so the billing-deferred path does not present payment as
+  the active milestone.
 - Dead legacy Sort-request client components that posted directly to
   `/api/sort-runs` were removed, so current app UI cannot re-enter the old
   freeform request flow.

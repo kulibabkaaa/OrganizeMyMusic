@@ -74,7 +74,7 @@ export function ProcessingPage({
 
         <Card elevated className="space-y-5 self-start">
           <StatusPill
-            label={progress.status === "failed" ? "Needs attention" : "Payment confirmed"}
+            label={progress.status === "failed" ? "Needs attention" : "Organization started"}
             tone={progress.status === "failed" ? "danger" : "success"}
           />
           <div>

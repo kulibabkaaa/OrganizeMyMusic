@@ -35,6 +35,7 @@ describe("processing page", () => {
     expect(markup).toContain("58%");
     expect(markup).toContain("About 4 min remaining");
     expect(markup).toContain("Building playlists");
+    expect(markup).toContain("Organization started");
     expect(markup).toContain("3 Playlist Recipes");
     expect(markup).toContain("19,960 tracks processed");
     expect(markup).toContain("Back to dashboard");
@@ -44,6 +45,7 @@ describe("processing page", () => {
     expect(markup).toContain("Apple Music export will wait for your review.");
     expect(markup).toContain("Processing status auto-refresh every 3 seconds.");
     expect(markup).not.toContain("Export to Apple Music");
+    expect(markup).not.toContain("Payment confirmed");
   });
 
   it("renders all processing steps with live state", () => {
