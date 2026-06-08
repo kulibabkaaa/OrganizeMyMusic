@@ -1,9 +1,15 @@
-import { env } from "@/lib/env";
-import { getDeploymentRevision } from "@/lib/deployment-revision";
-import { logger } from "@/lib/logger";
-import { createPgBoss } from "@/lib/pg-boss";
+import { loadRuntimeEnv } from "@/lib/load-runtime-env";
+
+loadRuntimeEnv();
 
 async function checkWorkerDatabase() {
+  const [{ env }, { getDeploymentRevision }, { logger }, { createPgBoss }] = await Promise.all([
+    import("@/lib/env"),
+    import("@/lib/deployment-revision"),
+    import("@/lib/logger"),
+    import("@/lib/pg-boss")
+  ]);
+
   logger.info({ revision: getDeploymentRevision() }, "Worker deployment revision.");
 
   if (!env.DATABASE_URL) {
@@ -25,7 +31,9 @@ async function checkWorkerDatabase() {
   }
 }
 
-checkWorkerDatabase().catch((error) => {
+checkWorkerDatabase().catch(async (error) => {
+  const { logger } = await import("@/lib/logger");
+
   logger.error(error, "Worker database health check failed.");
   process.exit(1);
 });

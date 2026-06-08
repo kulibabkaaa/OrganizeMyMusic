@@ -4,6 +4,7 @@ import { AppleMusicConnectCard } from "@/components/app/apple-music-connect-card
 import { LatestSortRunCard } from "@/components/app/latest-sort-run-card";
 import { LibrarySyncCard } from "@/components/app/library-sync-card";
 import { PlaylistRequestCard } from "@/components/app/playlist-request-card";
+import { PlatformQueuesCard } from "@/components/app/dashboard/platform-queues-card";
 import { signOut } from "@/app/(app)/dashboard/actions";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,16 @@ import {
   type AppleMusicConnectionSummary
 } from "@/modules/library-syncs/queue";
 import {
+  createSupabaseNewMusicStore,
+  getNewMusicSummary,
+  type NewMusicSummary
+} from "@/modules/library-syncs/new-music";
+import { createSupabasePlaylistStore } from "@/modules/playlists/store";
+import {
   createSupabaseLatestSortRunStore,
   type LatestSortRunSummary
 } from "@/modules/sorts/latest-run";
+import type { PersistentPlaylist } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -144,14 +152,21 @@ export default async function DashboardPage() {
   let appleMusicConnection: AppleMusicConnectionSummary | null = null;
   let latestLibrarySync: Awaited<ReturnType<typeof getLatestLibrarySyncStatus>> = null;
   let latestSortRun: LatestSortRunSummary | null = null;
+  let playlists: PersistentPlaylist[] = [];
+  let reviewQueueCount = 0;
+  let newMusicSummary: NewMusicSummary | null = null;
   let libraryStateError: string | null = null;
   let sortRunStateError: string | null = null;
 
-  if (syncStore) {
+  if (syncStore && serviceSupabase) {
     try {
       appleMusicConnection = await syncStore.getConnectedAppleMusicConnection(session.user.id);
       latestLibrarySync = await getLatestLibrarySyncStatus({
         store: syncStore,
+        userId: session.user.id
+      });
+      newMusicSummary = await getNewMusicSummary({
+        store: createSupabaseNewMusicStore(serviceSupabase),
         userId: session.user.id
       });
     } catch (error) {
@@ -161,9 +176,15 @@ export default async function DashboardPage() {
 
   if (serviceSupabase) {
     try {
-      latestSortRun = await createSupabaseLatestSortRunStore(serviceSupabase).getLatestSortRunSummary({
-        userId: session.user.id
-      });
+      [latestSortRun, playlists, reviewQueueCount] = await Promise.all([
+        createSupabaseLatestSortRunStore(serviceSupabase).getLatestSortRunSummary({
+          userId: session.user.id
+        }),
+        createSupabasePlaylistStore(serviceSupabase).listPlaylists({
+          userId: session.user.id
+        }),
+        getReviewQueueCount(serviceSupabase, session.user.id)
+      ]);
     } catch (error) {
       sortRunStateError = error instanceof Error ? error.message : "Unable to load latest sort run.";
     }
@@ -265,9 +286,32 @@ export default async function DashboardPage() {
         />
       </section>
 
+      <PlatformQueuesCard
+        playlists={playlists}
+        reviewQueueCount={reviewQueueCount}
+        newMusicSummary={newMusicSummary}
+      />
+
       <section className="mt-6">
         <LatestSortRunCard latestSortRun={latestSortRun} error={sortRunStateError} />
       </section>
     </AppShell>
   );
+}
+
+async function getReviewQueueCount(
+  supabase: NonNullable<ReturnType<typeof createSupabaseServiceRoleClient>>,
+  userId: string
+) {
+  const { count, error } = await supabase
+    .from("playlist_generations")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "ready_for_review");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
 }

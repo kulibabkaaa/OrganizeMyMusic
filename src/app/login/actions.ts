@@ -55,3 +55,27 @@ export async function signUpWithPassword(formData: FormData) {
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }
+
+async function signInWithOAuthProvider(provider: "apple" | "google") {
+  const supabase = await getActionClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/auth/callback`
+    }
+  });
+
+  if (error || !data.url) {
+    redirectWithMessage(error?.message ?? "OAuth sign-in is unavailable.");
+  }
+
+  redirect(data.url as Parameters<typeof redirect>[0]);
+}
+
+export async function signInWithApple() {
+  await signInWithOAuthProvider("apple");
+}
+
+export async function signInWithGoogle() {
+  await signInWithOAuthProvider("google");
+}

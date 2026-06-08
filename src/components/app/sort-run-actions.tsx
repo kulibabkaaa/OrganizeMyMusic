@@ -9,7 +9,7 @@ import type { SortRunSummary } from "@/types/domain";
 export function SortRunActions({ sortRun }: { sortRun: SortRunSummary }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState(
-    "Preview is ready. Payment unlocks Apple playlist creation, but the final write still requires confirmation."
+    "Preview is ready. Full processing can be unlocked when checkout is enabled, and Apple Music export still requires explicit confirmation."
   );
 
   function beginCheckout() {
@@ -52,7 +52,7 @@ export function SortRunActions({ sortRun }: { sortRun: SortRunSummary }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.18em] text-black/42">Actions</p>
-          <h2 className="mt-2 font-display text-3xl tracking-[-0.04em]">Review, pay, confirm</h2>
+          <h2 className="mt-2 font-display text-3xl tracking-[-0.04em]">Review and confirm</h2>
         </div>
         <StatusPill
           label={sortRun.paymentStatus === "paid" ? "Paid" : "Preview only"}
@@ -64,14 +64,14 @@ export function SortRunActions({ sortRun }: { sortRun: SortRunSummary }) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Button onClick={beginCheckout} disabled={isPending}>
-          {isPending ? "Preparing..." : "Unlock with one-time payment"}
+          {isPending ? "Preparing..." : "Unlock full processing"}
         </Button>
         <Button
           variant="secondary"
           onClick={createPlaylists}
           disabled={isPending || sortRun.paymentStatus !== "paid"}
         >
-          {isPending ? "Submitting..." : "Confirm playlist creation"}
+          {isPending ? "Submitting..." : "Create Apple Music playlists"}
         </Button>
       </div>
     </section>

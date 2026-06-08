@@ -38,7 +38,10 @@ Responsibilities:
 - Apple Music connect UI.
 - Library sync controls.
 - Playlist request UI.
+- Persistent playlist UI.
+- Playlist recipe UI.
 - Preview UI.
+- Review and edit-every-track UI.
 - Confirmation UI.
 - Status and error UI.
 
@@ -51,6 +54,9 @@ Responsibilities:
 - Apple connection endpoint.
 - Sync start endpoint.
 - Sort-run creation endpoint.
+- Persistent playlist endpoints.
+- Playlist recipe endpoints.
+- Playlist generation endpoints.
 - Preview endpoint.
 - Confirmation endpoint.
 - Status endpoints.
@@ -65,6 +71,7 @@ Responsibilities:
 - Normalization and dedupe.
 - Classification.
 - Playlist planning if queued.
+- Playlist generation and regeneration.
 - Apple Music write-back.
 - Retryable job processing.
 - Job event logging.
@@ -82,6 +89,11 @@ Supabase Postgres stores:
 - User track ownership.
 - Classifications.
 - Playlist requests.
+- Persistent playlists.
+- Playlist recipes.
+- Playlist generations.
+- Playlist generation tracks.
+- Playlist exports.
 - Sort runs.
 - Generated playlists.
 - Playlist-track relationships.
@@ -138,29 +150,41 @@ Worker updates sync status
 Dashboard polls or refreshes status
 ```
 
-### Generate playlists
+### Organize library with a Sort
 
 ```text
-User enters desired playlists
-API creates sort_run and playlist_request rows
+User clicks Organize My Library
+API creates sort_run
+User creates playlist drafts inside the Sort
+User defines one recipe per playlist
 Worker classifies tracks if needed
-Worker parses request into rules
-Worker plans playlists from classifications
-Worker stores preview snapshot
-Dashboard shows preview
+Worker generates tracks for each playlist recipe
+Worker stores playlist generations for review
+Review UI shows proposed playlists and tracks
+```
+
+### Create or regenerate one playlist
+
+```text
+User opens Playlists
+User creates or selects one playlist
+User edits playlist recipe
+User clicks Generate or Regenerate
+Worker plans tracks from latest library sync
+Worker stores a playlist_generation and proposed tracks
+User reviews every track
+User confirms export/update
 ```
 
 ### Confirm and write to Apple Music
 
 ```text
-User reviews preview
-User confirms selected playlists
+User reviews generated playlist tracks
+User confirms selected playlists/tracks
 API queues playlist creation job
 Worker decrypts Apple user token
-Worker creates Apple Music playlists
-Worker adds selected tracks
-Worker stores Apple playlist IDs
-Worker marks run completed
+Worker creates Apple Music playlists or adds approved tracks
+Worker stores Apple playlist IDs and export status
 Dashboard shows complete state
 ```
 
@@ -224,3 +248,16 @@ failed
 ```
 
 Payment state may remain unused until the core MVP flow works.
+
+Persistent playlist generation states:
+
+```text
+generating
+ready_for_review
+reviewed
+exporting
+exported
+failed
+```
+
+`Sort` states remain for batch organization. Playlist generation states should become the main recurring workflow state.

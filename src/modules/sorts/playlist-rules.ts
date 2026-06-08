@@ -6,6 +6,8 @@ import type {
   MoodLabel,
   NormalizedTrack,
   PlaylistDimension,
+  PlaylistRecipe,
+  PlaylistRecipeTag,
   TrackClassification
 } from "@/types/domain";
 
@@ -282,6 +284,218 @@ function qualityWarningsForMatchedCount(matchedTrackCount: number) {
   }
 
   return [];
+}
+
+export function generateRecipePlaylists(input: {
+  recipes: PlaylistRecipe[];
+  tracks: NormalizedTrack[];
+  classifications: TrackClassification[];
+}) {
+  const classificationsByFingerprint = new Map(
+    input.classifications.map((classification) => [classification.fingerprint, classification])
+  );
+
+  return input.recipes.map((recipe) => {
+    const matchStats = createEmptyMatchStats(input.tracks.length);
+    const targetMax = recipe.targetTrackMax ?? input.tracks.length;
+    const tracks = input.tracks
+      .flatMap((track) => {
+        const classification = classificationsByFingerprint.get(track.fingerprint);
+
+        if (!classification) {
+          return [];
+        }
+
+        matchStats.classifiedTrackCount += 1;
+        matchStats.missingClassificationCount -= 1;
+
+        const scored = scoreTrackForRecipe({
+          track,
+          classification,
+          recipe
+        });
+
+        if (scored.status === "matched") {
+          matchStats.matchedTrackCount += 1;
+          return [scored.track];
+        }
+
+        updateRejectionStats(matchStats, scored.reason);
+        return [];
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, targetMax)
+      .map((track, position) => ({
+        ...track,
+        position
+      }));
+
+    return {
+      id: recipe.id,
+      dimension: "request" as PlaylistDimension,
+      title: recipe.name,
+      description:
+        recipe.playlistNote ??
+        `Generated from ${recipe.tags.length} saved recipe tag${recipe.tags.length === 1 ? "" : "s"}.`,
+      confidenceLabel: confidenceLabelForRecipeTracks(tracks),
+      trackCount: tracks.length,
+      trackFingerprints: tracks.map((track) => track.fingerprint),
+      appleSongIds: tracks
+        .map((track) => track.appleSongId)
+        .filter((value): value is string => Boolean(value)),
+      tracks,
+      qualityWarnings: qualityWarningsForRecipe(recipe, tracks.length),
+      matchStats
+    } satisfies GeneratedPlaylist;
+  });
+}
+
+function scoreTrackForRecipe(input: {
+  track: NormalizedTrack;
+  classification: TrackClassification;
+  recipe: PlaylistRecipe;
+}): RequestScoreResult {
+  const { track, classification, recipe } = input;
+
+  if (!recipe.allowExplicit && track.contentRating === "explicit") {
+    return { status: "rejected", reason: "explicit" };
+  }
+
+  const supportedTags = recipe.tags.filter(isRecipeScoringTag);
+  if (supportedTags.length === 0) {
+    return { status: "rejected", reason: "below_score" };
+  }
+
+  const matchedReasons = supportedTags.flatMap((tag) =>
+    getRecipeTagMatchReason({ tag, track, classification })
+  );
+  const score = matchedReasons.length / supportedTags.length;
+
+  if (score < MIN_REQUEST_SCORE) {
+    return { status: "rejected", reason: getPrimaryRecipeRejectionReason(supportedTags) };
+  }
+
+  return {
+    status: "matched",
+    track: {
+      fingerprint: track.fingerprint,
+      normalizedTrackId: track.id,
+      appleSongId: track.appleSongId,
+      name: track.name,
+      artistName: track.artistName,
+      albumName: track.albumName,
+      score: clampScore(score * classification.confidence),
+      reason: matchedReasons.join("; ")
+    }
+  };
+}
+
+function isRecipeScoringTag(tag: PlaylistRecipeTag) {
+  return ["language", "genre", "mood", "energy", "activity"].includes(tag.category);
+}
+
+function getRecipeTagMatchReason({
+  tag,
+  track,
+  classification
+}: {
+  tag: PlaylistRecipeTag;
+  track: NormalizedTrack;
+  classification: TrackClassification;
+}) {
+  const value = tag.value.trim().toLowerCase();
+
+  if (!value) {
+    return [];
+  }
+
+  if (tag.category === "language") {
+    return classification.language.toLowerCase() === value || value === "mixed"
+      ? [`Language matches ${value}`]
+      : [];
+  }
+
+  if (tag.category === "genre") {
+    const genreMatches =
+      classification.genre.toLowerCase().includes(value) ||
+      classification.subgenres.some((subgenre) => subgenre.toLowerCase().includes(value)) ||
+      track.genreNames.some((genre) => genre.toLowerCase().includes(value));
+    return genreMatches ? [`Genre matches ${value}`] : [];
+  }
+
+  if (tag.category === "mood") {
+    return classification.moods.some((mood) => mood.toLowerCase() === value)
+      ? [`Mood matches ${value}`]
+      : [];
+  }
+
+  if (tag.category === "energy") {
+    return energyMatchesTag(classification.energy, value) ? [`Energy matches ${value}`] : [];
+  }
+
+  if (tag.category === "activity") {
+    return activityMatchesTag(classification, value) ? [`Activity matches ${value}`] : [];
+  }
+
+  return [];
+}
+
+function energyMatchesTag(energy: number | null, value: string) {
+  if (energy === null) {
+    return false;
+  }
+
+  if (value === "low") return energy <= 0.35;
+  if (value === "medium" || value === "warm") return energy > 0.35 && energy < 0.72;
+  if (value === "high" || value === "intense") return energy >= 0.72;
+
+  return false;
+}
+
+function activityMatchesTag(classification: TrackClassification, value: string) {
+  const moods = classification.moods.map((mood) => mood.toLowerCase());
+
+  if (value === "workout") return moods.includes("workout") || classification.energy === null || classification.energy >= 0.72;
+  if (value === "driving") return moods.includes("driving");
+  if (value === "focus") return moods.includes("focus");
+  if (value === "party") return moods.includes("party") || classification.energy !== null && classification.energy >= 0.72;
+  if (value === "late night") return moods.includes("late-night") || moods.includes("chill");
+
+  return false;
+}
+
+function getPrimaryRecipeRejectionReason(tags: PlaylistRecipeTag[]): Exclude<
+  RequestScoreResult,
+  { status: "matched" }
+>["reason"] {
+  if (tags.some((tag) => tag.category === "language")) return "language";
+  if (tags.some((tag) => tag.category === "genre")) return "genre";
+  if (tags.some((tag) => tag.category === "mood")) return "mood";
+  if (tags.some((tag) => tag.category === "energy" || tag.category === "activity")) return "energy";
+
+  return "below_score";
+}
+
+function confidenceLabelForRecipeTracks(tracks: GeneratedPlaylistTrack[]): GeneratedPlaylist["confidenceLabel"] {
+  if (tracks.length === 0) return "low";
+
+  const averageScore = tracks.reduce((sum, track) => sum + track.score, 0) / tracks.length;
+  if (tracks.length >= 10 && averageScore >= 0.78) return "high";
+  if (averageScore < 0.45) return "low";
+
+  return "medium";
+}
+
+function qualityWarningsForRecipe(recipe: PlaylistRecipe, matchedTrackCount: number) {
+  const warnings = qualityWarningsForMatchedCount(matchedTrackCount);
+
+  if (recipe.targetTrackMin && matchedTrackCount < recipe.targetTrackMin) {
+    warnings.push(
+      `Matched ${matchedTrackCount} of the requested minimum ${recipe.targetTrackMin} tracks.`
+    );
+  }
+
+  return warnings;
 }
 
 export function generateRequestedPlaylists(input: {

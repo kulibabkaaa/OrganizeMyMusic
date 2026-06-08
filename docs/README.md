@@ -27,6 +27,10 @@ This folder contains the product, architecture, implementation, and Codex workfl
 21. `ENVIRONMENT_VARIABLES.md` — required environment variables.
 22. `DECISIONS.md` — architecture decision log.
 23. `POST_MVP_SCOPE.md` — features intentionally excluded from MVP.
+24. `PLATFORM_FIRST_MVP_MIGRATION.md` — migration plan from Sort-first MVP to persistent playlist platform.
+25. `PLATFORM_FIRST_BLOCKER_AUDIT.md` — blocker and decision audit before resuming long-running migration work.
+26. `PLATFORM_FIRST_GOAL_PROMPT.md` — definitive objective and completion criteria for the long-running migration goal.
+27. `../SKILLS.md` — repo-local skill routing for platform-first migration work.
 
 ## Current project stage
 
@@ -42,14 +46,13 @@ test with a real Apple Music account:
 - Preview and explicit confirmation are in place before Apple Music write-back.
 - A confirmed production run created two real Apple Music playlists.
 
-The next important work is quality hardening:
+The next important work is platform migration planning and safe implementation:
 
-- Continue tuning matching/scoring with more real-library feedback.
-- Use the preview diagnostics to explain why requests have few or no matches.
-- Deploy the tuned scoring to both Vercel and the persistent Railway worker
-  before the next real sorting smoke test.
-- Continue expanding sorting tests across Ukrainian, Russian, English, Polish,
-  mixed, instrumental, and unknown tracks.
+- Treat `Sort` as full-library organization.
+- Move recurring value into persistent playlists and playlist recipes.
+- Keep Apple Music write-back review and confirmation strict.
+- Keep matching/scoring quality work active as playlist generation moves to the
+  new data model.
 - Keep Stripe deferred until the Apple Music organizing quality is acceptable.
 
 ## Documentation rule

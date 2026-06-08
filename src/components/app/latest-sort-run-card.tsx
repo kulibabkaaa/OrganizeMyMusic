@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ export function LatestSortRunCard({
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.18em] text-white/42">Latest sort run</p>
+          <p className="text-sm uppercase tracking-[0.18em] text-white/42">Latest organization</p>
           <h2 className="mt-3 font-display text-3xl tracking-[-0.04em]">
             {latestSortRun ? "Review the latest preview." : "No preview yet."}
           </h2>
@@ -51,11 +52,11 @@ export function LatestSortRunCard({
             </div>
             <div className="rounded-3xl border border-white/10 bg-black/24 p-4">
               <p className="text-2xl font-semibold">{latestSortRun.trackAssignmentCount}</p>
-              <p className="mt-1 text-sm text-white/54">assignments</p>
+              <p className="mt-1 text-sm text-white/54">tracks</p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-black/24 p-4">
               <p className="text-2xl font-semibold">{latestSortRun.applePlaylistIdCount}</p>
-              <p className="mt-1 text-sm text-white/54">Apple IDs</p>
+              <p className="mt-1 text-sm text-white/54">Exported</p>
             </div>
           </div>
 
@@ -63,7 +64,7 @@ export function LatestSortRunCard({
             <Link href={`/sorts/${latestSortRun.id}`} className="inline-flex">
               <Button variant="secondary">Open preview</Button>
             </Link>
-            <span className="text-sm text-white/48">Sort run: {latestSortRun.id}</span>
+            <span className="text-sm text-white/48">Project ID: {latestSortRun.id}</span>
           </div>
         </>
       ) : null}

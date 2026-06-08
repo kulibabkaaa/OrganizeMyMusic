@@ -5,6 +5,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        platform: {
+          bg: "var(--bg)",
+          burgundy: "var(--burgundy)",
+          card: "var(--card)",
+          elevated: "var(--card-elevated)",
+          border: "var(--border)",
+          fg: "var(--fg)",
+          secondary: "var(--secondary)",
+          muted: "var(--muted)",
+          pink: "var(--pink)",
+          red: "var(--red)",
+          success: "var(--success)",
+          warning: "var(--warning)",
+          danger: "var(--danger)"
+        },
         ink: "#000000",
         paper: "#ffffff",
         blush: "#ff4e6b",
@@ -31,4 +46,3 @@ const config: Config = {
 };
 
 export default config;
-

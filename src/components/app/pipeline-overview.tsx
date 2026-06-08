@@ -1,3 +1,5 @@
+import React from "react";
+
 import { StatusPill } from "@/components/ui/status-pill";
 
 const pipeline = [
@@ -5,8 +7,8 @@ const pipeline = [
   ["2", "Connect Apple Music", "MusicKit authorization and encrypted token storage."],
   ["3", "Sync library", "Fetch saved songs, store raw JSON, normalize, and dedupe."],
   ["4", "Classify tracks", "Use metadata and heuristics first, with structured AI fallback."],
-  ["5", "Preview playlists", "Show stable playlist output before any Apple Music write."],
-  ["6", "Confirm creation", "Queue write-back only after explicit user confirmation."]
+  ["5", "Preview ready", "Show stable playlist output before any Apple Music export."],
+  ["6", "Exported", "Queue export only after explicit user confirmation."]
 ];
 
 export function PipelineOverview() {
@@ -15,8 +17,8 @@ export function PipelineOverview() {
       <div className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-7 shadow-[0_24px_80px_rgba(0,0,0,0.24)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.18em] text-white/45">Sort pipeline</p>
-            <h2 className="mt-2 font-display text-3xl tracking-[-0.04em]">Operational view</h2>
+            <p className="text-sm uppercase tracking-[0.18em] text-white/45">Library flow</p>
+            <h2 className="mt-2 font-display text-3xl tracking-[-0.04em]">Music workspace</h2>
           </div>
           <StatusPill label="MVP flow" tone="accent" />
         </div>
@@ -35,7 +37,7 @@ export function PipelineOverview() {
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-black/55 p-7 text-white">
-        <p className="text-sm uppercase tracking-[0.18em] text-white/45">Why this shape</p>
+        <p className="text-sm uppercase tracking-[0.18em] text-white/45">Library needs attention</p>
         <h3 className="mt-2 font-display text-3xl tracking-[-0.04em]">
           The dashboard shows state before it performs work.
         </h3>

@@ -2,13 +2,30 @@ import { requireServerEnv } from "@/lib/env";
 import { env } from "@/lib/env";
 import { getStripe } from "@/modules/billing/stripe";
 
-export async function createSortCheckoutSession(sortRunId: string) {
+export async function createSortCheckoutSession(
+  sortRunId: string,
+  config: Record<string, string | undefined> = env
+) {
+  if (config.PAYMENTS_ENABLED !== "true" && config.PAYMENTS_DEV_BYPASS_ENABLED === "true") {
+    return {
+      mode: "dev_bypass",
+      checkoutUrl: `/sorts/${sortRunId}?payment=dev_bypass`
+    };
+  }
+
+  if (config.PAYMENTS_ENABLED !== "true") {
+    return {
+      mode: "disabled",
+      checkoutUrl: null
+    };
+  }
+
   const stripe = getStripe();
 
   if (!stripe) {
     return {
-      mode: "mock",
-      checkoutUrl: `/sorts/${sortRunId}?payment=mock`
+      mode: "disabled",
+      checkoutUrl: null
     };
   }
 

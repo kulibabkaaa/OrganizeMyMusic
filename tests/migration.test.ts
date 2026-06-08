@@ -21,7 +21,23 @@ const uniqueAppleMusicConnectionMigration = readFileSync(
   ),
   "utf8"
 );
-const migration = `${initialMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
+const playlistRecipesMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0002_playlist_recipes.sql"),
+  "utf8"
+);
+const sortDraftsMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0003_sort_drafts.sql"),
+  "utf8"
+);
+const platformPlaylistsMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0004_platform_playlists.sql"),
+  "utf8"
+);
+const fixPlaylistsUpdatedAtMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0005_fix_playlists_updated_at_default.sql"),
+  "utf8"
+);
+const migration = `${initialMigration}\n${playlistRecipesMigration}\n${sortDraftsMigration}\n${platformPlaylistsMigration}\n${fixPlaylistsUpdatedAtMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
 
 const userOwnedTables = [
   "profiles",
@@ -35,6 +51,11 @@ const userOwnedTables = [
   "playlist_requests",
   "sort_playlists",
   "sort_playlist_tracks",
+  "playlist_recipes",
+  "playlists",
+  "playlist_generations",
+  "playlist_generation_tracks",
+  "playlist_exports",
   "payments",
   "job_events"
 ];
@@ -64,6 +85,14 @@ describe("initial Supabase migration", () => {
     expect(uniqueAppleMusicConnectionMigration).toContain(
       "idx_apple_music_connections_unique_user"
     );
+    expect(platformPlaylistsMigration).toContain("add column if not exists playlist_id");
+    expect(platformPlaylistsMigration).toContain("playlist_recipes_scope_check");
+    expect(platformPlaylistsMigration).toContain("create policy playlists_select_own");
+    expect(platformPlaylistsMigration).toContain("create policy playlist_generations_select_own");
+    expect(fixPlaylistsUpdatedAtMigration).toContain(
+      "alter column updated_at set default now()"
+    );
+    expect(fixPlaylistsUpdatedAtMigration).toContain("alter column updated_at set not null");
     expect(migration).not.toMatch(/\bdrop\s+table\b/i);
     expect(migration).not.toMatch(/\bdisable\s+row\s+level\s+security\b/i);
   });
