@@ -548,7 +548,8 @@ Queues explicit Apple Music export after reviewing one playlist generation.
 
 Rules:
 
-- Requires reviewed tracks.
+- Requires the generation to be marked `reviewed` after the user saves track
+  keep/remove decisions.
 - Requires at least one kept Apple Music library track.
 - Requires explicit user action.
 - Uses server-side Apple Music credentials.

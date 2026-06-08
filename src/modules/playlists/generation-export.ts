@@ -330,9 +330,7 @@ async function validatePlaylistGenerationExport(input: {
     };
   }
 
-  const allowedStatuses = input.allowExportingStatus
-    ? ["ready_for_review", "reviewed", "exporting"]
-    : ["ready_for_review", "reviewed"];
+  const allowedStatuses = input.allowExportingStatus ? ["reviewed", "exporting"] : ["reviewed"];
 
   if (!allowedStatuses.includes(generation.status)) {
     return {
