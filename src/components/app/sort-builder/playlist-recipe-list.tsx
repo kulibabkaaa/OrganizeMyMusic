@@ -143,68 +143,76 @@ function RecipeListItem({
             ? recipe.tags.map((tag) => `${formatCategory(tag.category)}: ${tag.value}`).join(", ")
             : "Add supported tags before previewing"}
         </span>
-        <span className="mt-2 grid gap-1">
-          {readiness.checks.map((check) => (
-            <span
-              key={check.id}
-              className={cn(
-                "flex items-center gap-2 text-xs leading-5",
-                check.isComplete ? "text-platform-secondary" : "text-[#ffd36a]"
-              )}
-            >
+        {isSelected ? (
+          <span className="mt-2 grid gap-1">
+            {readiness.checks.map((check) => (
               <span
-                aria-hidden="true"
+                key={check.id}
                 className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  check.isComplete ? "bg-platform-success" : "bg-[#ffd36a]"
+                  "flex items-center gap-2 text-xs leading-5",
+                  check.isComplete ? "text-platform-secondary" : "text-[#ffd36a]"
                 )}
-              />
-              {check.label}
-            </span>
-          ))}
-        </span>
-      </button>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {canMoveUp ? (
-          <Button variant="ghost" className="px-3 py-2" onClick={() => onMove(recipe.id, "up")}>
-            Move up
-          </Button>
-        ) : null}
-        {canMoveDown ? (
-          <Button variant="ghost" className="px-3 py-2" onClick={() => onMove(recipe.id, "down")}>
-            Move down
-          </Button>
-        ) : null}
-        <Button variant="ghost" className="px-3 py-2" onClick={() => onDuplicate(recipe.id)}>
-          Duplicate playlist
-        </Button>
-        {isConfirmingDelete ? (
-          <>
-            <Button variant="danger" className="px-3 py-2" onClick={() => onDelete(recipe.id)}>
-              Confirm delete
-            </Button>
-            <Button variant="ghost" className="px-3 py-2" onClick={onCancelDelete}>
-              Cancel
-            </Button>
-          </>
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    check.isComplete ? "bg-platform-success" : "bg-[#ffd36a]"
+                  )}
+                />
+                {check.label}
+              </span>
+            ))}
+          </span>
         ) : (
-          <Button
-            variant={canDelete ? "danger" : "disabled"}
-            className="px-3 py-2"
-            disabled={!canDelete}
-            aria-describedby={!canDelete ? `delete-recipe-disabled-${recipe.id}` : undefined}
-            onClick={() => onStartDelete(recipe.id)}
-          >
-            Delete playlist
-          </Button>
+          <span className="mt-2 block text-xs leading-5 text-platform-muted">
+            {readiness.summary}
+          </span>
         )}
-      </div>
-      {isConfirmingDelete ? (
+      </button>
+      {isSelected ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {canMoveUp ? (
+            <Button variant="ghost" className="px-3 py-2" onClick={() => onMove(recipe.id, "up")}>
+              Move up
+            </Button>
+          ) : null}
+          {canMoveDown ? (
+            <Button variant="ghost" className="px-3 py-2" onClick={() => onMove(recipe.id, "down")}>
+              Move down
+            </Button>
+          ) : null}
+          <Button variant="ghost" className="px-3 py-2" onClick={() => onDuplicate(recipe.id)}>
+            Duplicate playlist
+          </Button>
+          {isConfirmingDelete ? (
+            <>
+              <Button variant="danger" className="px-3 py-2" onClick={() => onDelete(recipe.id)}>
+                Confirm delete
+              </Button>
+              <Button variant="ghost" className="px-3 py-2" onClick={onCancelDelete}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant={canDelete ? "danger" : "disabled"}
+              className="px-3 py-2"
+              disabled={!canDelete}
+              aria-describedby={!canDelete ? `delete-recipe-disabled-${recipe.id}` : undefined}
+              onClick={() => onStartDelete(recipe.id)}
+            >
+              Delete playlist
+            </Button>
+          )}
+        </div>
+      ) : null}
+      {isSelected && isConfirmingDelete ? (
         <p className="mt-2 text-xs leading-5 text-platform-secondary">
           Confirm to remove this playlist from the Sort.
         </p>
       ) : null}
-      {!canDelete ? (
+      {isSelected && !canDelete ? (
         <p
           id={`delete-recipe-disabled-${recipe.id}`}
           className="mt-2 text-xs leading-5 text-platform-secondary"
