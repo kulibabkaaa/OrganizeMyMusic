@@ -91,4 +91,83 @@ describe("POST /api/app/new-music/process", () => {
       userId: "user_1"
     });
   });
+
+  it("returns conflict when new music cannot be processed yet", async () => {
+    processNewMusicMock.mockResolvedValueOnce({
+      status: "not_ready",
+      summary: {
+        latestSyncId: null,
+        previousSyncId: null,
+        newTrackCount: 0,
+        canProcess: false,
+        message: "Complete a library sync before processing new music."
+      },
+      recommendations: [],
+      message: "Complete a library sync before processing new music."
+    });
+
+    const response = await POST();
+
+    await expect(response.json()).resolves.toEqual({
+      status: "not_ready",
+      summary: {
+        latestSyncId: null,
+        previousSyncId: null,
+        newTrackCount: 0,
+        canProcess: false,
+        message: "Complete a library sync before processing new music."
+      },
+      recommendations: [],
+      message: "Complete a library sync before processing new music."
+    });
+    expect(response.status).toBe(409);
+  });
+
+  it("returns no-playlists without treating the request as an API error", async () => {
+    processNewMusicMock.mockResolvedValueOnce({
+      status: "no_playlists",
+      summary: {
+        latestSyncId: "sync_latest",
+        previousSyncId: "sync_previous",
+        newTrackCount: 3,
+        canProcess: true,
+        message: "3 new songs detected since the previous sync."
+      },
+      recommendations: [],
+      message: "Create at least one saved playlist before processing new music."
+    });
+
+    const response = await POST();
+
+    await expect(response.json()).resolves.toMatchObject({
+      status: "no_playlists",
+      recommendations: [],
+      message: "Create at least one saved playlist before processing new music."
+    });
+    expect(response.status).toBe(200);
+  });
+
+  it("returns no-matches without treating the request as an API error", async () => {
+    processNewMusicMock.mockResolvedValueOnce({
+      status: "no_matches",
+      summary: {
+        latestSyncId: "sync_latest",
+        previousSyncId: "sync_previous",
+        newTrackCount: 2,
+        canProcess: true,
+        message: "2 new songs detected since the previous sync."
+      },
+      recommendations: [],
+      message: "No saved playlist recipes matched the new tracks."
+    });
+
+    const response = await POST();
+
+    await expect(response.json()).resolves.toMatchObject({
+      status: "no_matches",
+      recommendations: [],
+      message: "No saved playlist recipes matched the new tracks."
+    });
+    expect(response.status).toBe(200);
+  });
 });

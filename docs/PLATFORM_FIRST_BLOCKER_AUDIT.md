@@ -53,6 +53,8 @@ Latest local audit on 2026-06-08:
 - New-music generation persistence is idempotent for the same playlist and
   latest sync, so retry after a partial checkpoint failure does not duplicate
   review queues.
+- New-music API regressions now cover `not_ready`, `no_playlists`, and
+  `no_matches` result states.
 - Saved playlists now store `last_processed_new_music_sync_id` for
   user-triggered new-music checks, and the hosted Supabase migration
   `playlist_new_music_processing` is applied.
