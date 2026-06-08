@@ -11,7 +11,13 @@ import type {
   PlaylistGenerationHistoryItem,
   PlaylistGenerationView
 } from "@/modules/playlists/generation-store";
-import type { PersistentPlaylist, PlaylistRecipe, PlaylistTrackDecision } from "@/types/domain";
+import type {
+  PersistentPlaylist,
+  PlaylistRecipe,
+  PlaylistRecipeTag,
+  PlaylistRecipeTagCategory,
+  PlaylistTrackDecision
+} from "@/types/domain";
 
 export function PlaylistDetailWorkspace({
   playlist,
@@ -25,6 +31,18 @@ export function PlaylistDetailWorkspace({
   generationHistory: PlaylistGenerationHistoryItem[];
 }) {
   const router = useRouter();
+  const [currentRecipe, setCurrentRecipe] = useState(recipe);
+  const [recipeName, setRecipeName] = useState(recipe?.name ?? playlist.name);
+  const [recipeNote, setRecipeNote] = useState(recipe?.playlistNote ?? "");
+  const [recipeTags, setRecipeTags] = useState(recipe ? formatRecipeTags(recipe.tags) : "");
+  const [recipeTargetMax, setRecipeTargetMax] = useState(
+    recipe?.targetTrackMax ? recipe.targetTrackMax.toString() : "50"
+  );
+  const [recipeAllowExplicit, setRecipeAllowExplicit] = useState(recipe?.allowExplicit ?? true);
+  const [recipeLibraryOnly, setRecipeLibraryOnly] = useState(recipe?.includeLibraryOnly ?? true);
+  const [isSavingRecipe, setIsSavingRecipe] = useState(false);
+  const [recipeError, setRecipeError] = useState<string | null>(null);
+  const [recipeMessage, setRecipeMessage] = useState<string | null>(null);
   const [generation, setGeneration] = useState(latestGeneration);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
@@ -42,6 +60,53 @@ export function PlaylistDetailWorkspace({
     keptCount > 0 &&
     generation?.generation.status !== "exporting" &&
     generation?.generation.status !== "exported";
+
+  async function saveRecipe(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSavingRecipe(true);
+    setRecipeError(null);
+    setRecipeMessage(null);
+
+    try {
+      const response = await fetch(`/api/app/playlists/${encodeURIComponent(playlist.id)}/recipe`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: recipeName,
+          playlistNote: recipeNote,
+          targetTrackMin: null,
+          targetTrackMax: parseTargetTrackCount(recipeTargetMax),
+          duplicatePolicy: currentRecipe?.duplicatePolicy ?? "avoid_duplicates",
+          allowExplicit: recipeAllowExplicit,
+          includeLibraryOnly: recipeLibraryOnly,
+          tags: parseRecipeTags(recipeTags)
+        })
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { recipe?: PlaylistRecipe; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.recipe) {
+        setRecipeError(payload?.error ?? "Playlist Recipe could not be saved.");
+        return;
+      }
+
+      setCurrentRecipe(payload.recipe);
+      setRecipeName(payload.recipe.name);
+      setRecipeNote(payload.recipe.playlistNote ?? "");
+      setRecipeTags(formatRecipeTags(payload.recipe.tags));
+      setRecipeTargetMax(
+        payload.recipe.targetTrackMax ? payload.recipe.targetTrackMax.toString() : ""
+      );
+      setRecipeAllowExplicit(payload.recipe.allowExplicit);
+      setRecipeLibraryOnly(payload.recipe.includeLibraryOnly);
+      setRecipeMessage("Playlist Recipe saved.");
+      router.refresh();
+    } finally {
+      setIsSavingRecipe(false);
+    }
+  }
+
   async function exportGeneration() {
     if (!generation) {
       return;
@@ -115,46 +180,91 @@ export function PlaylistDetailWorkspace({
             {playlist.description ?? "No playlist description saved yet."}
           </p>
 
-          {recipe ? (
-            <div className="mt-6 space-y-5">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-platform-muted">
-                  Instructions
-                </p>
-                <p className="mt-2 text-sm leading-7 text-white">
-                  {recipe.playlistNote ?? "No extra instructions."}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-platform-muted">
-                  Tags
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {recipe.tags.length > 0 ? (
-                    recipe.tags.map((tag) => (
-                      <span
-                        key={tag.id}
-                        className="rounded-full border border-white/10 bg-white/[0.07] px-3 py-1 text-xs text-white"
-                      >
-                        {tag.category}: {tag.value}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-platform-secondary">No tags saved.</span>
-                  )}
-                </div>
-              </div>
-              <dl className="grid gap-3 rounded-[1.25rem] border border-white/10 bg-black/16 p-4 text-sm text-platform-secondary">
-                <MetaRow label="Target" value={formatTarget(recipe)} />
-                <MetaRow label="Explicit" value={recipe.allowExplicit ? "Allowed" : "Blocked"} />
-                <MetaRow label="Library only" value={recipe.includeLibraryOnly ? "Yes" : "No"} />
-              </dl>
+          <form className="mt-6 space-y-5" onSubmit={saveRecipe}>
+            <RecipeField label="Recipe name" htmlFor="playlist-recipe-name">
+              <input
+                id="playlist-recipe-name"
+                required
+                value={recipeName}
+                onChange={(event) => setRecipeName(event.target.value)}
+                className={recipeInputClassName}
+              />
+            </RecipeField>
+            <RecipeField label="Instructions" htmlFor="playlist-recipe-note">
+              <textarea
+                id="playlist-recipe-note"
+                value={recipeNote}
+                onChange={(event) => setRecipeNote(event.target.value)}
+                rows={4}
+                className={recipeInputClassName}
+                placeholder="Keep it energetic, modern, and avoid soft pop features."
+              />
+            </RecipeField>
+            <RecipeField
+              label="Tags"
+              htmlFor="playlist-recipe-tags"
+              hint="Use category:value pairs, separated by commas."
+            >
+              <input
+                id="playlist-recipe-tags"
+                value={recipeTags}
+                onChange={(event) => setRecipeTags(event.target.value)}
+                className={recipeInputClassName}
+                placeholder="genre: rap, mood: hype, language: ukrainian"
+              />
+            </RecipeField>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <RecipeField label="Target tracks" htmlFor="playlist-recipe-target">
+                <input
+                  id="playlist-recipe-target"
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={recipeTargetMax}
+                  onChange={(event) => setRecipeTargetMax(event.target.value)}
+                  className={recipeInputClassName}
+                />
+              </RecipeField>
+              <label className="flex min-h-11 items-center gap-3 rounded-[1.25rem] border border-white/10 bg-black/16 px-4 py-3 text-sm font-medium text-white sm:mt-7">
+                <input
+                  type="checkbox"
+                  checked={recipeAllowExplicit}
+                  onChange={(event) => setRecipeAllowExplicit(event.target.checked)}
+                  className="h-5 w-5 accent-platform-pink"
+                />
+                Allow explicit
+              </label>
+              <label className="flex min-h-11 items-center gap-3 rounded-[1.25rem] border border-white/10 bg-black/16 px-4 py-3 text-sm font-medium text-white sm:mt-7">
+                <input
+                  type="checkbox"
+                  checked={recipeLibraryOnly}
+                  onChange={(event) => setRecipeLibraryOnly(event.target.checked)}
+                  className="h-5 w-5 accent-platform-pink"
+                />
+                Library only
+              </label>
             </div>
-          ) : (
-            <p className="mt-6 rounded-[1.25rem] border border-white/10 bg-black/16 p-4 text-sm leading-7 text-platform-secondary">
-              Save a recipe before generating this playlist.
-            </p>
-          )}
+            {recipeError ? (
+              <p className="rounded-[1rem] border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] px-4 py-3 text-sm text-platform-danger">
+                {recipeError}
+              </p>
+            ) : null}
+            {recipeMessage ? (
+              <p className="rounded-[1rem] border border-[rgba(47,212,133,0.24)] bg-[rgba(47,212,133,0.10)] px-4 py-3 text-sm text-platform-success">
+                {recipeMessage}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit" disabled={isSavingRecipe} className="min-w-36">
+                {isSavingRecipe ? "Saving..." : "Save Recipe"}
+              </Button>
+              {currentRecipe ? (
+                <StatusPill label={`Target ${formatTarget(currentRecipe)}`} tone="inverse" />
+              ) : (
+                <StatusPill label="Recipe required" tone="warning" />
+              )}
+            </div>
+          </form>
 
           {generationError ? (
             <p className="mt-5 rounded-[1rem] border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] px-4 py-3 text-sm text-platform-danger">
@@ -164,8 +274,8 @@ export function PlaylistDetailWorkspace({
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
-              disabled={!recipe || isGenerating}
-              variant={!recipe ? "disabled" : "primary"}
+              disabled={!currentRecipe || isGenerating}
+              variant={!currentRecipe ? "disabled" : "primary"}
               onClick={async () => {
                 setIsGenerating(true);
                 setGenerationError(null);
@@ -250,7 +360,9 @@ export function PlaylistDetailWorkspace({
                     {generation.tracks.map((item) => (
                       <tr
                         key={item.id}
-                        className={item.decision === "remove" ? "bg-black/24 opacity-60" : "bg-black/12"}
+                        className={
+                          item.decision === "remove" ? "bg-black/24 opacity-60" : "bg-black/12"
+                        }
                       >
                         <th scope="row" className="px-4 py-3 font-medium text-white">
                           <span className="block">{item.track?.name ?? "Unknown track"}</span>
@@ -383,11 +495,27 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+const recipeInputClassName =
+  "mt-2 w-full min-w-0 rounded-[1rem] border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-platform-muted focus:border-platform-pink focus:ring-2 focus:ring-platform-pink/25";
+
+function RecipeField({
+  label,
+  htmlFor,
+  hint,
+  children
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <dt>{label}</dt>
-      <dd className="text-right text-white">{value}</dd>
+    <div className="min-w-0">
+      <label htmlFor={htmlFor} className="text-sm font-medium text-white">
+        {label}
+      </label>
+      {hint ? <p className="mt-1 text-xs leading-5 text-platform-muted">{hint}</p> : null}
+      {children}
     </div>
   );
 }
@@ -406,6 +534,56 @@ function formatTarget(recipe: PlaylistRecipe) {
   }
 
   return "No target";
+}
+
+const recipeTagCategories = new Set<PlaylistRecipeTagCategory>([
+  "mood",
+  "genre",
+  "language",
+  "era",
+  "region",
+  "energy",
+  "activity",
+  "artist_style",
+  "custom"
+]);
+
+function formatRecipeTags(tags: PlaylistRecipeTag[]) {
+  return tags.map((tag) => `${tag.category}: ${tag.value}`).join(", ");
+}
+
+function parseRecipeTags(value: string): PlaylistRecipeTag[] {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 30)
+    .map((item) => {
+      const [rawCategory, ...rest] = item.split(":");
+      const maybeCategory = normalizeRecipeTagCategory(rawCategory);
+      const tagValue = maybeCategory ? rest.join(":").trim() : item;
+      const category = maybeCategory ?? "custom";
+
+      return {
+        id: `tag_${category}_${tagValue.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`,
+        category,
+        value: tagValue || item
+      };
+    });
+}
+
+function normalizeRecipeTagCategory(value: string): PlaylistRecipeTagCategory | null {
+  const normalized = value.trim().toLowerCase().replaceAll(" ", "_");
+
+  return recipeTagCategories.has(normalized as PlaylistRecipeTagCategory)
+    ? (normalized as PlaylistRecipeTagCategory)
+    : null;
+}
+
+function parseTargetTrackCount(value: string) {
+  const parsed = Number.parseInt(value, 10);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 function formatDateTime(value: string) {

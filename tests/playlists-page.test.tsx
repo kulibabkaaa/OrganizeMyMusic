@@ -161,7 +161,10 @@ describe("playlists page", () => {
     );
 
     expect(markup).toContain("Playlist recipe");
+    expect(markup).toContain("Recipe name");
     expect(markup).toContain("Keep it hard and energetic.");
+    expect(markup).toContain("genre: rap");
+    expect(markup).toContain("Save Recipe");
     expect(markup).toContain("Review proposed tracks");
     expect(markup).toContain("Rap Track");
     expect(markup).toContain("Remove");
