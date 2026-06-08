@@ -8,6 +8,7 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  void request;
   const session = await getAuthenticatedSession();
 
   if (session.status !== "authenticated") {
@@ -37,6 +38,8 @@ export async function GET(
     sortRunId: sortRun.id,
     state: sortRun.state,
     paymentStatus: sortRun.paymentStatus,
+    nextPath: `/app/sorts/${encodeURIComponent(sortRun.id)}`,
+    nextApiPath: `/api/app/sorts/${encodeURIComponent(sortRun.id)}`,
     previewSnapshot: sortRun.previewSnapshot,
     playlistRequests: sortRun.requests
   });
