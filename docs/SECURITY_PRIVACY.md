@@ -47,6 +47,13 @@ Rules:
 - Add encryption versioning.
 - Plan for key rotation later.
 
+Log hardening:
+
+- Runtime logs use recursive sanitization for token-like, secret-like,
+  private-key-like, cookie, and authorization fields.
+- Do not add new logging that serializes raw Apple Music token payloads, raw
+  Apple Music API responses, or full prompt bodies.
+
 ## Apple private key
 
 Rules:

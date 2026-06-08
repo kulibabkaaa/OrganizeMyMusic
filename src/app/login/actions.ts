@@ -35,7 +35,7 @@ export async function signInWithPassword(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect("/app");
 }
 
 export async function signUpWithPassword(formData: FormData) {
@@ -53,7 +53,7 @@ export async function signUpWithPassword(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect("/app");
 }
 
 async function signInWithOAuthProvider(provider: "apple" | "google") {

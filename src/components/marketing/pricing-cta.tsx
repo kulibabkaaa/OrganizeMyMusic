@@ -22,7 +22,7 @@ export function PricingCta() {
 
           <div className="flex flex-col items-start gap-4 lg:items-end">
             <div className="font-display text-5xl tracking-[0em]">Review first</div>
-            <Link href="/dashboard">
+            <Link href="/app">
               <Button className="min-w-44">Open app</Button>
             </Link>
           </div>

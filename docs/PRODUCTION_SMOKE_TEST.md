@@ -128,6 +128,12 @@ As of 2026-06-08:
 
 - The platform-first code path builds locally and passes typecheck, lint, tests,
   and production build.
+- `/app` is the canonical platform dashboard. `/dashboard` redirects to `/app`
+  for compatibility with older links and smoke checks.
+- The dashboard, playlist hub, and playlist detail screens use the simplified
+  MVP structure: primary organization action, playlist queue visibility, inline
+  safety copy, track review, explicit export, and collapsed generation history.
+- Logger redaction now recursively sanitizes token-like and secret-like fields.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - Hosted schema was checked directly: `playlist_recipes_scope_check` is

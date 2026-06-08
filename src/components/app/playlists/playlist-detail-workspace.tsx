@@ -42,6 +42,60 @@ export function PlaylistDetailWorkspace({
     keptCount > 0 &&
     generation?.generation.status !== "exporting" &&
     generation?.generation.status !== "exported";
+  async function exportGeneration() {
+    if (!generation) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Create an Apple Music playlist and add ${keptCount} approved tracks?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError(null);
+    setExportMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/app/playlists/${encodeURIComponent(
+          playlist.id
+        )}/generations/${encodeURIComponent(generation.generation.id)}/export`,
+        { method: "POST" }
+      );
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            export?: {
+              selectedTrackCount: number;
+              jobId: string | null;
+            };
+            error?: string;
+          }
+        | null;
+
+      if (!response.ok || !payload?.export) {
+        setExportError(payload?.error ?? "Apple Music export failed.");
+        return;
+      }
+
+      setExportMessage(
+        `Apple Music export queued for ${payload.export.selectedTrackCount} approved tracks.`
+      );
+      setGeneration({
+        ...generation,
+        generation: {
+          ...generation.generation,
+          status: "exporting"
+        }
+      });
+      router.refresh();
+    } finally {
+      setIsExporting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -157,6 +211,10 @@ export function PlaylistDetailWorkspace({
             Edit every track before Apple Music export. Removed tracks stay out of the approved
             list for this generation.
           </p>
+          <p className="mt-2 text-xs leading-6 text-platform-muted">
+            Export creates an Apple Music playlist and adds approved tracks. It does not replace,
+            reorder, or remove tracks from existing Apple Music playlists.
+          </p>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <Metric label="Proposed" value={(generation?.tracks.length ?? 0).toString()} />
@@ -235,21 +293,14 @@ export function PlaylistDetailWorkspace({
               </div>
             )}
           </div>
-        </Card>
-      </section>
 
-      <Card className="p-7">
-        <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div>
-            <StatusPill label="Export wording" tone="warning" />
-            <h2 className="mt-4 font-display text-2xl font-semibold tracking-[0em] text-white">
-              Apple Music export stays explicit
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-platform-secondary">
-              MVP copy uses Create Apple Music playlist and Add approved tracks. The app only
-              manages playlists created here and does not promise automatic replacement, reorder, or
-              removal from Apple Music.
-            </p>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+            <div>
+              <p className="text-sm font-medium text-white">Ready after review</p>
+              <p className="mt-1 text-sm text-platform-secondary">
+                {keptCount} approved {keptCount === 1 ? "track" : "tracks"} will be added.
+              </p>
+            </div>
             {exportError ? (
               <p className="mt-4 rounded-[1rem] border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] px-4 py-3 text-sm text-platform-danger">
                 {exportError}
@@ -260,88 +311,34 @@ export function PlaylistDetailWorkspace({
                 {exportMessage}
               </p>
             ) : null}
+            <Button
+              disabled={!canExport || isExporting}
+              variant={!canExport ? "disabled" : "primary"}
+              className="min-w-56"
+              onClick={exportGeneration}
+            >
+              {isExporting ? "Exporting..." : "Create Apple Music playlist"}
+            </Button>
           </div>
-          <Button
-            disabled={!canExport || isExporting}
-            variant={!canExport ? "disabled" : "primary"}
-            className="min-w-56"
-            onClick={async () => {
-              if (!generation) {
-                return;
-              }
+        </Card>
+      </section>
 
-              const confirmed = window.confirm(
-                `Create an Apple Music playlist and add ${keptCount} approved tracks?`
-              );
-
-              if (!confirmed) {
-                return;
-              }
-
-              setIsExporting(true);
-              setExportError(null);
-              setExportMessage(null);
-
-              try {
-                const response = await fetch(
-                  `/api/app/playlists/${encodeURIComponent(
-                    playlist.id
-                  )}/generations/${encodeURIComponent(generation.generation.id)}/export`,
-                  { method: "POST" }
-                );
-                const payload = (await response.json().catch(() => null)) as
-                  | {
-                      export?: {
-                        selectedTrackCount: number;
-                        jobId: string | null;
-                      };
-                      error?: string;
-                    }
-                  | null;
-
-                if (!response.ok || !payload?.export) {
-                  setExportError(payload?.error ?? "Apple Music export failed.");
-                  return;
-                }
-
-                setExportMessage(
-                  `Apple Music export queued for ${payload.export.selectedTrackCount} approved tracks.`
-                );
-                setGeneration({
-                  ...generation,
-                  generation: {
-                    ...generation.generation,
-                    status: "exporting"
-                  }
-                });
-                router.refresh();
-              } finally {
-                setIsExporting(false);
-              }
-            }}
-          >
-            {isExporting ? "Exporting..." : "Create Apple Music playlist"}
-          </Button>
-        </div>
-      </Card>
-
-      <Card className="p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <StatusPill label="History" tone="muted" />
-            <h2 className="mt-4 font-display text-2xl font-semibold tracking-[0em] text-white">
+      <details className="rounded-[1.5rem] border border-platform-border bg-platform-card p-6">
+        <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-4">
+          <span>
+            <span className="block font-display text-2xl font-semibold tracking-[0em] text-white">
               Generation history
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-platform-secondary">
+            </span>
+            <span className="mt-2 block max-w-3xl text-sm leading-7 text-platform-secondary">
               Regenerate this playlist anytime. Previous generation records stay visible so users
               can see when the recipe last produced tracks.
-            </p>
-          </div>
+            </span>
+          </span>
           <StatusPill
             label={`${generationHistory.length} ${generationHistory.length === 1 ? "run" : "runs"}`}
             tone="inverse"
           />
-        </div>
+        </summary>
 
         {generationHistory.length > 0 ? (
           <ol className="mt-5 grid gap-3">
@@ -372,7 +369,7 @@ export function PlaylistDetailWorkspace({
             No generations yet. Generate this playlist to create the first reviewable version.
           </p>
         )}
-      </Card>
+      </details>
     </div>
   );
 }

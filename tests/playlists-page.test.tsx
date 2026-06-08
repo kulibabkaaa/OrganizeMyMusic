@@ -121,10 +121,10 @@ describe("playlists page", () => {
     expect(markup).toContain("Playlists");
     expect(markup).toContain("Saved playlist system");
     expect(markup).toContain("Create Playlist");
-    expect(markup).toContain("App-created playlists only");
+    expect(markup).toContain("MVP safety");
+    expect(markup).toContain("Existing Apple Music playlists stay untouched");
     expect(markup).toContain("No saved playlists yet");
     expect(markup).toContain("review the result before export");
-    expect(markup).toContain("Organize My Library");
   });
 
   it("renders saved app-created playlists and export status", () => {
@@ -132,8 +132,7 @@ describe("playlists page", () => {
 
     expect(markup).toContain("Ukrainian Rap");
     expect(markup).toContain("High-energy Ukrainian rap from my saved library.");
-    expect(markup).toContain("Saved playlists");
-    expect(markup).toContain("Apple Music exports");
+    expect(markup).toContain("Build playlists from your library");
     expect(markup).toContain("Exported");
     expect(markup).toContain("/app/playlists/playlist_1");
     expect(markup).not.toContain("No saved playlists yet");

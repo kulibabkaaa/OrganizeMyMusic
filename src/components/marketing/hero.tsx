@@ -47,7 +47,7 @@ export function Hero() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link href="/dashboard">
+              <Link href="/app">
                 <Button className="min-h-14 min-w-52 px-7 py-4 text-base shadow-[0_28px_90px_rgba(255,4,54,0.22)]">
                   Start a sort
                 </Button>

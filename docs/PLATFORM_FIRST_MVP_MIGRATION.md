@@ -180,6 +180,13 @@ Acceptance:
 - `Playlists` becomes a primary nav item.
 - No billing emphasis.
 
+Current MVP implementation:
+
+- `/app` is the canonical dashboard route.
+- `/dashboard` redirects to `/app` for compatibility with old links.
+- The dashboard uses state-based product copy instead of pipeline placeholders.
+- Ready dashboards show saved playlist, review, and new-music queues.
+
 ### PFM-004 Sort Builder v2
 
 Adapt the current builder into the two-pane playlist/recipe workspace.
@@ -203,7 +210,8 @@ Acceptance:
 Current MVP implementation:
 
 - Playlist detail shows the latest generation for track-level review.
-- Playlist detail also shows recent generation history with status and proposed track counts.
+- Playlist detail keeps export controls inside the review panel and collapses
+  generation history by default to reduce MVP screen density.
 
 ### PFM-006 Generation model migration
 
