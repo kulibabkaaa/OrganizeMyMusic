@@ -125,7 +125,7 @@ export function createSupabaseBillingStore(supabase: SupabaseClient): BillingSto
         .order("updated_at", { ascending: false });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "Unable to load billing Sorts.");
+        throw new Error(error?.message ?? "Unable to load billing organization records.");
       }
 
       return data as BillingSortRunRow[];
@@ -138,7 +138,7 @@ export function createSupabaseBillingStore(supabase: SupabaseClient): BillingSto
         .eq("user_id", userId);
 
       if (sortRunError || !sortRuns) {
-        throw new Error(sortRunError?.message ?? "Unable to load payment Sorts.");
+        throw new Error(sortRunError?.message ?? "Unable to load payment organization records.");
       }
 
       const sortRunIds = sortRuns.map((sortRun) => sortRun.id as string);

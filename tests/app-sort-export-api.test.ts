@@ -128,7 +128,7 @@ describe("POST /api/app/sorts/[sortId]/export", () => {
     );
   });
 
-  it("uses stored full-organization playlists as the export review snapshot for paid Sorts", async () => {
+  it("uses stored full-organization playlists as the export review snapshot for started Sorts", async () => {
     const storedSnapshot = {
       sortRunId: "sort_1",
       librarySyncId: "sync_1",

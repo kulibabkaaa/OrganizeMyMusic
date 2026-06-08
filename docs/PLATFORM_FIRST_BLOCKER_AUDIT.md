@@ -293,6 +293,9 @@ Follow-up observed earlier on 2026-06-08:
 - If the local shell is on unsupported Node `v25.x`, `npm run build` can still
   reproduce the missing `.next/server/pages-manifest.json` failure. Use the
   declared Node `24.x` runtime from `package.json` for local and CI verification.
+- If `next typegen` runs immediately before `next build`, local `.next` state
+  can also reproduce that manifest failure. Remove `.next` and rerun
+  `npm run build` under Node `24.x`; the clean build and Vercel preview pass.
 
 Remaining follow-up:
 
