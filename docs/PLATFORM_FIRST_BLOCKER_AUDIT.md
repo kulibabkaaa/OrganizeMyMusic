@@ -42,6 +42,9 @@ Latest local audit on 2026-06-08:
   the playlist hub filters to playlists with proposed tracks waiting for review.
 - Dashboard new-music queues now deep-link to the `Process New Music` card on
   the library page.
+- Sorts index and empty-state CTAs now use `Organize My Library` instead of
+  `Create a Sort`, keeping `Sort` as the full-library object while presenting
+  the primary action in product language.
 - Playlist hub cards surface the latest generation review/export state for each
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before
