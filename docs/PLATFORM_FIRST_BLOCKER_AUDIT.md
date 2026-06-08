@@ -61,6 +61,9 @@ Latest local audit on 2026-06-08:
 - Full-organization persistence now has regression coverage for creating persistent app
   playlists, storing reviewable generations, and linking Sort-created recipes to
   those playlists for later Playlist Hub editing.
+- Full-organization persistence coverage now explicitly proves a Sort can create
+  three persistent app playlists and link each Sort-created recipe to its saved
+  playlist.
 - Sort Builder advanced recipe controls are collapsed by default and open when
   needed for tag notes or detailed tuning.
 - Logger redaction now recursively sanitizes token-like, secret-like, private
@@ -97,6 +100,9 @@ Latest local audit on 2026-06-08:
 - Full-organization start and preview screens now avoid checkout-first wording
   in the billing-deferred MVP path; copy uses organization, generation, review,
   `Create Apple Music playlists`, and `add approved tracks` language.
+- Dead legacy Sort-request client components that posted directly to
+  `/api/sort-runs` were removed, so current app UI cannot re-enter the old
+  freeform request flow.
 - Preview warnings, Sort empty states, processing, and review headings now use
   full-organization wording instead of old paywall-era wording.
 - Hosted Supabase has platform migrations `platform_playlists` and

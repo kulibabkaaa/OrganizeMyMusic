@@ -496,7 +496,7 @@ The main gaps this roadmap addresses:
 2. Auth route is currently `/login`; target flow wants `/auth`.
 3. App home is currently `src/app/(app)/dashboard/page.tsx`; target flow wants `/app`.
 4. Current preview route is `src/app/(app)/sorts/[id]/page.tsx`; target flow wants status-aware `/app/sorts/[sortId]` routes.
-5. Current playlist request UI is a textarea in `PlaylistRequestCard`; target flow needs structured Playlist Recipes and Tags.
+5. Legacy playlist request UI has been retired; target flow uses structured Playlist Recipes and Tags.
 6. Current preview/review/write-back UI is too combined; target flow separates Preview, Checkout, Processing, Review, Exporting, and Complete.
 7. Stripe/payment is deferred or incomplete; target flow needs one-time unlock per Sort.
 8. Billing/settings/sorts index should become first-class platform surfaces.
@@ -1904,7 +1904,7 @@ Files:
 ```text
 src/components/app/pipeline-overview.tsx
 src/components/app/latest-sort-run-card.tsx
-src/components/app/playlist-request-card.tsx
+structured Sort Builder playlist recipe components
 src/app/(app)/dashboard/page.tsx
 new /app pages
 ```
