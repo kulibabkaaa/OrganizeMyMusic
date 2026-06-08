@@ -70,7 +70,7 @@ export default async function SortReviewPage({
             Review is not ready
           </h1>
           <p className="mt-3 text-sm leading-7 text-platform-secondary">
-            Full Sort results are needed before review. Apple Music export still requires explicit confirmation.
+            Full-organization results are needed before review. Apple Music export still requires explicit confirmation.
           </p>
         </Card>
       </AppShell>

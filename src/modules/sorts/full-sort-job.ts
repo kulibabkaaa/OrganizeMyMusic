@@ -150,7 +150,7 @@ export async function queueFullSortAfterPayment(input: {
   if (!sortRun) {
     return {
       status: "not_ready",
-      message: "Paid Sort is not ready for full sorting."
+      message: "Paid Sort is not ready for full organization."
     };
   }
 
@@ -180,7 +180,7 @@ export async function queueFullSortAfterPayment(input: {
     sortRunId: sortRun.id,
     stage: "full_sort",
     level: "info",
-    message: "Full Sort queued after payment confirmation.",
+    message: "Full organization queued after confirmation.",
     details: createPrivacySafeJobDetails({
       eventType: "full_sort_queued",
       jobName: FULL_SORT_JOB_NAME,
@@ -203,7 +203,7 @@ export async function handleFullSortJob(input: {
   const sortRun = await input.store.getPaidSortRunForFullSort(input.data);
 
   if (!sortRun) {
-    throw new Error("Paid Sort is not ready for full sorting.");
+    throw new Error("Paid Sort is not ready for full organization.");
   }
 
   if (sortRun.generatedPlaylistCount > 0) {
@@ -218,14 +218,14 @@ export async function handleFullSortJob(input: {
 
   try {
     if (!sortRun.librarySyncId) {
-      throw new Error("Completed Apple Music library sync is required before full sorting.");
+      throw new Error("Completed Apple Music library sync is required before full organization.");
     }
 
     await input.store.createJobEvent({
       sortRunId: sortRun.id,
       stage: "preparing_library",
       level: "info",
-      message: "Preparing Apple Music library for full Sort.",
+      message: "Preparing Apple Music library for full organization.",
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_preparing_library",
         jobName: FULL_SORT_JOB_NAME
@@ -238,7 +238,7 @@ export async function handleFullSortJob(input: {
     });
 
     if (recipes.length === 0) {
-      throw new Error("At least one Playlist Recipe is required before full sorting.");
+      throw new Error("At least one Playlist Recipe is required before full organization.");
     }
 
     const tracks = await input.store.listTracksForFullSort({
@@ -263,7 +263,7 @@ export async function handleFullSortJob(input: {
       sortRunId: sortRun.id,
       stage: "full_sort",
       level: "info",
-      message: `Building full Sort from ${recipes.length} Playlist Recipes.`,
+      message: `Building full organization from ${recipes.length} Playlist Recipes.`,
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_building",
         counts: {
@@ -297,7 +297,7 @@ export async function handleFullSortJob(input: {
       sortRunId: sortRun.id,
       stage: "preparing_review",
       level: "info",
-      message: `Full Sort generated ${playlists.length} playlists with ${trackCount} tracks.`,
+      message: `Full organization generated ${playlists.length} playlists with ${trackCount} tracks.`,
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_completed",
         durationMs: getWorkflowDurationMs(startedAt),
@@ -318,7 +318,7 @@ export async function handleFullSortJob(input: {
     };
   } catch (error) {
     const failure = createPrivacySafeFailure({
-      workflowName: "Full Sort",
+      workflowName: "Full organization",
       error
     });
 
@@ -331,7 +331,7 @@ export async function handleFullSortJob(input: {
       sortRunId: sortRun.id,
       stage: "full_sort",
       level: "error",
-      message: "Full Sort failed.",
+      message: "Full organization failed.",
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_failed",
         durationMs: getWorkflowDurationMs(startedAt),
@@ -489,7 +489,7 @@ export function createSupabaseFullSortStore(supabase: SupabaseClient): FullSortS
         .select("id");
 
       if (playlistError || !playlistRows) {
-        throw new Error(playlistError?.message ?? "Unable to store full Sort playlists.");
+        throw new Error(playlistError?.message ?? "Unable to store full-organization playlists.");
       }
 
       const { data: generationRows, error: generationError } = await supabase
@@ -667,7 +667,7 @@ export async function loadStoredFullSortReviewSnapshot(input: {
         .order("position", { ascending: true });
 
       if (trackError || !trackRows) {
-        throw new Error(trackError?.message ?? "Unable to load full Sort tracks.");
+        throw new Error(trackError?.message ?? "Unable to load full-organization tracks.");
       }
 
       return {

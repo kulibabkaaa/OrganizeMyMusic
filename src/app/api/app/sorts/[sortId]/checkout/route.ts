@@ -81,7 +81,7 @@ export async function POST(
 
     if (!result) {
       return NextResponse.json(
-        { error: "Full Sort queue is not configured." },
+        { error: "Full organization queue is not configured." },
         { status: 503 }
       );
     }

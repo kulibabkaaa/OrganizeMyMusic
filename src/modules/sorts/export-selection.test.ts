@@ -163,7 +163,7 @@ describe("exportReviewedPlaylists", () => {
     );
   });
 
-  it("exports paid full Sorts that have stored review snapshots", async () => {
+  it("exports paid full-organization runs that have stored review snapshots", async () => {
     const paidSortRun = {
       ...previewSortRun,
       state: "paid" as const,

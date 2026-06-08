@@ -128,7 +128,7 @@ describe("POST /api/app/sorts/[sortId]/export", () => {
     );
   });
 
-  it("uses stored full Sort playlists as the export review snapshot for paid Sorts", async () => {
+  it("uses stored full-organization playlists as the export review snapshot for paid Sorts", async () => {
     const storedSnapshot = {
       sortRunId: "sort_1",
       librarySyncId: "sync_1",
@@ -207,7 +207,7 @@ describe("POST /api/sort-runs/[id]/confirm", () => {
 });
 
 describe("POST /api/sort-runs/[id]/checkout", () => {
-  it("does not unlock full sorting from the legacy checkout endpoint", async () => {
+  it("does not unlock full organization from the legacy checkout endpoint", async () => {
     vi.clearAllMocks();
 
     const response = await legacyCheckoutPost(
@@ -218,7 +218,7 @@ describe("POST /api/sort-runs/[id]/checkout", () => {
     );
 
     await expect(response.json()).resolves.toEqual({
-      error: "Use the platform full Sort start endpoint."
+      error: "Use the platform full-organization start endpoint."
     });
     expect(response.status).toBe(409);
     expect(withPgBossMock).not.toHaveBeenCalled();

@@ -79,7 +79,7 @@ function createStore(overrides: Partial<FullSortStore> = {}): FullSortStore {
 }
 
 describe("full sort job", () => {
-  it("queues full sorting only after payment is confirmed", async () => {
+  it("queues full organization only after payment is confirmed", async () => {
     const store = createStore();
     const queue = {
       createQueue: vi.fn().mockResolvedValue(undefined),
@@ -134,7 +134,7 @@ describe("full sort job", () => {
       })
     ).resolves.toEqual({
       status: "not_ready",
-      message: "Paid Sort is not ready for full sorting."
+      message: "Paid Sort is not ready for full organization."
     });
 
     expect(queue.send).not.toHaveBeenCalled();
@@ -179,7 +179,7 @@ describe("full sort job", () => {
     expect(store.createJobEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         stage: "preparing_review",
-        message: "Full Sort generated 1 playlists with 1 tracks."
+        message: "Full organization generated 1 playlists with 1 tracks."
       })
     );
   });
@@ -318,7 +318,7 @@ describe("full sort job", () => {
     ]);
   });
 
-  it("records failed full Sort jobs without raw track names or tokens", async () => {
+  it("records failed full-organization jobs without raw track names or tokens", async () => {
     const store = createStore({
       listRecipesForSort: vi.fn().mockRejectedValue(
         new Error("raw-music-user-token failed while sorting Track One by Artist One.")
@@ -330,19 +330,19 @@ describe("full sort job", () => {
         store,
         data: { sortRunId: "sort_1", userId: "user_1" }
       })
-    ).rejects.toThrow("Full Sort failed. Failure category: authentication.");
+    ).rejects.toThrow("Full organization failed. Failure category: authentication.");
 
     expect(store.markSortRunFailed).toHaveBeenCalledWith({
       sortRunId: "sort_1",
       userId: "user_1",
-      errorSummary: "Full Sort failed. Failure category: authentication."
+      errorSummary: "Full organization failed. Failure category: authentication."
     });
     expect(store.createJobEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         sortRunId: "sort_1",
         stage: "full_sort",
         level: "error",
-        message: "Full Sort failed.",
+        message: "Full organization failed.",
         details: expect.objectContaining({
           eventType: "full_sort_failed",
           failureCategory: "authentication",

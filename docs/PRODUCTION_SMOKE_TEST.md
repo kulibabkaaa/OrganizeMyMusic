@@ -53,7 +53,7 @@ library data and creates real playlists only after explicit confirmation.
     - sad Slavic songs
 16. Start full organization from `/app/sorts/{sortId}/start` with billing
     deferred; use development bypass only in approved local/staging smoke.
-17. Full Sort processing.
+17. Full-organization processing.
 18. Review playlist names, descriptions, track counts, and included tracks.
 19. Deselect playlists or remove tracks that should not be created.
 20. Explicit export to Apple Music only when the review is acceptable.
@@ -104,7 +104,7 @@ platform-first completion gate.
 13. Start full organization from `/app/sorts/{sortId}/start` with billing
     deferred or approved development bypass depending on environment
     configuration.
-14. Full Sort processing.
+14. Full-organization processing.
 15. Review playlist names, descriptions, track counts, and included tracks.
 16. Deselect or remove anything that should not be created.
 17. Explicit export to Apple Music only when the review is acceptable.

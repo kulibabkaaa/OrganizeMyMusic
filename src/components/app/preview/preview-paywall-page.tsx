@@ -24,7 +24,7 @@ export function PreviewPaywallPage({
             Preview your library organization
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            See likely playlist shape before full organization. Full sorting, editing, and export
+            See likely playlist shape before full organization. Editing and export
             review become available after you start.
           </p>
           <WorkflowEscapeActions
