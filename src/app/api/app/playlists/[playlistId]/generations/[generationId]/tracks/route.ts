@@ -18,8 +18,15 @@ const decisionSchema = z.object({
         decision: z.enum(["keep", "remove"])
       })
     )
-    .min(1)
     .max(500)
+}).superRefine((value, context) => {
+  if (!value.markReviewed && value.decisions.length === 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["decisions"],
+      message: "At least one track decision is required unless review is being completed."
+    });
+  }
 });
 
 export async function PATCH(

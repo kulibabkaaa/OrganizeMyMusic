@@ -259,6 +259,34 @@ describe("playlists page", () => {
     expect(markup).toContain("12 proposed tracks");
   });
 
+  it("lets users complete review for an empty playlist generation", () => {
+    const markup = renderToStaticMarkup(
+      <PlaylistDetailWorkspace
+        playlist={playlist}
+        recipe={recipe}
+        latestGeneration={{
+          ...latestGeneration,
+          tracks: []
+        }}
+        generationHistory={[
+          {
+            generation: latestGeneration.generation,
+            trackCount: 0
+          }
+        ]}
+      />
+    );
+
+    expect(markup).toContain("No tracks matched this recipe.");
+    expect(markup).toContain("Complete review to clear this queue");
+    expect(markup).toContain("Mark Review Complete");
+    expect(markup).toContain("0 approved tracks will be added.");
+    expect(markup).toContain("Create Apple Music playlist");
+    expect(markup).not.toContain(
+      "Generate this playlist to review proposed tracks from your synced Apple Music library."
+    );
+  });
+
   it("labels new-music generations as incremental suggestions", () => {
     const newMusicGeneration = {
       ...latestGeneration,

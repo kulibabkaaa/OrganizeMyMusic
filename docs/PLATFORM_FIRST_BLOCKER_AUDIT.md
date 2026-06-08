@@ -54,6 +54,13 @@ Latest local audit on 2026-06-08:
   of old `playlist requests` language.
 - Runtime fallback errors now refer to `Playlist Recipes` instead of old
   playlist-request wording when Sort recipe rows cannot load or store.
+- Empty playlist generations can now be explicitly marked reviewed without fake
+  track decisions, so no-match recipe results do not stay stuck in review
+  queues.
+- Active acceptance docs now make `/app` the canonical dashboard route, treat
+  500-track smoke as a scale check only when the account has enough saved songs,
+  and keep the old Sort-first roadmap as historical context rather than the
+  current completion gate.
 - Playlist hub cards surface the latest generation review/export state for each
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before

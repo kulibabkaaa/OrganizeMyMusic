@@ -167,7 +167,7 @@ export function PlaylistDetailWorkspace({
   }
 
   async function markReviewComplete() {
-    if (!generation || generation.tracks.length === 0) {
+    if (!generation) {
       return;
     }
 
@@ -517,8 +517,9 @@ export function PlaylistDetailWorkspace({
             ) : (
               <div className="rounded-[1.25rem] border border-white/10 bg-black/16 p-5">
                 <p className="text-sm leading-7 text-platform-secondary">
-                  Generate this playlist to review proposed tracks from your synced Apple Music
-                  library.
+                  {generation
+                    ? "No tracks matched this recipe. Complete review to clear this queue, then adjust the recipe and regenerate when ready."
+                    : "Generate this playlist to review proposed tracks from your synced Apple Music library."}
                 </p>
               </div>
             )}
@@ -547,7 +548,6 @@ export function PlaylistDetailWorkspace({
               <Button
                 disabled={
                   !generation ||
-                  generation.tracks.length === 0 ||
                   isReviewComplete ||
                   isSavingReview
                 }

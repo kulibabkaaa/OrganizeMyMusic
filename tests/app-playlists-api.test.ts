@@ -682,6 +682,29 @@ describe("platform playlist API routes", () => {
     });
   });
 
+  it("requires a track decision unless review completion is explicit", async () => {
+    const response = await PATCH_GENERATION_TRACKS(
+      new Request("http://test.local", {
+        method: "PATCH",
+        body: JSON.stringify({
+          decisions: []
+        })
+      }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid track decision payload."
+    });
+    expect(response.status).toBe(400);
+    expect(generationStore.updateTrackDecisions).not.toHaveBeenCalled();
+  });
+
   it("does not save track reviews for archived playlists", async () => {
     vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce({
       ...playlist,
@@ -817,6 +840,54 @@ describe("platform playlist API routes", () => {
           decision: "keep"
         }
       ]
+    });
+  });
+
+  it("marks an empty generated playlist reviewed when review completion is explicit", async () => {
+    const emptyGeneration = {
+      ...generation,
+      tracks: []
+    };
+    vi.mocked(generationStore.updateTrackDecisions).mockResolvedValueOnce({
+      ...emptyGeneration,
+      generation: {
+        ...emptyGeneration.generation,
+        status: "reviewed"
+      }
+    });
+
+    const response = await PATCH_GENERATION_TRACKS(
+      new Request("http://test.local", {
+        method: "PATCH",
+        body: JSON.stringify({
+          markReviewed: true,
+          decisions: []
+        })
+      }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      generation: {
+        generation: {
+          id: generation.generation.id,
+          status: "reviewed"
+        },
+        tracks: []
+      }
+    });
+    expect(response.status).toBe(200);
+    expect(generationStore.updateTrackDecisions).toHaveBeenCalledWith({
+      userId: "user_1",
+      playlistId: playlist.id,
+      generationId: generation.generation.id,
+      markReviewed: true,
+      decisions: []
     });
   });
 
