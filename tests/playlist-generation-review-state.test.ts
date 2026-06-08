@@ -87,6 +87,27 @@ describe("playlist generation review state", () => {
     ]);
   });
 
+  it("marks an empty generation reviewed when review completion is explicit", async () => {
+    const supabase = createReviewStateSupabase();
+    const store = createSupabasePlaylistGenerationStore(supabase.client);
+
+    await store.updateTrackDecisions({
+      userId: "user_1",
+      playlistId: generationRow.playlist_id,
+      generationId: generationRow.id,
+      markReviewed: true,
+      decisions: []
+    });
+
+    expect(supabase.trackDecisionUpdates).toEqual([]);
+    expect(supabase.generationStatusUpdates).toEqual([
+      {
+        status: "reviewed",
+        updated_at: expect.any(String)
+      }
+    ]);
+  });
+
   it("rejects track decisions that do not match the generation", async () => {
     const supabase = createReviewStateSupabase({
       missingTrackIds: new Set(["99999999-9999-4999-8999-999999999999"])

@@ -2,9 +2,19 @@
 
 ## Current platform migration note
 
-This original roadmap describes the Apple Music Sort-first MVP. The active product direction is now platform-first: a Sort is a full-library organization project, while persistent playlists and playlist recipes become the recurring product surface.
+This original roadmap describes the historical Apple Music Sort-first MVP. It is
+kept for implementation history only.
 
-Use `docs/PLATFORM_FIRST_MVP_MIGRATION.md` for the migration sequence before adding new Sort-first tickets.
+The active product direction is platform-first: a Sort is a full-library
+organization project, while persistent playlists and playlist recipes are the
+recurring product surface.
+
+Use these documents as the current source of truth before adding new work:
+
+- `docs/PLATFORM_FIRST_GOAL_PROMPT.md`
+- `docs/MVP_ACCEPTANCE_CRITERIA.md`
+- `docs/PRODUCTION_SMOKE_TEST.md`
+- `docs/PLATFORM_FIRST_MVP_MIGRATION.md`
 
 ## Purpose
 
@@ -18,18 +28,25 @@ Use ticket-by-ticket development, not one large batch.
 
 Reason: this MVP touches authentication, Apple Music tokens, private user music data, database migrations, AI output, deployment configuration, and real Apple Music write actions. Those areas need small, reviewable steps.
 
-## MVP target
+## Historical MVP target
 
-The MVP is complete when a real user can:
+This was the original Sort-first target. Do not use it as the active completion
+gate. The active completion gate is `docs/MVP_ACCEPTANCE_CRITERIA.md`.
+
+The historical MVP was complete when a real user could:
 
 1. Sign up or sign in.
 2. Connect Apple Music.
-3. Sync at least 500 saved Apple Music library tracks.
+3. Sync Apple Music library tracks.
 4. Request custom playlists.
 5. Preview proposed playlists and included tracks.
 6. Confirm the playlists.
 7. Have the playlists created in their real Apple Music account.
 8. See completion or failure status.
+
+The current platform-first smoke should verify 500-track scale only when the
+test account actually has at least 500 saved songs. A smaller real library can
+still prove the platform flow if every current acceptance step passes.
 
 ## Current known repo state
 
@@ -927,9 +944,12 @@ Acceptance criteria:
 
 ---
 
-# Final MVP checklist
+# Historical final MVP checklist
 
-The MVP is done only when all of these are true:
+This checklist is retained for old Sort-first context. The current final MVP
+checklist lives in `docs/MVP_ACCEPTANCE_CRITERIA.md`.
+
+The historical MVP was done only when all of these were true:
 
 - Auth works.
 - Apple Music connection works.

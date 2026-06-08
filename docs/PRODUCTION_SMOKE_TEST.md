@@ -44,74 +44,56 @@ library data and creates real playlists only after explicit confirmation.
 11. Confirm the Sort preview/generation action remains blocked until library
     sync is completed.
 12. Confirm at least 500 raw library tracks are stored when the account has at
-    least 500 saved songs.
+    least 500 saved songs. If the smoke account has fewer saved songs, record
+    the actual count and continue only if the full library is synced correctly.
 13. Confirm normalized and duplicate counts are shown.
 14. Preview generation.
-15. Use at least three playlist recipes, for example:
+15. Confirm the preview snapshot stays stable after the organization is started
+    and before export; playlist names, counts, and selected tracks should not
+    silently change across refreshes.
+16. Use at least three playlist recipes, for example:
     - Ukrainian rap
     - gym rap
     - sad Slavic songs
-16. Start full organization from `/app/sorts/{sortId}/start` with billing
+17. Start full organization from `/app/sorts/{sortId}/start` with billing
     deferred; use development bypass only in approved local/staging smoke.
-17. Full-organization processing.
-18. Review playlist names, descriptions, track counts, and included tracks.
-19. Deselect playlists or remove tracks that should not be created.
-20. Explicit export to Apple Music only when the review is acceptable.
-21. Verify the app queues playlist creation.
-22. Verify the Railway worker completes the job.
-23. Verify the playlists appear in the real Apple Music account.
-24. Verify exported app-created playlists appear in `/app/playlists`.
-25. Open one exported playlist in `/app/playlists/:playlistId`.
-26. Confirm the playlist shows recipe details, latest generated tracks, export
+18. Full-organization processing.
+19. Review playlist names, descriptions, track counts, and included tracks.
+20. Deselect playlists or remove tracks that should not be created.
+21. If any playlist has zero matched tracks, confirm review can still be
+    completed and the empty generation does not stay in the review queue.
+22. Confirm export copy uses `Create Apple Music playlist`, `Export`, or `add
+    approved tracks`, and does not promise replacement, reorder, automatic sync,
+    or automatic removal.
+23. Explicit export to Apple Music only when the review is acceptable.
+24. Verify the app queues playlist creation.
+25. Verify the Railway worker completes the job.
+26. Verify the playlists appear in the real Apple Music account.
+27. Verify exported app-created playlists appear in `/app/playlists`.
+28. Open one exported playlist in `/app/playlists/:playlistId`.
+29. Confirm the playlist shows recipe details, latest generated tracks, export
     status, and generation history.
-27. Create one new playlist from `/app/playlists/new` without starting a Sort.
-28. Save its playlist-owned recipe.
-29. Generate proposed tracks from the latest synced Apple Music library.
-30. Review every proposed track, remove or restore at least one track, click
+30. Create one new playlist from `/app/playlists/new` without starting a Sort.
+31. Save its playlist-owned recipe.
+32. Generate proposed tracks from the latest synced Apple Music library.
+33. Review every proposed track, remove or restore at least one track, click
     `Mark Review Complete`, then queue `Create Apple Music playlist`.
-31. Verify the individual playlist export is processed by the persistent worker
+34. Verify the individual playlist export is processed by the persistent worker
     and the app playlist receives an Apple playlist ID.
-32. Run a second library sync after adding at least one song to Apple Music.
-33. Click `Process New Music` from the library page.
-34. Confirm recommendations are review-only and based on saved playlist recipes.
-35. Confirm matching recommendations are saved as playlist review queues and
+35. Run a second library sync after adding at least one song to Apple Music.
+36. Click `Process New Music` from the library page.
+37. Confirm recommendations are review-only and based on saved playlist recipes.
+38. Confirm matching recommendations are saved as playlist review queues and
     visible when opening the recommended playlist.
-36. Retry `Process New Music` and confirm the same latest sync does not create
+39. Retry `Process New Music` and confirm the same latest sync does not create
     duplicate new-music review queues.
-37. Record any partial failures and retry behavior.
+40. Record any partial failures and retry behavior.
 
-## Legacy Sort-first smoke path
+## Historical Sort-first smoke path
 
-The old smoke path is retained only as historical context. Do not use it as the
-platform-first completion gate.
-
-1. Open the Production app URL.
-2. Signup or sign in.
-3. Confirm the dashboard shows the signed-in state.
-4. Apple Music connect with MusicKit.
-5. Confirm the dashboard shows Apple Music connected.
-6. Library sync.
-7. Wait for sync completion.
-8. Legacy Draft Sort creation with old playlist-request input.
-9. Confirm at least 500 raw library tracks are stored when the account has at
-   least 500 saved songs.
-10. Confirm normalized and duplicate counts are shown.
-11. Preview generation.
-12. Request at least three playlists, for example:
-    - Ukrainian rap
-    - gym rap
-    - sad Slavic songs
-13. Start full organization from `/app/sorts/{sortId}/start` with billing
-    deferred or approved development bypass depending on environment
-    configuration.
-14. Full-organization processing.
-15. Review playlist names, descriptions, track counts, and included tracks.
-16. Deselect or remove anything that should not be created.
-17. Explicit export to Apple Music only when the review is acceptable.
-18. Verify the app queues playlist creation.
-19. Verify the Railway worker completes the job.
-20. Verify the playlists appear in the real Apple Music account.
-21. Record any partial failures and retry behavior.
+The old Sort-first smoke path is retained only as historical context in earlier
+roadmap notes and old smoke evidence. Do not execute it as an MVP acceptance
+gate. Current completion must use the platform-first smoke path above.
 
 ## Stop conditions
 

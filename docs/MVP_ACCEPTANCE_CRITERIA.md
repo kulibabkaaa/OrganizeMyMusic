@@ -6,7 +6,9 @@ The MVP is done only when a real user can complete the full flow:
 
 1. Create or access an app account.
 2. Connect Apple Music.
-3. Sync their Apple Music saved library.
+3. Sync their Apple Music saved library. There is no fixed track-count minimum
+   for completion, but a smoke account with at least 500 saved songs should
+   verify that 500-track scale works.
 4. Click `Organize My Library`.
 5. Create playlist recipes for at least three playlists.
 6. Generate proposed playlist tracks.
@@ -24,7 +26,8 @@ The MVP is done only when a real user can complete the full flow:
 
 - User can sign up or sign in.
 - User has a profile row.
-- User can access `/dashboard`.
+- User can access `/app` as the canonical dashboard. `/dashboard` may redirect
+  to `/app` for compatibility.
 - Signed-out users cannot access private user data.
 
 ### 2. Apple Music connection
@@ -57,14 +60,17 @@ The MVP is done only when a real user can complete the full flow:
 - User can define playlist recipes with product-style fields.
 - App matches existing tracks to rules.
 - App produces playlist titles, descriptions, track lists, and confidence/reasons.
-- App handles empty or low-confidence playlists gracefully.
+- App handles empty or low-confidence playlists gracefully, including letting a
+  user complete review for an empty generation so it does not stay in the
+  review queue forever.
 
 ### 6. Preview
 
 - User can inspect playlist output before anything is written to Apple Music.
 - User can deselect playlists.
 - User can remove tracks from the proposed export.
-- Preview snapshot is stable after confirmation/start state begins.
+- Preview snapshot is stable after confirmation/start state begins, so the
+  reviewed output cannot silently change before export.
 
 ### 7. Confirmation
 
@@ -83,6 +89,8 @@ The MVP is done only when a real user can complete the full flow:
 - App records partial failures.
 - Individual playlist exports run through the persistent worker, not directly in
   the browser request.
+- Product copy says export/create/add approved tracks. It does not promise exact
+  replacement, reorder, automatic sync, or automatic removal from Apple Music.
 
 ### 9. Recurring platform value
 
