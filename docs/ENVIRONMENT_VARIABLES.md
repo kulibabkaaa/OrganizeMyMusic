@@ -127,7 +127,8 @@ Stripe webhook verification secret. Optional until payment ticket.
 
 ## `STRIPE_PRICE_SORT`
 
-Legacy Stripe price ID for one-time sort/payment. Do not add new dependency on this variable during the platform-first migration.
+Stripe price ID used only if `PAYMENTS_ENABLED=true`. Do not make the
+platform-first MVP depend on this variable while billing remains deferred.
 
 Payment is deferred until Apple Music organization quality is strong and the subscription model is defined.
 

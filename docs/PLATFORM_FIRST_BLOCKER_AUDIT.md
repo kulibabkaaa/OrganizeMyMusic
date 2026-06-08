@@ -171,10 +171,12 @@ Latest local audit on 2026-06-08:
 - Local `npm run build` passes with Next.js `15.5.19`; Vercel preview also
   passes for the PR branch.
 
-Remaining completion verification is external: real Apple Music authorization,
-worker deployment, and Apple Music write-back smoke testing require configured
-credentials and environment access. Railway CLI is currently unauthorized in
-this Codex environment.
+Automated/local completion coverage includes platform readiness, route/API
+tests, review/export safety, dashboard and playlist hub behavior, and the
+production smoke checklist. Remaining completion verification is external: real
+Apple Music authorization, worker deployment, and Apple Music write-back smoke
+testing require configured credentials and environment access. Railway CLI is
+currently unauthorized in this Codex environment.
 
 ## Not blockers for the next implementation slices
 
