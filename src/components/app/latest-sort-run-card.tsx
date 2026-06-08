@@ -61,7 +61,7 @@ export function LatestSortRunCard({
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Link href={`/sorts/${latestSortRun.id}`} className="inline-flex">
+            <Link href={`/app/sorts/${latestSortRun.id}`} className="inline-flex">
               <Button variant="secondary">Open preview</Button>
             </Link>
             <span className="text-sm text-white/48">Project ID: {latestSortRun.id}</span>

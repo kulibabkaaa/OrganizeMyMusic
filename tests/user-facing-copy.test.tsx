@@ -47,5 +47,7 @@ describe("normal user-facing copy", () => {
     expect(markup).toContain("Preview ready");
     expect(markup).toContain("Exported");
     expect(markup).toContain("Library needs attention");
+    expect(markup).toContain("/app/sorts/11111111-1111-4111-8111-111111111111");
+    expect(markup).not.toContain('href="/sorts/');
   });
 });

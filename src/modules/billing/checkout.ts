@@ -9,7 +9,7 @@ export async function createSortCheckoutSession(
   if (config.PAYMENTS_ENABLED !== "true" && config.PAYMENTS_DEV_BYPASS_ENABLED === "true") {
     return {
       mode: "dev_bypass",
-      checkoutUrl: `/sorts/${sortRunId}?payment=dev_bypass`
+      checkoutUrl: `/app/sorts/${sortRunId}?payment=dev_bypass`
     };
   }
 
@@ -31,8 +31,8 @@ export async function createSortCheckoutSession(
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
-    success_url: `${env.NEXT_PUBLIC_APP_URL}/sorts/${sortRunId}?payment=success`,
-    cancel_url: `${env.NEXT_PUBLIC_APP_URL}/sorts/${sortRunId}?payment=cancelled`,
+    success_url: `${env.NEXT_PUBLIC_APP_URL}/app/sorts/${sortRunId}?payment=success`,
+    cancel_url: `${env.NEXT_PUBLIC_APP_URL}/app/sorts/${sortRunId}?payment=cancelled`,
     line_items: [
       {
         price: requireServerEnv("STRIPE_PRICE_SORT"),
