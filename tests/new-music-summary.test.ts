@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   createNewMusicRecommendations,
+  createSupabaseNewMusicStore,
   getNewMusicSummary,
   processNewMusic,
   type NewMusicStore
@@ -212,6 +213,43 @@ describe("new music summary", () => {
       })
     ).toEqual([]);
   });
+
+  it("does not duplicate an already persisted new-music generation for the same playlist and sync", async () => {
+    const { supabase, calls } = createExistingGenerationSupabase();
+    const store = createSupabaseNewMusicStore(supabase);
+
+    await store.storeNewMusicGenerations?.({
+      userId: "user_1",
+      syncId: "sync_latest",
+      playlistRecipes: [{ playlist, recipe }],
+      recommendations: [
+        {
+          playlistId: playlist.id,
+          playlistName: playlist.name,
+          recipeId: recipe.id,
+          recipeName: recipe.name,
+          trackCount: 1,
+          tracks: [
+            {
+              normalizedTrackId: track.id,
+              appleSongId: track.appleSongId ?? null,
+              name: track.name,
+              artistName: track.artistName,
+              albumName: track.albumName ?? null,
+              score: 0.9,
+              reason: "Matched genre."
+            }
+          ]
+        }
+      ]
+    });
+
+    expect(calls).toContain("playlist_generations.select:id");
+    expect(calls).toContain("playlist_generations.contains:recipe_snapshot");
+    expect(calls).toContain("playlists.update");
+    expect(calls).not.toContain("playlist_generations.insert");
+    expect(calls).not.toContain("playlist_generation_tracks.insert");
+  });
 });
 
 const playlist: PersistentPlaylist = {
@@ -276,3 +314,74 @@ const track: NormalizedTrack = {
   contentRating: "clean",
   isrc: "US1234567890"
 };
+
+function createExistingGenerationSupabase() {
+  const calls: string[] = [];
+  const supabase = {
+    from(table: string) {
+      return new FakeSupabaseQuery(table, calls);
+    }
+  };
+
+  return {
+    calls,
+    supabase: supabase as unknown as Parameters<typeof createSupabaseNewMusicStore>[0]
+  };
+}
+
+class FakeSupabaseQuery {
+  constructor(
+    private readonly table: string,
+    private readonly calls: string[]
+  ) {}
+
+  select(columns: string) {
+    this.calls.push(`${this.table}.select:${columns}`);
+    return this;
+  }
+
+  insert() {
+    this.calls.push(`${this.table}.insert`);
+    return this;
+  }
+
+  update() {
+    this.calls.push(`${this.table}.update`);
+    return this;
+  }
+
+  eq() {
+    return this;
+  }
+
+  neq() {
+    return this;
+  }
+
+  contains(column: string) {
+    this.calls.push(`${this.table}.contains:${column}`);
+    return this;
+  }
+
+  limit() {
+    return this;
+  }
+
+  async maybeSingle() {
+    return {
+      data: this.table === "playlist_generations" ? { id: "generation_existing" } : null,
+      error: null
+    };
+  }
+
+  async single() {
+    return {
+      data: { id: "generation_new" },
+      error: null
+    };
+  }
+
+  then(resolve: (value: { data: null; error: null }) => void) {
+    resolve({ data: null, error: null });
+  }
+}

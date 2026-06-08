@@ -48,6 +48,9 @@ Latest local audit on 2026-06-08:
 - New-music recommendations are stored as reviewable playlist generations and
   link back to the playlist workspace for recipe adjustment, review, and
   explicit export.
+- New-music generation persistence is idempotent for the same playlist and
+  latest sync, so retry after a partial checkpoint failure does not duplicate
+  review queues.
 - Saved playlists now store `last_processed_new_music_sync_id` for
   user-triggered new-music checks, and the hosted Supabase migration
   `playlist_new_music_processing` is applied.

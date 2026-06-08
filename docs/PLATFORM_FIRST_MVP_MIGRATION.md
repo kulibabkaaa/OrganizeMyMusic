@@ -269,6 +269,9 @@ Current MVP implementation:
   as playlist generations in `ready_for_review`, then links each
   recommendation back to its playlist workspace for recipe adjustment, track
   review, and explicit export.
+- Persisting new-music generations is retry-safe for a playlist/latest-sync
+  pair: if a matching `new_music` generation already exists, processing updates
+  playlist state instead of inserting duplicate generation rows.
 - No Apple Music playlist is updated automatically.
 
 ## Inputs needed from product owner
