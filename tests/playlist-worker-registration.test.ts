@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { PLAYLIST_CREATION_JOB_NAME } from "@/modules/sorts/confirmation";
+import { PLAYLIST_CREATION_JOB_NAME } from "@/modules/sorts/playlist-creation-queue";
 import {
   PLAYLIST_GENERATION_EXPORT_JOB_NAME,
   type PlaylistGenerationExportJobData
