@@ -24,12 +24,12 @@ export function PaymentHistoryTable({
       {payments.length === 0 ? (
         <EmptyState
           title="No payment history yet."
-          description="Payment rows will appear after Stripe checkout is enabled and completed."
+          description="Payment rows will appear only after billing is enabled and completed."
         />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-            <caption className="sr-only">Payment history for paid Sorts</caption>
+            <caption className="sr-only">Payment history for Sort billing records</caption>
             <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-platform-muted">
               <tr>
                 <th scope="col" className="px-3 py-3 font-medium">Sort</th>

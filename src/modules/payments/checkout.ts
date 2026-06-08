@@ -61,31 +61,31 @@ export function summarizeCheckout(input: {
   const estimatedTrackCount = input.estimatedTrackCount ?? input.recipeCount * 30;
 
   return {
-    title: input.mode === "deferred" ? "Start full Sort" : "Start this Sort",
+    title: input.mode === "deferred" ? "Start full library organization" : "Start this Sort",
     description:
-      "Generate full playlists from your Apple Music library, review the results, and export them to Apple Music.",
+      "Generate proposed playlists from your Apple Music library, review every track, then export only approved tracks.",
     sortName: input.sortName,
     recipeCount: input.recipeCount,
     connectedLibrary: "Apple Music",
     estimatedOutput: `About ${estimatedTrackCount} tracks across ${input.recipeCount} Playlist Recipes`,
     priceLabel:
       input.mode === "deferred"
-        ? "Billing deferred"
+        ? "Included during MVP"
         : input.mode === "dev_bypass"
           ? "Dev bypass enabled"
           : "$19.00",
     included: [
-      "Full library analysis",
-      "Generated playlists from your recipes",
+      "Full-library analysis",
+      "Playlist recipes converted into proposed tracks",
       "Track-level review before export",
-      "Create playlists in Apple Music"
+      "Create Apple Music playlists and add approved tracks"
     ],
     ctaLabel:
       input.mode === "deferred"
-        ? "Start full Sort"
+        ? "Generate full results"
         : input.mode === "dev_bypass"
           ? "Use approved dev bypass"
-          : "Pay and start full Sort"
+          : "Continue to billing"
   };
 }
 

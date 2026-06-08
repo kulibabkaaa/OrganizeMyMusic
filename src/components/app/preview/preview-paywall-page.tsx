@@ -21,11 +21,11 @@ export function PreviewPaywallPage({
             Lightweight estimate
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-[0em] text-white md:text-4xl">
-            Preview your Sort
+            Preview your library organization
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            See likely playlist shape before full processing. Full sorting, editing, and export
-            review become available after you start the full Sort.
+            See likely playlist shape before full organization. Full sorting, editing, and export
+            review become available after you start.
           </p>
           <WorkflowEscapeActions
             sortId={snapshot.sortRunId}

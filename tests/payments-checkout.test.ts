@@ -22,7 +22,7 @@ describe("payments checkout", () => {
     expect(getCheckoutMode({ PAYMENTS_ENABLED: "1", PAYMENTS_DEV_BYPASS_ENABLED: "true" })).toBe("stripe");
   });
 
-  it("summarizes the Sort-specific checkout surface", () => {
+  it("summarizes the Sort-specific generation start surface", () => {
     expect(
       summarizeCheckout({
         sortName: "My Apple Music cleanup",
@@ -31,21 +31,21 @@ describe("payments checkout", () => {
         mode: "deferred"
       })
     ).toEqual({
-      title: "Start full Sort",
+      title: "Start full library organization",
       description:
-        "Generate full playlists from your Apple Music library, review the results, and export them to Apple Music.",
+        "Generate proposed playlists from your Apple Music library, review every track, then export only approved tracks.",
       sortName: "My Apple Music cleanup",
       recipeCount: 3,
       connectedLibrary: "Apple Music",
       estimatedOutput: "About 90 tracks across 3 Playlist Recipes",
-      priceLabel: "Billing deferred",
+      priceLabel: "Included during MVP",
       included: [
-        "Full library analysis",
-        "Generated playlists from your recipes",
+        "Full-library analysis",
+        "Playlist recipes converted into proposed tracks",
         "Track-level review before export",
-        "Create playlists in Apple Music"
+        "Create Apple Music playlists and add approved tracks"
       ],
-      ctaLabel: "Start full Sort"
+      ctaLabel: "Generate full results"
     });
   });
 });

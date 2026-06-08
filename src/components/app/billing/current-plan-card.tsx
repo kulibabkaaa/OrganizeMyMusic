@@ -21,10 +21,10 @@ export function CurrentPlanCard({ plan }: { plan: CurrentPlanSummary }) {
       <p className="text-sm font-semibold text-white">{plan.description}</p>
       <p className="text-sm leading-7 text-platform-secondary">{plan.details}</p>
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <p className="text-sm font-semibold text-white">Billing settings paused</p>
+        <p className="text-sm font-semibold text-white">Billing controls paused</p>
         <p className="mt-2 text-sm leading-6 text-platform-secondary">
-          Subscription and checkout controls will appear here after Apple Music generation and
-          export quality are verified.
+          Account billing controls will appear here after Apple Music generation and export
+          quality are verified.
         </p>
       </div>
     </Card>

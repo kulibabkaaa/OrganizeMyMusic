@@ -56,7 +56,7 @@ export function PlaylistPreviewCard({
                 <td className="px-4 py-3 text-platform-muted">
                   {playlist.lockedTrackCount} locked matches
                 </td>
-                <td className="px-4 py-3 text-platform-muted">Start full Sort</td>
+                <td className="px-4 py-3 text-platform-muted">Start full organization</td>
               </tr>
             ) : null}
           </tbody>
@@ -78,13 +78,13 @@ export function PlaylistPreviewCard({
             ))}
           </ul>
           <p className="mt-3 text-xs leading-5 text-platform-muted">
-            Adjust this playlist plan before full processing if these warnings look wrong.
+            Adjust this playlist plan before full organization if these warnings look wrong.
           </p>
         </div>
       ) : null}
 
       <p className="text-sm text-platform-secondary">
-        Preview only. Final results are generated after you start the full Sort.
+        Preview only. Final results are generated after you start full organization.
       </p>
     </Card>
   );

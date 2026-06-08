@@ -16,15 +16,15 @@ export function CheckoutPage({
   summary: CheckoutSummary;
 }) {
   const isDisabled = mode === "disabled";
-  const paymentDisabledReasonId = isDisabled ? "checkout-disabled-reason" : undefined;
+  const startDisabledReasonId = isDisabled ? "sort-start-disabled-reason" : undefined;
   const statusLabel =
     mode === "deferred"
-      ? "Billing deferred"
+      ? "MVP access"
       : mode === "dev_bypass"
         ? "Dev bypass approved"
         : isDisabled
           ? "Full Sort paused"
-          : "Secure checkout";
+          : "Billing";
   const statusTone =
     mode === "deferred"
       ? "success"
@@ -57,7 +57,7 @@ export function CheckoutPage({
 
       <Card className="space-y-5">
         <div>
-          <p className="text-sm text-platform-secondary">Price</p>
+          <p className="text-sm text-platform-secondary">Access</p>
           <p className="mt-2 font-display text-3xl font-semibold text-white">
             {summary.priceLabel}
           </p>
@@ -73,7 +73,7 @@ export function CheckoutPage({
 
         {isDisabled ? (
           <p
-            id={paymentDisabledReasonId}
+            id={startDisabledReasonId}
             className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-platform-secondary"
           >
             Full Sort processing is paused in this environment.
@@ -81,8 +81,8 @@ export function CheckoutPage({
         ) : null}
         {mode === "deferred" ? (
           <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-platform-secondary">
-            Billing is deferred for the MVP. Starting this Sort queues full playlist generation;
-            Apple Music export still requires track review and explicit confirmation.
+            Billing is deferred for the MVP. Starting full organization queues playlist
+            generation; Apple Music export still requires track review and explicit confirmation.
           </p>
         ) : null}
 
@@ -90,7 +90,7 @@ export function CheckoutPage({
           sortId={sortId}
           ctaLabel={summary.ctaLabel}
           disabled={isDisabled}
-          disabledReasonId={paymentDisabledReasonId}
+          disabledReasonId={startDisabledReasonId}
         />
         <WorkflowEscapeActions sortId={sortId} showBuilderLink />
       </Card>

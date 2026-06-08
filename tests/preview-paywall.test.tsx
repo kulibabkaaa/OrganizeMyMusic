@@ -70,13 +70,13 @@ describe("preview paywall components", () => {
     expect(markup).toContain("Phoebe Bridgers");
     expect(markup).toContain("Cellophane");
     expect(markup).toContain("40 locked matches");
-    expect(markup).toContain("Start full Sort");
+    expect(markup).toContain("Start full organization");
     expect(markup).toContain("Sorting warnings");
     expect(markup).toContain("Only 2 tracks matched this playlist plan.");
     expect(markup).toContain(
-      "Adjust this playlist plan before full processing if these warnings look wrong."
+      "Adjust this playlist plan before full organization if these warnings look wrong."
     );
-    expect(markup).toContain("Preview only. Final results are generated after you start the full Sort.");
+    expect(markup).toContain("Preview only. Final results are generated after you start full organization.");
   });
 
   it("renders an unlock panel tied to the Sort without export controls", () => {
@@ -84,11 +84,11 @@ describe("preview paywall components", () => {
       <UnlockSortCard sortId={snapshot.sortRunId} playlistCount={snapshot.playlists.length} />
     );
 
-    expect(markup).toContain("Start full Sort");
+    expect(markup).toContain("Start full organization");
     expect(markup).toContain(
       "Run the full library analysis and review every generated playlist before anything is created in Apple Music."
     );
-    expect(markup).toContain("Start full Sort");
+    expect(markup).toContain("Start full organization");
     expect(markup).toContain(`/app/sorts/${snapshot.sortRunId}/checkout`);
     expect(markup).not.toContain("Export");
   });
@@ -98,10 +98,10 @@ describe("preview paywall components", () => {
       <PreviewPaywallPage sortName="My Apple Music cleanup" snapshot={snapshot} />
     );
 
-    expect(markup).toContain("Preview your Sort");
-    expect(markup).toContain("See likely playlist shape before full processing.");
+    expect(markup).toContain("Preview your library organization");
+    expect(markup).toContain("See likely playlist shape before full organization.");
     expect(markup).toContain("Sad late-night songs");
-    expect(markup).toContain("Start full Sort");
+    expect(markup).toContain("Start full organization");
     expect(markup).toContain("Back to dashboard");
     expect(markup).toContain("View all Sorts");
     expect(markup).toContain("Back to builder");
