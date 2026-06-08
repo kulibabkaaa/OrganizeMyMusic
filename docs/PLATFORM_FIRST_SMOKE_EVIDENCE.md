@@ -52,7 +52,7 @@ Result:
 Notes:
 ```
 
-Latest preflight record:
+Recorded safe preflight example:
 
 ```text
 Date: 2026-06-08
@@ -65,7 +65,8 @@ Result: pass
 Notes: Read-only preflight passed for production health, signed-out landing,
 signed-out dashboard redirect state, and GitHub deployment statuses. Vercel
 status was added manually only after production health confirmed the deployed
-main commit.
+main commit. Rerun `npm run smoke:preflight` after each production deployment
+and record the current health commit before manual Apple Music smoke.
 ```
 
 ## Required Manual Evidence
