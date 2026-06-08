@@ -336,7 +336,7 @@ describe("SortBuilder", () => {
     expect(markup).not.toContain("Move down");
     expect(markup).not.toContain("Save draft");
     expect(markup).toContain("Generate Playlists");
-    expect(markup).toContain("You can save this draft now. Preview unlocks when the library index is ready.");
+    expect(markup).toContain("You can save this draft now. Preview becomes available when the library index is ready.");
   });
 
   it("renders saved recipes and enabled preview state for reopened drafts", () => {
@@ -386,7 +386,7 @@ describe("SortBuilder", () => {
 
     expect(markup).toContain('id="sort-builder-footer-message"');
     expect(markup).toContain('aria-describedby="sort-builder-footer-message"');
-    expect(markup).toContain("Preview unlocks when the library index is ready.");
+    expect(markup).toContain("Preview becomes available when the library index is ready.");
   });
 
   it("shows a visible reason while preview is disabled by saving", () => {

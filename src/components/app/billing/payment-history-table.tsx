@@ -29,7 +29,7 @@ export function PaymentHistoryTable({
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-            <caption className="sr-only">Payment history for unlocked Sorts</caption>
+            <caption className="sr-only">Payment history for paid Sorts</caption>
             <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-platform-muted">
               <tr>
                 <th scope="col" className="px-3 py-3 font-medium">Sort</th>

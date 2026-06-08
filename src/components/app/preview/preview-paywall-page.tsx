@@ -25,7 +25,7 @@ export function PreviewPaywallPage({
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
             See likely playlist shape before full processing. Full sorting, editing, and export
-            review unlock after you start the full Sort.
+            review become available after you start the full Sort.
           </p>
           <WorkflowEscapeActions
             sortId={snapshot.sortRunId}

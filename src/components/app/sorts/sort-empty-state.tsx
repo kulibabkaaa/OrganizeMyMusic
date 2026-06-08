@@ -24,14 +24,14 @@ const emptyStateByFilter: Record<
   draft: {
     title: "No draft Sorts.",
     description:
-      "Drafts appear here when you start building Playlist plans before previewing or unlocking a Sort.",
+      "Drafts appear here when you start building Playlist plans before previewing or starting a full Sort.",
     actionHref: "/app/sorts/new",
     actionLabel: "Create a Sort"
   },
   processing: {
     title: "No Sorts are processing.",
     description:
-      "Processing Sorts appear here after a Sort is unlocked and the full playlist build is running.",
+      "Processing Sorts appear here after you start a full Sort and the playlist build is running.",
     actionHref: "/app/sorts",
     actionLabel: "View all Sorts"
   },
