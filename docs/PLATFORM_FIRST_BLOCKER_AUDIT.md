@@ -434,9 +434,14 @@ Follow-up observed earlier on 2026-06-08:
   can also reproduce that manifest failure. Remove `.next` and rerun
   `npm run build` under Node `24.x`; the clean build and Vercel preview pass.
 
-Remaining follow-up:
+Resolved follow-up on 2026-06-08:
 
-- `npm ci` reports 5 dependency audit findings. Handle them in a separate dependency/security ticket so product migration changes stay reviewable.
+- `vitest` was updated to `3.2.6`.
+- `postcss` was updated to `8.5.15`.
+- `qs` and `ws` transitive dependencies were updated through the lockfile.
+- A package override now dedupes Next.js internal PostCSS to the patched
+  top-level PostCSS version.
+- `npm audit --json` reports `0` vulnerabilities.
 
 ## Required owner inputs before resuming deep work
 
