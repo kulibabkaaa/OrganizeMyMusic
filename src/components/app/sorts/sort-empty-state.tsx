@@ -17,16 +17,16 @@ const emptyStateByFilter: Record<
   all: {
     title: "No Sorts yet.",
     description:
-      "Create a Sort when your Apple Music library is ready. Drafts, previews, reviews, and exports will appear here.",
+      "Organize your Apple Music library when it is ready. Drafts, previews, reviews, and exports will appear here.",
     actionHref: "/app/sorts/new",
-    actionLabel: "Create a Sort"
+    actionLabel: "Organize My Library"
   },
   draft: {
     title: "No draft Sorts.",
     description:
       "Drafts appear here when you start building Playlist plans before previewing or starting full organization.",
     actionHref: "/app/sorts/new",
-    actionLabel: "Create a Sort"
+    actionLabel: "Organize My Library"
   },
   processing: {
     title: "No Sorts are processing.",

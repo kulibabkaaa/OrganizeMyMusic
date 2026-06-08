@@ -118,11 +118,12 @@ describe("Sorts index helpers", () => {
 });
 
 describe("Sorts index UI", () => {
-  it("renders an empty state with a Create a Sort action", () => {
+  it("renders an empty state with an Organize My Library action", () => {
     const markup = renderToStaticMarkup(<SortEmptyState />);
 
     expect(markup).toContain("No Sorts yet.");
-    expect(markup).toContain("Create a Sort");
+    expect(markup).toContain("Organize My Library");
+    expect(markup).not.toContain("Create a Sort");
     expect(markup).toContain("/app/sorts/new");
   });
 
@@ -138,7 +139,7 @@ describe("Sorts index UI", () => {
         filter: "draft",
         title: "No draft Sorts.",
         description: "Drafts appear here when you start building Playlist plans",
-        action: "Create a Sort",
+        action: "Organize My Library",
         href: "/app/sorts/new"
       },
       {
@@ -194,7 +195,8 @@ describe("Sorts index UI", () => {
     expect(markup).toContain("Ready for review");
     expect(markup).toContain("Exported");
     expect(markup).toContain("Failed");
-    expect(markup).toContain("Create a Sort");
+    expect(markup).toContain("Organize My Library");
+    expect(markup).not.toContain("Create a Sort");
     expect(markup).toContain("Road trip cleanup");
     expect(markup).toContain("Night music system");
     expect(markup).toContain("My Apple Music cleanup");
