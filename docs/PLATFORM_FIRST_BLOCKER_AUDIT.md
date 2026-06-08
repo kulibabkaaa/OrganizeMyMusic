@@ -20,6 +20,8 @@ Latest local audit on 2026-06-08:
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before
   generation/regeneration.
+- Playlist detail now exposes app-only playlist archive with copy that Apple
+  Music playlists and tracks are not changed.
 - Sort Builder advanced recipe controls are collapsed by default and open when
   needed for tag notes or detailed tuning.
 - Logger redaction now recursively sanitizes token-like, secret-like, private

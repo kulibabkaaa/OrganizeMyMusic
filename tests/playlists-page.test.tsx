@@ -192,6 +192,8 @@ describe("playlists page", () => {
     expect(markup).toContain("Rap Track");
     expect(markup).toContain("Remove");
     expect(markup).toContain("Create Apple Music playlist");
+    expect(markup).toContain("Archive Playlist");
+    expect(markup).toContain("Apple Music is not edited, deleted, reordered, or replaced.");
     expect(markup).toContain("Generation history");
     expect(markup).toContain("2 runs");
     expect(markup).toContain("12 proposed tracks");
