@@ -59,21 +59,19 @@ Result:
 Notes:
 ```
 
-Recorded safe preflight example:
+Latest recorded safe preflight:
 
 ```text
 Date: 2026-06-08
 Operator: Codex
 Production URL: https://organize-my-music.vercel.app
-Health commit: 00cb40ea781f90670e415993b8a8550bbacd0a29
-Vercel status: success, production deployment dpl_2MkzXwCN6SqpEsCByDdpFeEmdUL6
+Health commit: f7041293586eadb9f98c6f6aac001caed574829c
+Vercel status: success, GitHub context "Vercel"
 Railway status: success, GitHub context "hearty-recreation - OrganizeMyMusic"
 Result: pass
 Notes: Read-only preflight passed for production health, signed-out landing,
 signed-out dashboard redirect state, and GitHub deployment statuses. Vercel
-status was added manually only after production health confirmed the deployed
-main commit. Rerun `npm run smoke:preflight` after each production deployment
-and record the current health commit before manual Apple Music smoke.
+and Railway both reported successful deployment status for this commit.
 ```
 
 ## Required Manual Evidence

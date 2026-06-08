@@ -173,7 +173,7 @@ As of 2026-06-08:
   signed-out landing/dashboard surfaces, and successful Vercel/Railway GitHub
   deployment statuses without creating jobs or using Apple Music credentials.
 - Latest safe preflight passed on 2026-06-08 for production commit
-  `00cb40ea781f90670e415993b8a8550bbacd0a29`.
+  `f7041293586eadb9f98c6f6aac001caed574829c`.
 - Hosted pg-boss has `library-sync`, `full-sort`, `playlist-create`, and
   `playlist-generation-export` queues registered, with no active, queued,
   retrying, or failed jobs for those queues at verification time.
