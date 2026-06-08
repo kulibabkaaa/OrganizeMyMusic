@@ -89,7 +89,8 @@ describe("preview paywall components", () => {
       "Run the full library analysis and review every generated playlist before anything is created in Apple Music."
     );
     expect(markup).toContain("Start full organization");
-    expect(markup).toContain(`/app/sorts/${snapshot.sortRunId}/checkout`);
+    expect(markup).toContain(`/app/sorts/${snapshot.sortRunId}/start`);
+    expect(markup).not.toContain(`/app/sorts/${snapshot.sortRunId}/checkout`);
     expect(markup).not.toContain("Export");
   });
 

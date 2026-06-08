@@ -40,7 +40,7 @@
 - `src/components/app/export/exporting-page.tsx`
 - `src/components/app/export/export-complete-page.tsx`
 - `src/components/app/preview/preview-paywall-page.tsx`
-- `src/components/app/checkout/checkout-page.tsx`
+- `src/components/app/sort-start/sort-start-page.tsx`
 - `src/components/app/review/review-playlists-page.tsx`
 
 **Tasks:**
@@ -165,7 +165,7 @@
 
 **Files to inspect:**
 - `src/components/app/sort-builder/sort-builder-footer.tsx`
-- `src/components/app/checkout/checkout-page.tsx`
+- `src/components/app/sort-start/sort-start-page.tsx`
 - `src/components/app/dashboard/dashboard-empty.tsx`
 - `src/components/app/library/apple-music-library-card.tsx`
 
@@ -736,7 +736,7 @@
 
 **Tasks:**
 - Create `docs/PRODUCTION_SMOKE_TEST.md` or update existing file.
-- Cover signup, Apple Music connect, sync, draft, preview, checkout/dev bypass, processing, review, export.
+- Cover signup, Apple Music connect, sync, draft, preview, full-organization start, processing, review, export.
 - Include expected result and rollback/reset notes.
 
 **Acceptance criteria:**

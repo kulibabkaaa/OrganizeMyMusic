@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useTransition, useState } from "react";
+import React, { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 
-export function CheckoutAction({
+export function SortStartAction({
   sortId,
   ctaLabel,
   disabled = false,
@@ -18,7 +18,7 @@ export function CheckoutAction({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function startCheckout() {
+  function startFullOrganization() {
     setError(null);
     startTransition(async () => {
       const response = await fetch(`/api/app/sorts/${encodeURIComponent(sortId)}/checkout`, {
@@ -29,7 +29,7 @@ export function CheckoutAction({
         | null;
 
       if (!response.ok) {
-        setError(payload?.error ?? "Full Sort could not start.");
+        setError(payload?.error ?? "Full organization could not start.");
         return;
       }
 
@@ -47,7 +47,7 @@ export function CheckoutAction({
         className="w-full"
         disabled={disabled || isPending}
         aria-describedby={disabled ? disabledReasonId : undefined}
-        onClick={startCheckout}
+        onClick={startFullOrganization}
       >
         {isPending ? "Starting..." : ctaLabel}
       </Button>

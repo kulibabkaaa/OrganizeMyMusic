@@ -172,8 +172,9 @@ The target route structure should use `/app` as the platform home. Keep redirect
 /app/sorts/new                     Create Sort draft
 /app/sorts/[sortId]                Status-aware redirect
 /app/sorts/[sortId]/builder        Build/edit Playlist Recipes
-/app/sorts/[sortId]/preview        Lightweight preview + paywall panel
-/app/sorts/[sortId]/checkout       Payment page for this Sort
+/app/sorts/[sortId]/preview        Lightweight preview + start panel
+/app/sorts/[sortId]/start          Full organization start page
+/app/sorts/[sortId]/checkout       Legacy redirect to /start
 /app/sorts/[sortId]/processing     Paid full-sort progress
 /app/sorts/[sortId]/review         Review generated playlists/tracks
 /app/sorts/[sortId]/exporting      Apple Music export progress
@@ -1457,31 +1458,31 @@ src/components/app/preview/unlock-sort-card.tsx
 Tasks:
 
 - Left side: Playlist preview cards.
-- Right side: Unlock card/payment panel.
+- Right side: Start full organization panel.
 - Each preview card shows:
   - Playlist name
   - Estimated track count
   - Tags used
   - Sample tracks
   - Locked rows
-  - `Preview only. Final results are generated after checkout.`
+  - `Preview only. Final results are generated after you start full organization.`
 - Unlock card copy:
 
 ```text
-Unlock this Sort
+Start full organization
 Run the full library analysis and review every generated playlist before anything is created in Apple Music.
 ```
 
 - CTA:
 
 ```text
-Unlock full Sort
+Generate full results
 ```
 
 or
 
 ```text
-Continue to checkout
+Continue to billing
 ```
 
 Do not use vague `Continue` copy alone.
@@ -1501,7 +1502,9 @@ Real Stripe payment remains deferred.
 
 Completion notes:
 
-- Added the canonical `/app/sorts/[sortId]/checkout` page.
+- Added the canonical `/app/sorts/[sortId]/checkout` page at the time; current
+  platform-first UI uses `/app/sorts/[sortId]/start` and redirects the legacy
+  checkout page there.
 - Added `/api/app/sorts/[sortId]/checkout`.
 - Added `PAYMENTS_ENABLED` and `PAYMENTS_DEV_BYPASS_ENABLED` flags.
 - Checkout stays disabled by default.
@@ -1516,6 +1519,7 @@ Goal: add payment as a Sort-specific unlock step.
 Files:
 
 ```text
+src/app/(app)/app/sorts/[sortId]/start/page.tsx
 src/app/(app)/app/sorts/[sortId]/checkout/page.tsx
 src/app/api/app/sorts/[sortId]/checkout/route.ts
 src/app/api/stripe/webhook/route.ts
@@ -1991,7 +1995,7 @@ and sync.
 
 Blockers:
 
-- The target account has no paid Sort yet, so the platform checkout,
+- The target account has no completed platform-first full-organization start,
   processing, review, and export path has not been executed through the UI.
 - The largest verified completed sync for the target account has 378 raw tracks,
   so the 500-track smoke target remains unverified.

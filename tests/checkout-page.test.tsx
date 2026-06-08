@@ -2,13 +2,13 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { CheckoutPage } from "@/components/app/checkout/checkout-page";
+import { SortStartPage } from "@/components/app/sort-start/sort-start-page";
 import { summarizeCheckout } from "@/modules/payments/checkout";
 
-describe("CheckoutPage", () => {
+describe("SortStartPage", () => {
   it("renders Sort-specific generation start summary with billing deferred copy", () => {
     const markup = renderToStaticMarkup(
-      <CheckoutPage
+      <SortStartPage
         sortId="sort_1"
         mode="deferred"
         summary={summarizeCheckout({
@@ -41,7 +41,7 @@ describe("CheckoutPage", () => {
 
   it("keeps the checkout action disabled when payments are paused", () => {
     const markup = renderToStaticMarkup(
-      <CheckoutPage
+      <SortStartPage
         sortId="sort_1"
         mode="disabled"
         summary={summarizeCheckout({
