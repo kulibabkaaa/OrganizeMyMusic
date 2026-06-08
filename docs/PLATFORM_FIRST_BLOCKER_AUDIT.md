@@ -127,6 +127,9 @@ Latest local audit on 2026-06-08:
 - Full-organization processing copy now says `Organization started` instead of
   `Payment confirmed`, so the billing-deferred path does not present payment as
   the active milestone.
+- The active preview start component and tests were renamed away from old
+  paywall naming; historical roadmap docs may still mention paywall-era file
+  names, but runtime source now uses start/full-organization language.
 - Dead legacy Sort-request client components that posted directly to
   `/api/sort-runs` were removed, so current app UI cannot re-enter the old
   freeform request flow.

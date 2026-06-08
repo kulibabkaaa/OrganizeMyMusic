@@ -6,7 +6,7 @@ import { WorkflowEscapeActions } from "@/components/app/workflow-escape-actions"
 import { Card } from "@/components/ui/card";
 import type { LightweightPreviewSnapshot } from "@/modules/sorts/lightweight-preview";
 
-export function PreviewPaywallPage({
+export function PreviewStartPage({
   sortName,
   snapshot
 }: {
