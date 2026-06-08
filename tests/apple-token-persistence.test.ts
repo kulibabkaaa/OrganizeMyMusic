@@ -105,7 +105,7 @@ describe("persistAppleMusicUserToken", () => {
         userId: "user_1",
         storefront: "us",
         musicUserToken: "raw-music-user-token",
-        encryptionKey: "test-encryption-key"
+        encryptionKey: "test-encryption-key-with-at-least-32-bytes"
       })
     ).resolves.toMatchObject({
       status: "connected",
@@ -132,7 +132,7 @@ describe("decryptAppleMusicUserToken", () => {
       userId: "user_1",
       storefront: "gb",
       musicUserToken: "worker-token",
-      encryptionKey: "test-encryption-key"
+      encryptionKey: "test-encryption-key-with-at-least-32-bytes"
     });
 
     expect(result.status).toBe("connected");
@@ -142,7 +142,7 @@ describe("decryptAppleMusicUserToken", () => {
 
     expect(
       decryptAppleMusicUserToken(result.encryptedUserToken, {
-        encryptionKey: "test-encryption-key"
+        encryptionKey: "test-encryption-key-with-at-least-32-bytes"
       })
     ).toBe("worker-token");
   });

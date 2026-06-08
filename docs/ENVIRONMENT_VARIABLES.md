@@ -142,6 +142,7 @@ Server-only key used to encrypt Apple Music user tokens.
 Recommended:
 
 - At least 32 bytes of cryptographically secure random data.
+- The app rejects shorter values before encrypting or decrypting Apple Music user tokens.
 - Do not rotate casually without migration plan.
 - Add encryption version field in database.
 
