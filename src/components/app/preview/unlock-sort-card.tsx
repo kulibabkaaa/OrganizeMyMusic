@@ -14,10 +14,10 @@ export function UnlockSortCard({
 }) {
   return (
     <Card elevated className="sticky top-6 space-y-5 self-start">
-      <StatusPill label="Unlock required" tone="pink" />
+      <StatusPill label="Billing deferred" tone="success" />
       <div>
         <h2 className="font-display text-3xl font-semibold tracking-[0em] text-white">
-          Unlock this Sort
+          Start full Sort
         </h2>
         <p className="mt-3 text-sm leading-7 text-platform-secondary">
           Run the full library analysis and review every generated playlist before anything is created in Apple Music.
@@ -44,7 +44,7 @@ export function UnlockSortCard({
         href={`/app/sorts/${encodeURIComponent(sortId)}/checkout` as Route}
         className="inline-flex w-full items-center justify-center rounded-full bg-accent-sweep px-5 py-3 text-sm font-semibold text-white shadow-pulse transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
       >
-        Unlock full Sort
+        Start full Sort
       </Link>
     </Card>
   );

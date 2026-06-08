@@ -51,7 +51,8 @@ library data and creates real playlists only after explicit confirmation.
     - Ukrainian rap
     - gym rap
     - sad Slavic songs
-16. Checkout or approved development bypass.
+16. Start the full Sort with billing deferred. If Stripe is explicitly enabled,
+    use checkout; use development bypass only in approved local/staging smoke.
 17. Full Sort processing.
 18. Review playlist names, descriptions, track counts, and included tracks.
 19. Deselect playlists or remove tracks that should not be created.
@@ -96,7 +97,8 @@ platform-first completion gate.
     - Ukrainian rap
     - gym rap
     - sad Slavic songs
-13. Checkout or approved development bypass.
+13. Start the full Sort with billing deferred, checkout, or approved
+    development bypass depending on environment configuration.
 14. Full Sort processing.
 15. Review playlist names, descriptions, track counts, and included tracks.
 16. Deselect or remove anything that should not be created.
@@ -202,10 +204,13 @@ Known issues from this smoke:
 
 ## Payment and bypass status
 
-Payment implementation is blocked until explicitly reopened.
+Stripe payment implementation is deferred until explicitly reopened.
 
-Use `PAYMENTS_DEV_BYPASS_ENABLED=true` only for an approved local or staging smoke
-test. Never enable a development bypass by default or in production.
+Billing is deferred by default for the platform-first MVP. Use
+`PAYMENTS_DEV_BYPASS_ENABLED=true` only for an approved local or staging smoke
+test when you need to exercise that legacy path.
+
+Never enable a development bypass by default or in production.
 
 ## Export safety
 

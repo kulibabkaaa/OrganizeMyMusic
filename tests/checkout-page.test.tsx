@@ -6,28 +6,29 @@ import { CheckoutPage } from "@/components/app/checkout/checkout-page";
 import { summarizeCheckout } from "@/modules/payments/checkout";
 
 describe("CheckoutPage", () => {
-  it("renders Sort-specific checkout summary and approved dev bypass copy", () => {
+  it("renders Sort-specific checkout summary with billing deferred copy", () => {
     const markup = renderToStaticMarkup(
       <CheckoutPage
         sortId="sort_1"
-        mode="dev_bypass"
+        mode="deferred"
         summary={summarizeCheckout({
           sortName: "My Apple Music cleanup",
           recipeCount: 3,
           estimatedTrackCount: 90,
-          mode: "dev_bypass"
+          mode: "deferred"
         })}
       />
     );
 
-    expect(markup).toContain("Unlock this Sort");
+    expect(markup).toContain("Start full Sort");
     expect(markup).toContain("Generate full playlists from your Apple Music library");
     expect(markup).toContain("My Apple Music cleanup");
     expect(markup).toContain("Playlist Recipes");
     expect(markup).toContain("Apple Music");
     expect(markup).toContain("About 90 tracks across 3 Playlist Recipes");
-    expect(markup).toContain("Dev bypass enabled");
-    expect(markup).toContain("Use approved dev bypass");
+    expect(markup).toContain("Billing deferred");
+    expect(markup).toContain("Starting this Sort queues full playlist generation");
+    expect(markup).toContain("Apple Music export still requires track review and explicit confirmation");
     expect(markup).toContain("Track-level review before export");
     expect(markup).toContain("Back to dashboard");
     expect(markup).toContain("View all Sorts");
@@ -49,8 +50,8 @@ describe("CheckoutPage", () => {
       />
     );
 
-    expect(markup).toContain("Payment is paused.");
-    expect(markup).toContain("Full Sort processing stays blocked until payment is enabled.");
+    expect(markup).toContain("Payment paused");
+    expect(markup).toContain("Full Sort processing is disabled in this environment.");
     expect(markup).toContain('id="checkout-disabled-reason"');
     expect(markup).toContain('aria-describedby="checkout-disabled-reason"');
     expect(markup).toContain("disabled");

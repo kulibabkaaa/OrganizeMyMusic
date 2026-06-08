@@ -15,6 +15,8 @@ Latest local audit on 2026-06-08:
   generation, and generation history for playlist hub clients.
 - Legacy Sort preview navigation points into `/app/sorts/*`.
 - Legacy payment-first Sort copy has been softened for deferred billing.
+- Full Sort checkout now defaults to billing-deferred unlock so a real MVP user
+  can start full-library organization without enabling Stripe or dev bypass.
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.
 - The playlist hub and playlist detail screens were simplified to reduce
   always-visible metrics, safety panels, and history blocks.
@@ -143,6 +145,14 @@ Mitigation:
 ### 4. Billing model
 
 Risk: old docs mention one-time Sort payment. Current strategy defers billing and aims at subscription value.
+
+Current MVP behavior:
+
+- `PAYMENTS_ENABLED=true` uses Stripe checkout.
+- `PAYMENTS_DEV_BYPASS_ENABLED=true` uses the explicitly approved development
+  bypass.
+- With both flags unset or false, full Sort processing uses billing-deferred
+  unlock after the user clicks `Start full Sort`.
 
 Decision needed later:
 

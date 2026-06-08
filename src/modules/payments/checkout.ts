@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { env, requireServerEnv } from "@/lib/env";
 import { getStripe } from "@/modules/billing/stripe";
 
-export type CheckoutMode = "disabled" | "dev_bypass" | "stripe";
+export type CheckoutMode = "deferred" | "disabled" | "dev_bypass" | "stripe";
 
 export interface CheckoutSortSummary {
   id: string;
@@ -34,6 +34,10 @@ export interface PaymentStore {
     sortRunId: string;
     userId: string;
   }): Promise<boolean>;
+  markSortUnlockedForDeferredBilling(input: {
+    sortRunId: string;
+    userId: string;
+  }): Promise<boolean>;
 }
 
 export function getCheckoutMode(config: Record<string, string | undefined> = env): CheckoutMode {
@@ -45,7 +49,7 @@ export function getCheckoutMode(config: Record<string, string | undefined> = env
     return "dev_bypass";
   }
 
-  return "disabled";
+  return "deferred";
 }
 
 export function summarizeCheckout(input: {
@@ -57,21 +61,31 @@ export function summarizeCheckout(input: {
   const estimatedTrackCount = input.estimatedTrackCount ?? input.recipeCount * 30;
 
   return {
-    title: "Unlock this Sort",
+    title: input.mode === "deferred" ? "Start full Sort" : "Unlock this Sort",
     description:
       "Generate full playlists from your Apple Music library, review the results, and export them to Apple Music.",
     sortName: input.sortName,
     recipeCount: input.recipeCount,
     connectedLibrary: "Apple Music",
     estimatedOutput: `About ${estimatedTrackCount} tracks across ${input.recipeCount} Playlist Recipes`,
-    priceLabel: input.mode === "dev_bypass" ? "Dev bypass enabled" : "$19.00",
+    priceLabel:
+      input.mode === "deferred"
+        ? "Billing deferred"
+        : input.mode === "dev_bypass"
+          ? "Dev bypass enabled"
+          : "$19.00",
     included: [
       "Full library analysis",
       "Generated playlists from your recipes",
       "Track-level review before export",
       "Create playlists in Apple Music"
     ],
-    ctaLabel: input.mode === "dev_bypass" ? "Use approved dev bypass" : "Pay and start full Sort"
+    ctaLabel:
+      input.mode === "deferred"
+        ? "Start full Sort"
+        : input.mode === "dev_bypass"
+          ? "Use approved dev bypass"
+          : "Pay and start full Sort"
   };
 }
 
@@ -81,6 +95,29 @@ export async function unlockSortWithDevBypass(input: {
   userId: string;
 }) {
   const paid = await input.store.markSortPaidByDevBypass({
+    sortRunId: input.sortRunId,
+    userId: input.userId
+  });
+
+  if (!paid) {
+    return {
+      status: "not_found" as const,
+      message: "Sort not found."
+    };
+  }
+
+  return {
+    status: "paid" as const,
+    processingUrl: `/app/sorts/${encodeURIComponent(input.sortRunId)}/processing`
+  };
+}
+
+export async function unlockSortWithDeferredBilling(input: {
+  store: PaymentStore;
+  sortRunId: string;
+  userId: string;
+}) {
+  const paid = await input.store.markSortUnlockedForDeferredBilling({
     sortRunId: input.sortRunId,
     userId: input.userId
   });
@@ -165,43 +202,66 @@ export function createSupabasePaymentStore(supabase: SupabaseClient): PaymentSto
     },
 
     async markSortPaidByDevBypass(input) {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("sort_runs")
-        .update({
-          payment_status: "paid",
-          state: "paid",
-          updated_at: now
-        })
-        .eq("id", input.sortRunId)
-        .eq("user_id", input.userId)
-        .select("id")
-        .maybeSingle();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (!data) {
-        return false;
-      }
-
-      const { error: paymentError } = await supabase.from("payments").insert({
-        sort_run_id: input.sortRunId,
-        stripe_checkout_session_id: "dev_bypass",
-        stripe_payment_intent_id: null,
-        status: "paid",
-        amount_cents: 0,
-        updated_at: now
+      return markSortPaidWithZeroDollarPayment({
+        supabase,
+        sortRunId: input.sortRunId,
+        userId: input.userId,
+        paymentMarker: "dev_bypass"
       });
+    },
 
-      if (paymentError) {
-        throw new Error(paymentError.message);
-      }
-
-      return true;
+    async markSortUnlockedForDeferredBilling(input) {
+      return markSortPaidWithZeroDollarPayment({
+        supabase,
+        sortRunId: input.sortRunId,
+        userId: input.userId,
+        paymentMarker: "billing_deferred"
+      });
     }
   };
+}
+
+async function markSortPaidWithZeroDollarPayment(input: {
+  supabase: SupabaseClient;
+  sortRunId: string;
+  userId: string;
+  paymentMarker: "billing_deferred" | "dev_bypass";
+}) {
+  const now = new Date().toISOString();
+  const { data, error } = await input.supabase
+    .from("sort_runs")
+    .update({
+      payment_status: "paid",
+      state: "paid",
+      updated_at: now
+    })
+    .eq("id", input.sortRunId)
+    .eq("user_id", input.userId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return false;
+  }
+
+  const { error: paymentError } = await input.supabase.from("payments").insert({
+    sort_run_id: input.sortRunId,
+    stripe_checkout_session_id: input.paymentMarker,
+    stripe_payment_intent_id: null,
+    status: "paid",
+    amount_cents: 0,
+    updated_at: now
+  });
+
+  if (paymentError) {
+    throw new Error(paymentError.message);
+  }
+
+  return true;
 }
 
 function isEnabled(value: string | undefined) {

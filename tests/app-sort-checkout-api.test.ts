@@ -7,6 +7,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import {
   createSupabasePaymentStore,
   getCheckoutMode,
+  unlockSortWithDeferredBilling,
   unlockSortWithDevBypass
 } from "@/modules/payments/checkout";
 import {
@@ -33,6 +34,7 @@ vi.mock("@/modules/payments/checkout", async (importOriginal) => {
     ...actual,
     createSupabasePaymentStore: vi.fn(),
     getCheckoutMode: vi.fn(),
+    unlockSortWithDeferredBilling: vi.fn(),
     unlockSortWithDevBypass: vi.fn()
   };
 });
@@ -47,6 +49,7 @@ const withPgBossMock = vi.mocked(withPgBoss);
 const serviceRoleMock = vi.mocked(createSupabaseServiceRoleClient);
 const storeMock = vi.mocked(createSupabasePaymentStore);
 const modeMock = vi.mocked(getCheckoutMode);
+const deferredUnlockMock = vi.mocked(unlockSortWithDeferredBilling);
 const bypassMock = vi.mocked(unlockSortWithDevBypass);
 const fullSortStoreMock = vi.mocked(createSupabaseFullSortStore);
 const queueFullSortMock = vi.mocked(queueFullSortAfterPayment);
@@ -63,7 +66,11 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
     storeMock.mockReturnValue({ store: "payment" } as unknown as ReturnType<typeof createSupabasePaymentStore>);
     fullSortStoreMock.mockReturnValue({ store: "full-sort" } as unknown as ReturnType<typeof createSupabaseFullSortStore>);
     withPgBossMock.mockImplementation(async (callback) => callback({ queue: true } as never));
-    modeMock.mockReturnValue("dev_bypass");
+    modeMock.mockReturnValue("deferred");
+    deferredUnlockMock.mockResolvedValue({
+      status: "paid",
+      processingUrl: "/app/sorts/sort_1/processing"
+    });
     bypassMock.mockResolvedValue({
       status: "paid",
       processingUrl: "/app/sorts/sort_1/processing"
@@ -90,7 +97,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
     expect(response.status).toBe(401);
   });
 
-  it("keeps checkout blocked when payments and dev bypass are disabled", async () => {
+  it("keeps checkout blocked when the mode is explicitly disabled", async () => {
     modeMock.mockReturnValueOnce("disabled");
 
     const response = await POST(new Request("http://test.local"), {
@@ -101,10 +108,42 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       error: "Payment is not enabled for this Sort."
     });
     expect(response.status).toBe(409);
+    expect(deferredUnlockMock).not.toHaveBeenCalled();
     expect(bypassMock).not.toHaveBeenCalled();
   });
 
-  it("marks the Sort paid only through the explicit dev bypass and queues full sorting", async () => {
+  it("unlocks the Sort through deferred billing and queues full sorting by default", async () => {
+    const response = await POST(new Request("http://test.local"), {
+      params: Promise.resolve({ sortId: "sort_1" })
+    });
+
+    await expect(response.json()).resolves.toEqual({
+      status: "paid",
+      mode: "deferred",
+      processingUrl: "/app/sorts/sort_1/processing",
+      fullSort: {
+        status: "queued",
+        jobId: "job_1"
+      }
+    });
+    expect(response.status).toBe(200);
+    expect(deferredUnlockMock).toHaveBeenCalledWith({
+      store: { store: "payment" },
+      sortRunId: "sort_1",
+      userId: "user_1"
+    });
+    expect(bypassMock).not.toHaveBeenCalled();
+    expect(queueFullSortMock).toHaveBeenCalledWith({
+      store: { store: "full-sort" },
+      queue: { queue: true },
+      sortRunId: "sort_1",
+      userId: "user_1"
+    });
+  });
+
+  it("keeps the explicit dev bypass path available when configured", async () => {
+    modeMock.mockReturnValueOnce("dev_bypass");
+
     const response = await POST(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
@@ -119,6 +158,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       }
     });
     expect(response.status).toBe(200);
+    expect(deferredUnlockMock).not.toHaveBeenCalled();
     expect(bypassMock).toHaveBeenCalledWith({
       store: { store: "payment" },
       sortRunId: "sort_1",
