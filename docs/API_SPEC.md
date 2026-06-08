@@ -505,6 +505,11 @@ Rules:
 
 Returns playlist, recipe, `latestGeneration`, and `generationHistory`.
 
+Rules:
+
+- Returns active workspace playlists only.
+- Archived playlists return `404` from the active detail API.
+
 ### `PATCH /api/app/playlists/:playlistId`
 
 Updates playlist metadata or archives the playlist.
@@ -512,6 +517,7 @@ Updates playlist metadata or archives the playlist.
 Rules:
 
 - Archive user-facing playlists instead of destructive delete.
+- Archived playlists cannot be reopened or mutated through this endpoint.
 - Must not change Apple Music before explicit export/update.
 - Rejects client updates to server-managed export fields such as
   `applePlaylistId`, `latestLibrarySyncId`, `lastGeneratedAt`, and
@@ -520,6 +526,10 @@ Rules:
 ### `GET /api/app/playlists/:playlistId/recipe`
 
 Returns the playlist recipe.
+
+Rules:
+
+- Archived playlists return `404`.
 
 ### `PUT /api/app/playlists/:playlistId/recipe`
 

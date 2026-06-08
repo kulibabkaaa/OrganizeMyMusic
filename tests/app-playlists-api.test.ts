@@ -366,6 +366,45 @@ describe("platform playlist API routes", () => {
     });
   });
 
+  it("does not return archived playlists from the active detail API", async () => {
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce({
+      ...playlist,
+      status: "archived",
+      archivedAt: "2026-06-08T12:00:00.000Z"
+    });
+
+    const response = await GET_PLAYLIST(new Request("http://test.local"), {
+      params: Promise.resolve({ playlistId: playlist.id })
+    });
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(recipeStore.listRecipesForPlaylist).not.toHaveBeenCalled();
+    expect(generationStore.getLatestGeneration).not.toHaveBeenCalled();
+  });
+
+  it("does not mutate archived playlists through the playlist API", async () => {
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce({
+      ...playlist,
+      status: "archived",
+      archivedAt: "2026-06-08T12:00:00.000Z"
+    });
+
+    const response = await PATCH_PLAYLIST(
+      new Request("http://test.local/api/app/playlists/22222222-2222-4222-8222-222222222222", {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: "Reopened playlist"
+        })
+      }),
+      { params: Promise.resolve({ playlistId: playlist.id }) }
+    );
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(playlistStore.updatePlaylist).not.toHaveBeenCalled();
+  });
+
   it("creates a playlist-owned recipe when none exists", async () => {
     const response = await PUT_PLAYLIST_RECIPE(
       new Request("http://test.local", {
@@ -447,6 +486,22 @@ describe("platform playlist API routes", () => {
     });
 
     await expect(response.json()).resolves.toEqual({ recipe });
+  });
+
+  it("does not return recipes for archived playlists", async () => {
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce({
+      ...playlist,
+      status: "archived",
+      archivedAt: "2026-06-08T12:00:00.000Z"
+    });
+
+    const response = await GET_PLAYLIST_RECIPE(new Request("http://test.local"), {
+      params: Promise.resolve({ playlistId: playlist.id })
+    });
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(recipeStore.listRecipesForPlaylist).not.toHaveBeenCalled();
   });
 
   it("generates one playlist from its saved recipe without creating a Sort", async () => {

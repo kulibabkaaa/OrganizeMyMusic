@@ -18,6 +18,11 @@ export async function GET(
   }
 
   const { playlist, recipeStore, session } = contextResult;
+
+  if (playlist.status === "archived") {
+    return NextResponse.json({ error: "Playlist not found." }, { status: 404 });
+  }
+
   const recipes = await recipeStore.listRecipesForPlaylist({
     userId: session.user.id,
     playlistId: playlist.id
