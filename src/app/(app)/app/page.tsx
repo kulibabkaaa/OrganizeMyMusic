@@ -71,7 +71,7 @@ export default async function AppDashboardPage() {
     recentSorts
   });
   const activeProcessingJobCount = recentSorts.filter((sort) =>
-    ["preview_generating", "paid", "processing", "exporting"].includes(sort.uiStatus)
+    ["preview_generating", "organizing", "processing", "exporting"].includes(sort.uiStatus)
   ).length;
   const state = deriveDashboardState({
     authStatus: session.status,
