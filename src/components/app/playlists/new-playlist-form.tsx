@@ -27,6 +27,7 @@ export function NewPlaylistForm() {
   const [energy, setEnergy] = useState("");
   const [targetMax, setTargetMax] = useState("50");
   const [allowExplicit, setAllowExplicit] = useState(true);
+  const [showRecipeFields, setShowRecipeFields] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdPlaylistId, setCreatedPlaylistId] = useState<string | null>(null);
@@ -124,7 +125,7 @@ export function NewPlaylistForm() {
         }
       }}
     >
-      <Card elevated className="p-7">
+      <Card elevated className="p-7 lg:col-span-2">
         <StatusPill label="Saved playlist" tone="pink" />
         <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0em] text-white">
           Create playlist
@@ -155,106 +156,126 @@ export function NewPlaylistForm() {
               placeholder="High-energy Ukrainian rap from my saved library."
             />
           </Field>
-          <Field label="Recipe instructions" htmlFor="playlist-note">
-            <textarea
-              id="playlist-note"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              className={inputClassName}
-              rows={5}
-              placeholder="Keep it energetic, modern, and avoid soft pop features."
-            />
-          </Field>
         </div>
       </Card>
 
-      <Card className="p-7">
+      <Card className="p-7 lg:col-span-2">
         <StatusPill label="Recipe fields" tone="success" />
-        <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0em] text-white">
-          Matching rules
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-platform-secondary">
-          Use simple fields. AI logic stays mostly hidden behind tags and preferences.
-        </p>
-
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <Field label="Genres" htmlFor="playlist-genres" hint="Comma separated.">
-            <input
-              id="playlist-genres"
-              value={genres}
-              onChange={(event) => setGenres(event.target.value)}
-              className={inputClassName}
-              placeholder="rap, hip-hop"
-            />
-          </Field>
-          <Field label="Moods" htmlFor="playlist-moods" hint="Comma separated.">
-            <input
-              id="playlist-moods"
-              value={moods}
-              onChange={(event) => setMoods(event.target.value)}
-              className={inputClassName}
-              placeholder="Workout, Hype"
-            />
-          </Field>
-          <Field label="Language" htmlFor="playlist-language">
-            <input
-              id="playlist-language"
-              value={language}
-              onChange={(event) => setLanguage(event.target.value)}
-              className={inputClassName}
-              placeholder="ukrainian"
-            />
-          </Field>
-          <Field label="Activity" htmlFor="playlist-activity">
-            <select
-              id="playlist-activity"
-              value={activity}
-              onChange={(event) => setActivity(event.target.value)}
-              className={inputClassName}
-            >
-              <option value="">None</option>
-              <option value="workout">Workout</option>
-              <option value="driving">Driving</option>
-              <option value="focus">Focus</option>
-              <option value="party">Party</option>
-              <option value="late night">Late night</option>
-            </select>
-          </Field>
-          <Field label="Energy" htmlFor="playlist-energy">
-            <select
-              id="playlist-energy"
-              value={energy}
-              onChange={(event) => setEnergy(event.target.value)}
-              className={inputClassName}
-            >
-              <option value="">Any</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </Field>
-          <Field label="Target tracks" htmlFor="playlist-target">
-            <input
-              id="playlist-target"
-              type="number"
-              min={1}
-              max={500}
-              value={targetMax}
-              onChange={(event) => setTargetMax(event.target.value)}
-              className={inputClassName}
-            />
-          </Field>
+        <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-semibold tracking-[0em] text-white">
+              Matching rules
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-platform-secondary">
+              Optional recipe fields help generation later. You can also finish them inside the playlist workspace.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="glass"
+            aria-expanded={showRecipeFields}
+            aria-controls="playlist-recipe-fields"
+            onClick={() => setShowRecipeFields((current) => !current)}
+          >
+            {showRecipeFields ? "Hide matching rules" : "Add matching rules"}
+          </Button>
         </div>
 
-        <label className="mt-6 flex min-h-11 items-center gap-3 rounded-[1.25rem] border border-white/10 bg-white/[0.055] px-4 py-3 text-sm text-platform-secondary">
-          <input
-            type="checkbox"
-            checked={allowExplicit}
-            onChange={(event) => setAllowExplicit(event.target.checked)}
-            className="h-5 w-5 rounded border-white/20 bg-black/30"
-          />
-          Allow explicit tracks
-        </label>
+        {showRecipeFields ? (
+          <div id="playlist-recipe-fields">
+            <div className="mt-6">
+              <Field label="Recipe instructions" htmlFor="playlist-note">
+                <textarea
+                  id="playlist-note"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  className={inputClassName}
+                  rows={4}
+                  placeholder="Keep it energetic, modern, and avoid soft pop features."
+                />
+              </Field>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <Field label="Genres" htmlFor="playlist-genres" hint="Comma separated.">
+                <input
+                  id="playlist-genres"
+                  value={genres}
+                  onChange={(event) => setGenres(event.target.value)}
+                  className={inputClassName}
+                  placeholder="rap, hip-hop"
+                />
+              </Field>
+              <Field label="Moods" htmlFor="playlist-moods" hint="Comma separated.">
+                <input
+                  id="playlist-moods"
+                  value={moods}
+                  onChange={(event) => setMoods(event.target.value)}
+                  className={inputClassName}
+                  placeholder="Workout, Hype"
+                />
+              </Field>
+              <Field label="Language" htmlFor="playlist-language">
+                <input
+                  id="playlist-language"
+                  value={language}
+                  onChange={(event) => setLanguage(event.target.value)}
+                  className={inputClassName}
+                  placeholder="ukrainian"
+                />
+              </Field>
+              <Field label="Activity" htmlFor="playlist-activity">
+                <select
+                  id="playlist-activity"
+                  value={activity}
+                  onChange={(event) => setActivity(event.target.value)}
+                  className={inputClassName}
+                >
+                  <option value="">None</option>
+                  <option value="workout">Workout</option>
+                  <option value="driving">Driving</option>
+                  <option value="focus">Focus</option>
+                  <option value="party">Party</option>
+                  <option value="late night">Late night</option>
+                </select>
+              </Field>
+              <Field label="Energy" htmlFor="playlist-energy">
+                <select
+                  id="playlist-energy"
+                  value={energy}
+                  onChange={(event) => setEnergy(event.target.value)}
+                  className={inputClassName}
+                >
+                  <option value="">Any</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </Field>
+              <Field label="Target tracks" htmlFor="playlist-target">
+                <input
+                  id="playlist-target"
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={targetMax}
+                  onChange={(event) => setTargetMax(event.target.value)}
+                  className={inputClassName}
+                />
+              </Field>
+            </div>
+
+            <label className="mt-6 flex min-h-11 items-center gap-3 rounded-[1.25rem] border border-white/10 bg-white/[0.055] px-4 py-3 text-sm text-platform-secondary">
+              <input
+                type="checkbox"
+                checked={allowExplicit}
+                onChange={(event) => setAllowExplicit(event.target.checked)}
+                className="h-5 w-5 rounded border-white/20 bg-black/30"
+              />
+              Allow explicit tracks
+            </label>
+          </div>
+        ) : null}
 
         {error ? (
           <div className="mt-5 rounded-[1rem] border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] px-4 py-3">
