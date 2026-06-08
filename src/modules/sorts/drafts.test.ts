@@ -73,8 +73,8 @@ describe("createSortDraftSchema", () => {
 
     expect(() =>
       createSortDraftSchema.parse({
-        name: "Spotify import",
-        sourceProvider: "spotify"
+        name: "External import",
+        sourceProvider: "unsupported_provider"
       })
     ).toThrow();
   });

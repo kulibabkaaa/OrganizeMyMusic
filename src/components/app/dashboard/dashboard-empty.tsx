@@ -10,18 +10,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 const providers = [
   {
     name: "Apple Music",
-    status: "Available now",
-    availability: "available" as const
-  },
-  {
-    name: "Spotify",
-    status: "Coming later",
-    availability: "coming_later" as const
-  },
-  {
-    name: "YouTube Music",
-    status: "Coming later",
-    availability: "coming_later" as const
+    status: "Available now"
   }
 ];
 

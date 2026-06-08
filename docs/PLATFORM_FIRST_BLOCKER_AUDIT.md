@@ -21,6 +21,8 @@ Latest local audit on 2026-06-08:
   billing is deferred.
 - Unused legacy Sort preview/action components were removed, so stale client
   code no longer points at disabled legacy write/start endpoints.
+- Dashboard and connected-library settings no longer surface Spotify or YouTube
+  Music cards; MVP UI is Apple Music-only.
 - Full Sort checkout now defaults to billing-deferred unlock so a real MVP user
   can start full-library organization without enabling Stripe or dev bypass.
 - `GET /api/apple/connection` now exposes authenticated Apple Music connection

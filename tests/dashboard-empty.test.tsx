@@ -23,27 +23,23 @@ describe("dashboard empty state", () => {
     );
     expect(markup).toContain("Apple Music");
     expect(markup).toContain("Available now");
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("YouTube Music");
+    expect(markup).not.toContain("Spotify");
+    expect(markup).not.toContain("YouTube Music");
     expect(markup).toContain("Saved Playlists");
     expect(markup).toContain("Library Status");
     expect(markup).toContain("Connect a library first");
   });
 
-  it("renders available and disabled provider cards", () => {
+  it("renders Apple Music as the only setup provider", () => {
     const markup = renderToStaticMarkup(
       <div>
-        <ProviderCard name="Apple Music" status="Available now" availability="available" />
-        <ProviderCard name="Spotify" status="Coming later" availability="coming_later" />
+        <ProviderCard name="Apple Music" status="Available now" />
       </div>
     );
 
     expect(markup).toContain("Apple Music");
     expect(markup).toContain("Available now");
     expect(markup).toContain("Ready");
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("Disabled");
+    expect(markup).not.toContain("Coming later");
   });
 });

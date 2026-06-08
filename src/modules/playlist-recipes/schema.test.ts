@@ -66,7 +66,7 @@ describe("Playlist Recipe schema", () => {
       playlistRecipeTagSchema.parse({
         id: "bad",
         category: "provider",
-        value: "Spotify"
+        value: "External provider"
       })
     ).toThrow();
 
