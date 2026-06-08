@@ -124,7 +124,7 @@ Use this as the recurring-value screen:
 - Pending suggestions
 - Regenerate
 - Review
-- Update Apple Music
+- Export approved tracks
 - Generation history
 
 ## Data migration strategy
@@ -145,7 +145,7 @@ Do not delete `sort_playlists` or `sort_playlist_tracks` until the new generatio
 
 Apple Music supports creating library playlists and adding tracks to existing library playlists. Exact replacement, track removal, and reordering need a separate implementation spike before the product promises perfect in-place updates.
 
-MVP wording should say `Update Apple Music` only after the capability is verified. Until then, prefer `Export` or `Add approved tracks`.
+Update-oriented Apple Music wording should wait until the capability is verified. Until then, prefer `Export` or `Add approved tracks`.
 
 ## Implementation tickets
 
