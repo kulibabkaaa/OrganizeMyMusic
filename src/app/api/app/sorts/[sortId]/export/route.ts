@@ -49,11 +49,7 @@ export async function POST(
   const getSortRunForExport: typeof previewStore.getSortRunForPreview = async (input) => {
     const sortRun = await previewStore.getSortRunForPreview(input);
 
-    if (
-      !sortRun ||
-      sortRun.previewSnapshot ||
-      (sortRun.state !== "paid" && sortRun.state !== "failed")
-    ) {
+    if (!sortRun || (sortRun.state !== "paid" && sortRun.state !== "failed")) {
       return sortRun;
     }
 
@@ -65,7 +61,7 @@ export async function POST(
 
     return {
       ...sortRun,
-      previewSnapshot: storedSnapshot
+      previewSnapshot: storedSnapshot ?? sortRun.previewSnapshot
     };
   };
   const result = await withPgBoss((queue) =>

@@ -13,6 +13,7 @@ import {
   exportReviewedPlaylists
 } from "@/modules/sorts/export-selection";
 import { loadStoredFullSortReviewSnapshot } from "@/modules/sorts/full-sort-job";
+import type { PreviewSnapshot } from "@/modules/sorts/preview-snapshot";
 import { createSupabasePreviewSnapshotStore } from "@/modules/sorts/preview-snapshot";
 
 vi.mock("@/lib/auth/session", () => ({
@@ -130,7 +131,7 @@ describe("POST /api/app/sorts/[sortId]/export", () => {
   });
 
   it("uses stored full-organization playlists as the export review snapshot for started Sorts", async () => {
-    const storedSnapshot = {
+    const storedSnapshot: PreviewSnapshot = {
       sortRunId: "sort_1",
       librarySyncId: "sync_1",
       generatedAt: "2026-05-27T12:00:00.000Z",
@@ -178,6 +179,94 @@ describe("POST /api/app/sorts/[sortId]/export", () => {
       supabase: {},
       sortRunId: "sort_1",
       librarySyncId: "sync_1"
+    });
+  });
+
+  it("prefers stored full-organization snapshots over stale lightweight previews", async () => {
+    const storedSnapshot: PreviewSnapshot = {
+      sortRunId: "sort_1",
+      librarySyncId: "sync_1",
+      generatedAt: "2026-05-27T12:00:00.000Z",
+      playlists: [
+        {
+          id: "playlist_full",
+          dimension: "request",
+          title: "Full playlist",
+          description: "Stored full playlist.",
+          confidenceLabel: "high",
+          trackCount: 1,
+          trackFingerprints: ["fp_1"],
+          appleSongIds: ["song_1"],
+          tracks: [
+            {
+              fingerprint: "fp_1",
+              normalizedTrackId: "track_1",
+              appleSongId: "song_1",
+              name: "Track",
+              artistName: "Artist",
+              albumName: "Album",
+              score: 0.9,
+              position: 0,
+              reason: "Matched"
+            }
+          ]
+        }
+      ]
+    };
+    const lightweightSnapshot: PreviewSnapshot = {
+      sortRunId: "sort_1",
+      librarySyncId: "sync_1",
+      generatedAt: "2026-05-27T11:00:00.000Z",
+      playlists: [
+        {
+          id: "preview_playlist",
+          dimension: "request",
+          title: "Preview playlist",
+          description: "Stale lightweight preview.",
+          confidenceLabel: "low",
+          trackCount: 0,
+          trackFingerprints: [],
+          appleSongIds: [],
+          tracks: []
+        }
+      ]
+    };
+    const getSortRunForPreview = vi.fn().mockResolvedValue({
+      id: "sort_1",
+      userId: "user_1",
+      librarySyncId: "sync_1",
+      state: "paid",
+      paymentStatus: "paid",
+      previewSnapshot: lightweightSnapshot,
+      requests: []
+    });
+    previewStoreMock.mockReturnValueOnce({
+      getSortRunForPreview
+    } as never);
+    fullSortSnapshotMock.mockResolvedValueOnce(storedSnapshot);
+
+    await exportPost(
+      new Request("http://test.local", {
+        method: "POST",
+        body: JSON.stringify({
+          selectedPlaylistIds: ["playlist_full"],
+          removedTrackFingerprintsByPlaylistId: {},
+          renamedPlaylistTitlesById: {}
+        })
+      }),
+      {
+        params: Promise.resolve({ sortId: "sort_1" })
+      }
+    );
+
+    const getSortRunForExport = exportStoreMock.mock.calls[0]?.[1];
+
+    expect(getSortRunForExport).toEqual(expect.any(Function));
+    await expect(
+      getSortRunForExport({ sortRunId: "sort_1", userId: "user_1" })
+    ).resolves.toMatchObject({
+      state: "paid",
+      previewSnapshot: storedSnapshot
     });
   });
 
