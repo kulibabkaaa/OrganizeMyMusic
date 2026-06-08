@@ -52,6 +52,8 @@ Latest local audit on 2026-06-08:
   the primary action in product language.
 - Latest organization empty-state copy now says `Create playlist plans` instead
   of old `playlist requests` language.
+- Runtime fallback errors now refer to `Playlist Recipes` instead of old
+  playlist-request wording when Sort recipe rows cannot load or store.
 - Playlist hub cards surface the latest generation review/export state for each
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before

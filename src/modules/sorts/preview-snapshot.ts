@@ -282,7 +282,7 @@ export function createSupabasePreviewSnapshotStore(
       ]);
 
       if (requestsResult.error || !requestsResult.data) {
-        throw new Error(requestsResult.error?.message ?? "Unable to load playlist requests.");
+        throw new Error(requestsResult.error?.message ?? "Unable to load Playlist Recipes.");
       }
 
       if (eventsResult.error || !eventsResult.data) {
