@@ -26,15 +26,15 @@ export default async function AppSortStatusPage({
   }
 
   if (previewResult.status !== "ready") {
-    redirect(`/sorts/${encodeURIComponent(sortId)}` as Route);
+    redirect(`/app/sorts/${encodeURIComponent(sortId)}/builder` as Route);
   }
 
   const status = getSortUiStatus({
     state: previewResult.sortRun.state,
     paymentStatus: previewResult.sortRun.paymentStatus,
     hasPreviewSnapshot: Boolean(previewResult.sortRun.previewSnapshot),
-    generatedPlaylistCount: 0,
-    applePlaylistIdCount: 0,
+    generatedPlaylistCount: previewResult.sortRun.generatedPlaylistCount ?? 0,
+    applePlaylistIdCount: previewResult.sortRun.applePlaylistIdCount ?? 0,
     activeJobStages: previewResult.sortRun.events?.map((event) => event.stage) ?? []
   });
 

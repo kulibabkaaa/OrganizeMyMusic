@@ -35,12 +35,12 @@ export function DashboardSyncing({
             Your music workspace
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            Syncing your library so you can create your first Sort. Drafts are available while
-            the index finishes.
+            Syncing your library so you can organize it into saved playlists. You can start the
+            full-library workspace while the index finishes.
           </p>
         </div>
         <Link href="/app/sorts/new" className="inline-flex">
-          <Button className="min-w-44">Create Sort Draft</Button>
+          <Button className="min-w-44">Organize My Library</Button>
         </Link>
       </section>
 
@@ -99,8 +99,8 @@ export function DashboardSyncing({
             {latestSync ? "Sync status" : "Library sync is ready to start."}
           </h3>
           <p className="mt-3 text-sm leading-7 text-platform-secondary">
-            You can name a Sort and draft Playlist Recipes now. Preview stays locked until the
-            library index is ready.
+            You can set up playlist recipes now. Preview stays locked until the library index is
+            ready.
           </p>
           <dl className="mt-5 grid gap-3">
             <StatusRow label="Latest status" value={formatSyncStatus(latestSync)} />
@@ -121,7 +121,7 @@ export function DashboardSyncing({
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/app/sorts/new" className="inline-flex">
               <Button variant="glass" className="min-w-44">
-                Create Sort Draft
+                Organize My Library
               </Button>
             </Link>
             {syncFallbackAction}

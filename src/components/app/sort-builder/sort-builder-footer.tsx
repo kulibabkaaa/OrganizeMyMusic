@@ -63,7 +63,7 @@ export function SortBuilderFooter({
   onRetrySave: () => void;
 }) {
   const disabledReason =
-    message ?? "Complete the required Sort details before previewing.";
+    message ?? "Complete the required Sort details before generating playlists.";
   const messageId = !canPreview ? "sort-builder-footer-message" : undefined;
   const savingMessageId = canPreview && isSaving ? "sort-builder-saving-message" : undefined;
   const autosaveStatusId = "sort-builder-autosave-status";
@@ -108,11 +108,11 @@ export function SortBuilderFooter({
               aria-describedby={previewDescriptionIds || undefined}
               onClick={onPreview}
             >
-              {isSaving ? "Saving..." : "Preview Sort"}
+              {isSaving ? "Saving..." : "Generate Review"}
             </Button>
           ) : (
             <Button variant="disabled" aria-describedby={previewDescriptionIds || undefined}>
-              Preview Sort
+              Generate Review
             </Button>
           )}
         </div>

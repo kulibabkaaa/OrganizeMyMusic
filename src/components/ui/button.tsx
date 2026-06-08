@@ -12,30 +12,25 @@ export function Button({
   variant = "primary",
   children,
   type,
-  formAction,
-  disabled,
   ...props
 }: PropsWithChildren<ButtonProps>) {
-  const isDisabled = disabled || variant === "disabled";
+  const buttonType = type ?? (props.formAction ? undefined : "button");
 
   return (
     <button
-      type={type ?? (formAction ? undefined : "button")}
-      formAction={formAction}
-      disabled={isDisabled}
+      type={buttonType}
       className={cn(
-        "inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink",
+        "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink disabled:cursor-not-allowed disabled:opacity-50",
         variant === "primary" &&
-          "bg-accent-sweep text-white shadow-pulse",
+          "bg-accent-sweep text-white shadow-pulse hover:-translate-y-0.5",
         variant === "secondary" &&
-          "border border-white/15 bg-white text-black shadow-none",
+          "border border-white/12 bg-white text-black hover:-translate-y-0.5",
         variant === "glass" &&
-          "border border-white/15 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur hover:bg-white/[0.14]",
-        variant === "ghost" && "text-platform-secondary hover:bg-white/5 hover:text-white",
+          "border border-white/10 bg-white/10 text-white hover:border-white/18 hover:bg-white/[0.14]",
+        variant === "ghost" && "text-platform-secondary hover:bg-white/[0.06] hover:text-white",
         variant === "danger" &&
-          "border border-[rgba(255,77,109,0.35)] bg-[rgba(255,77,109,0.10)] text-platform-danger hover:bg-[rgba(255,77,109,0.15)]",
-        isDisabled && "cursor-not-allowed opacity-55 hover:translate-y-0",
-        !isDisabled && "hover:-translate-y-0.5",
+          "border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] text-platform-danger hover:bg-[rgba(255,69,99,0.14)]",
+        variant === "disabled" && "bg-white/[0.08] text-platform-muted",
         className
       )}
       {...props}

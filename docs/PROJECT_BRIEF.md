@@ -6,7 +6,7 @@ OrganizeMyMusic
 
 ## Core idea
 
-A web app that connects to a user's Apple Music library, analyzes their existing saved tracks, lets them create reusable Sorts with Playlist Recipes, previews likely output, and writes reviewed playlists back into their Apple Music account only after explicit export confirmation.
+A web app that connects to a user's Apple Music library, organizes their existing saved tracks into useful playlists, stores those playlists as reusable app objects, and lets the user regenerate, review, and export approved updates back to Apple Music.
 
 ## MVP focus
 
@@ -16,7 +16,7 @@ Spotify and YouTube Music are intentionally excluded from the MVP. They should b
 
 ## Target user
 
-A user with a messy Apple Music library who wants practical playlists without manually sorting hundreds or thousands of tracks.
+Casual listeners and music obsessives with messy Apple Music libraries who want practical playlists without manually sorting hundreds or thousands of tracks.
 
 Example user need:
 
@@ -35,12 +35,14 @@ show me the proposed playlists, then create them in Apple Music if I confirm.
 3. Sync saved Apple Music library tracks.
 4. Normalize and dedupe tracks.
 5. Classify tracks by metadata, language, genre, mood, and practical use case.
-6. Let the user describe or select desired playlists.
-7. Generate proposed playlists from the user's existing tracks.
-8. Show the user a lightweight preview before payment.
-9. Unlock a specific Sort with payment when payment is enabled.
-10. Let the user review, edit, or reject the generated output.
-11. Create reviewed playlists in Apple Music only after explicit export.
+6. Let the user organize the whole library through a Sort.
+7. Let the user create playlist objects inside that Sort.
+8. Let the user define a simple recipe for each playlist.
+9. Generate proposed tracks from the user's existing library.
+10. Show the user playlists and included tracks before writing anything.
+11. Let the user approve, edit, or reject every playlist and track.
+12. Create approved playlists in Apple Music.
+13. Persist playlists so the user can revisit, regenerate, and update them later.
 
 ## MVP definition
 
@@ -49,12 +51,14 @@ The MVP is complete when one real user can:
 1. Sign up or sign in.
 2. Connect Apple Music.
 3. Sync at least 500 saved library tracks.
-4. Request at least three custom playlists, or create at least three Playlist Recipes once the platform UI is implemented.
-5. See a preview with playlist names, sample or full track rows, and track counts.
-6. Review the generated output.
-7. Explicitly export the reviewed playlists.
-8. Have the playlists created in their real Apple Music account.
-9. See completion status and any errors.
+4. Click `Organize My Library`.
+5. Create at least three playlists with recipes.
+6. Generate proposed tracks from their existing library.
+7. Review playlist names, artists, track counts, reasons, and every track.
+8. Confirm the reviewed output.
+9. Have the playlists created in their real Apple Music account.
+10. See those playlists persist in the app dashboard.
+11. See completion status and any errors.
 
 ## Non-goals for MVP
 
@@ -77,9 +81,9 @@ The MVP succeeds if:
 
 - A real Apple Music user can complete the full flow without developer intervention.
 - The app never writes to Apple Music before confirmation.
-- The app treats payment as an unlock for one Sort, not as a required signup or connection step.
 - The app can recover from failed sync/classification/write-back jobs.
 - The generated playlists are plausible enough that the user keeps at least some of them.
+- App-created playlists remain available for later review/regeneration.
 - The codebase is structured so Spotify and YouTube Music can be added later without rewriting the whole app.
 
 ## Product principle
@@ -87,3 +91,7 @@ The MVP succeeds if:
 The app should behave like an organizer, not a chatbot.
 
 AI is used to classify and plan. The user should interact with a clear product interface, not with an unpredictable open-ended assistant.
+
+## Platform principle
+
+`Sort` means a full-library organization project. The daily product surface is saved playlists with recipes, review history, and user-triggered regeneration.

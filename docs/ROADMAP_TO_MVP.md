@@ -1,5 +1,21 @@
 # Roadmap to MVP
 
+## Current platform migration note
+
+This original roadmap describes the historical Apple Music Sort-first MVP. It is
+kept for implementation history only.
+
+The active product direction is platform-first: a Sort is a full-library
+organization project, while persistent playlists and playlist recipes are the
+recurring product surface.
+
+Use these documents as the current source of truth before adding new work:
+
+- `docs/PLATFORM_FIRST_GOAL_PROMPT.md`
+- `docs/MVP_ACCEPTANCE_CRITERIA.md`
+- `docs/PRODUCTION_SMOKE_TEST.md`
+- `docs/PLATFORM_FIRST_MVP_MIGRATION.md`
+
 ## Purpose
 
 This is the master execution plan for Codex.
@@ -12,35 +28,25 @@ Use ticket-by-ticket development, not one large batch.
 
 Reason: this MVP touches authentication, Apple Music tokens, private user music data, database migrations, AI output, deployment configuration, and real Apple Music write actions. Those areas need small, reviewable steps.
 
-## MVP target
+## Historical MVP target
 
-The MVP is complete when a real user can:
+This was the original Sort-first target. Do not use it as the active completion
+gate. The active completion gate is `docs/MVP_ACCEPTANCE_CRITERIA.md`.
+
+The historical MVP was complete when a real user could:
 
 1. Sign up or sign in.
 2. Connect Apple Music.
-3. Sync at least 500 saved Apple Music library tracks.
+3. Sync Apple Music library tracks.
 4. Request custom playlists.
 5. Preview proposed playlists and included tracks.
 6. Confirm the playlists.
 7. Have the playlists created in their real Apple Music account.
 8. See completion or failure status.
 
-## Platform UI follow-up
-
-The first Apple Music MVP smoke has proven the backend flow once. The next UI
-product phase is documented in `docs/UI_PLATFORM_FLOW_ROADMAP.md`.
-
-That roadmap does not replace the backend safety rules in this file. It adds a
-platform-first app flow:
-
-```text
-Landing page -> /auth -> /app -> Sorts -> Playlist Recipes -> Preview -> Checkout -> Review -> Export
-```
-
-Implement that roadmap ticket by ticket after the current quality-hardening
-work. Preserve the public landing page visuals, keep legacy `/login`,
-`/dashboard`, and existing sort links working during migration, and never create
-Apple Music playlists before explicit review/export confirmation.
+The current platform-first smoke should verify 500-track scale only when the
+test account actually has at least 500 saved songs. A smaller real library can
+still prove the platform flow if every current acceptance step passes.
 
 ## Current known repo state
 
@@ -722,8 +728,7 @@ Goal: add payment only after product flow works.
 
 Tasks:
 
-- Add Stripe checkout after preview and before full Sort processing/review if
-  desired.
+- Add Stripe checkout after preview and before final confirmation if desired.
 - Store payment status.
 - Freeze preview before checkout.
 - Use webhook verification.
@@ -939,55 +944,12 @@ Acceptance criteria:
 
 ---
 
-# Phase 10 — Platform-first UI flow after MVP stabilization
+# Historical final MVP checklist
 
-## FLOW-000 — Add platform-first UI roadmap
+This checklist is retained for old Sort-first context. The current final MVP
+checklist lives in `docs/MVP_ACCEPTANCE_CRITERIA.md`.
 
-Status: complete on 2026-05-26.
-
-Current state: `docs/UI_PLATFORM_FLOW_ROADMAP.md` is the source of truth for
-the small product redesign. It keeps the public landing page visually unchanged
-and moves the app experience toward `/auth`, `/app`, reusable Sorts, structured
-Playlist Recipes, preview before payment, payment per Sort, review, and explicit
-Apple Music export.
-
-Payment decision: payment implementation remains blocked until the user
-explicitly reopens it. Do not add a dev-only payment bypass by default.
-
-Goal: make the platform-first flow visible to Codex without rewriting the
-working Apple Music backend pipeline.
-
-Tasks:
-
-- Add `docs/UI_PLATFORM_FLOW_ROADMAP.md`.
-- Link it from the main docs and agent workflow.
-- Update existing docs that still imply the old one-time dashboard flow.
-- Keep current MVP backend roadmap intact.
-
-Acceptance criteria:
-
-- The platform UI roadmap exists in repo docs.
-- Existing backend safety rules remain unchanged.
-- Legacy routes stay documented as aliases or redirects during migration.
-- Stripe/payment remains after preview and scoped to a Sort, but implementation
-  is blocked for now.
-- Review/export stays explicit before Apple Music write-back.
-
-## Next FLOW tickets
-
-Continue with `docs/UI_PLATFORM_FLOW_ROADMAP.md` in order:
-
-- `FLOW-001` adds canonical `/auth` and `/app` routes with legacy redirects.
-- `FLOW-002` adds `getSortUiStatus()` and status-aware sort routing.
-- Later tickets build the app shell, dashboard states, Sorts, Playlist Recipes,
-  preview/paywall, review, and export pages.
-- Work one ticket at a time. Do not batch the full redesign.
-
----
-
-# Final MVP checklist
-
-The MVP is done only when all of these are true:
+The historical MVP was done only when all of these were true:
 
 - Auth works.
 - Apple Music connection works.

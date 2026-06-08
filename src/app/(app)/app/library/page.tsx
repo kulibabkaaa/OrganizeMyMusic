@@ -10,6 +10,7 @@ export default async function LibraryPage() {
     <ConnectedLibrariesPage
       appleMusicConnection={state.appleMusicConnection}
       latestSync={state.latestSync}
+      newMusicSummary={state.newMusicSummary}
     />
   );
 }

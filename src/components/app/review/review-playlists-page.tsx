@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 
 import { ExportConfirmationDialog } from "@/components/app/review/export-confirmation-dialog";
@@ -30,7 +29,6 @@ export function ReviewPlaylistsPage({
   sortName: string;
   snapshot: PreviewSnapshot;
 }) {
-  const router = useRouter();
   const [selection, setSelection] = useState(() => createInitialReviewSelection(snapshot));
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isExportSubmitting, setIsExportSubmitting] = useState(false);
@@ -53,7 +51,7 @@ export function ReviewPlaylistsPage({
       <section className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-platform-muted">
-            Full Sort ready
+            Full organization ready
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-[0em] text-white md:text-4xl">
             Review playlists
@@ -163,7 +161,6 @@ export function ReviewPlaylistsPage({
             }
 
             setExportMessage("Apple Music export queued.");
-            router.push(`/app/sorts/${encodeURIComponent(sortId)}/exporting`);
           } finally {
             setIsExportSubmitting(false);
           }

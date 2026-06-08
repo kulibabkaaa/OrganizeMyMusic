@@ -16,7 +16,8 @@ export function BillingPage({ summary }: { summary: BillingSummary }) {
           Billing
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-          Organize Your Music uses one-time Sort unlocks. No subscription is active.
+          Billing is paused while the Apple Music platform workflow is verified. No subscription
+          or paid plan is active.
         </p>
       </section>
 

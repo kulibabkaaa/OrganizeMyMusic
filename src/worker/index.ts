@@ -8,14 +8,14 @@ async function bootstrap() {
     { logger },
     { createPgBoss },
     { registerLibrarySyncWorker },
-    { registerCreateApplePlaylistsWorker },
+    { registerPlaylistCreationWorker },
     { registerFullSortWorker }
   ] = await Promise.all([
     import("@/lib/env"),
     import("@/lib/logger"),
     import("@/lib/pg-boss"),
     import("@/worker/library-sync"),
-    import("@/worker/jobs/create-apple-playlists"),
+    import("@/worker/playlist-creation"),
     import("@/worker/jobs/full-sort")
   ]);
 
@@ -34,28 +34,12 @@ async function bootstrap() {
   await boss.start();
   await registerLibrarySyncWorker(boss);
   await registerFullSortWorker(boss);
-  await registerCreateApplePlaylistsWorker(boss);
+  await registerPlaylistCreationWorker(boss);
 
-  logger.info("Worker started and ready for library sync, full Sort, and playlist creation jobs.");
+  logger.info("Worker started and ready for library sync, full organization, and playlist creation jobs.");
 }
 
-bootstrap().catch(async (error) => {
-  const [{ logger }, { createPrivacySafeFailure }] = await Promise.all([
-    import("@/lib/logger"),
-    import("@/modules/activity/privacy-safe-observability")
-  ]);
-
-  const failure = createPrivacySafeFailure({
-    workflowName: "Worker boot",
-    error
-  });
-
-  logger.error(
-    {
-      eventType: "worker_boot_failed",
-      failureCategory: failure.category
-    },
-    "Worker failed to boot."
-  );
+bootstrap().catch((error) => {
+  console.error(error);
   process.exit(1);
 });

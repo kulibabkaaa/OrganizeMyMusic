@@ -3,8 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PaymentStatus, SortRunState } from "@/types/domain";
 
 export interface CurrentPlanSummary {
-  name: "Pay per Sort";
-  description: "No active subscription.";
+  name: "Billing deferred";
+  description: "No active subscription or paid plan.";
   details: string;
 }
 
@@ -69,10 +69,10 @@ export function summarizeBillingData(input: {
 
   return {
     currentPlan: {
-      name: "Pay per Sort",
-      description: "No active subscription.",
+      name: "Billing deferred",
+      description: "No active subscription or paid plan.",
       details:
-        "Each paid Sort unlocks full analysis, editable results, and Apple Music export for that Sort."
+        "The MVP is focused on Apple Music quality, playlist recipes, review, and app-created playlist export before subscription packaging is introduced."
     },
     paidSorts: input.sortRuns
       .filter((sortRun) => sortRun.payment_status === "paid")
@@ -125,7 +125,7 @@ export function createSupabaseBillingStore(supabase: SupabaseClient): BillingSto
         .order("updated_at", { ascending: false });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "Unable to load billing Sorts.");
+        throw new Error(error?.message ?? "Unable to load billing organization records.");
       }
 
       return data as BillingSortRunRow[];
@@ -138,7 +138,7 @@ export function createSupabaseBillingStore(supabase: SupabaseClient): BillingSto
         .eq("user_id", userId);
 
       if (sortRunError || !sortRuns) {
-        throw new Error(sortRunError?.message ?? "Unable to load payment Sorts.");
+        throw new Error(sortRunError?.message ?? "Unable to load payment organization records.");
       }
 
       const sortRunIds = sortRuns.map((sortRun) => sortRun.id as string);

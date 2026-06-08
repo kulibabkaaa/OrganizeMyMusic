@@ -12,17 +12,17 @@ export function PaidSortsCard({ paidSorts }: { paidSorts: PaidSortSummary[] }) {
     <Card className="space-y-5">
       <div>
         <h2 className="font-display text-2xl font-semibold tracking-[0em] text-white">
-          Paid Sorts
+          Historical billing records
         </h2>
         <p className="mt-2 text-sm leading-6 text-platform-secondary">
-          Each paid Sort is unlocked independently.
+          Previous organization billing records remain visible for existing accounts.
         </p>
       </div>
 
       {paidSorts.length === 0 ? (
         <EmptyState
-          title="No paid Sorts yet."
-          description="Paid Sorts will appear here after checkout is enabled and a Sort is unlocked."
+          title="No billing records yet."
+          description="Historical organization billing records will appear here if records exist."
         />
       ) : (
         <div className="grid gap-3">

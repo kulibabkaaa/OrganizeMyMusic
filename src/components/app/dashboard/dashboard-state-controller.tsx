@@ -5,18 +5,21 @@ import { DashboardEmpty } from "@/components/app/dashboard/dashboard-empty";
 import { DashboardReadyEmpty } from "@/components/app/dashboard/dashboard-ready-empty";
 import { DashboardReturning } from "@/components/app/dashboard/dashboard-returning";
 import { DashboardSyncing } from "@/components/app/dashboard/dashboard-syncing";
+import { PlatformQueuesCard } from "@/components/app/dashboard/platform-queues-card";
 import { StartLibrarySyncButton } from "@/components/app/start-library-sync-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import type { DashboardActivityItem } from "@/modules/activity/list-activity";
 import type { DashboardState } from "@/modules/dashboard/get-dashboard-state";
+import type { NewMusicSummary } from "@/modules/library-syncs/new-music";
 import type {
   AppleMusicConnectionSummary,
   LibrarySyncJobEvent,
   LibrarySyncSummary
 } from "@/modules/library-syncs/queue";
 import type { RecentSortRunSummary } from "@/modules/sorts/list-sort-runs";
+import type { PersistentPlaylist } from "@/types/domain";
 
 interface DashboardStateControllerProps {
   state: DashboardState;
@@ -26,6 +29,9 @@ interface DashboardStateControllerProps {
   latestLibrarySyncEvents: LibrarySyncJobEvent[];
   recentSorts: RecentSortRunSummary[];
   activities: DashboardActivityItem[];
+  playlists: PersistentPlaylist[];
+  reviewQueueCount: number;
+  newMusicSummary: NewMusicSummary | null;
   canUseServerData: boolean;
   signOutAction: () => Promise<void>;
 }
@@ -41,15 +47,15 @@ const shellCopy: Record<DashboardState, { title: string; subtitle: string }> = {
   },
   library_syncing: {
     title: "Your music workspace",
-    subtitle: "Syncing your library so you can create your first Sort."
+    subtitle: "Syncing your library so you can organize it into playlists."
   },
   library_ready_no_sorts: {
     title: "Library ready",
-    subtitle: "Create your first Sort from the tracks already in your Apple Music library."
+    subtitle: "Organize your Apple Music library into saved playlists and recipes."
   },
   library_ready_with_sorts: {
-    title: "Your Sorts",
-    subtitle: "Review the latest preview or create another Sort from your library."
+    title: "Your music workspace",
+    subtitle: "Manage playlists, recipes, organization work, and Apple Music exports."
   }
 };
 
@@ -60,6 +66,9 @@ export function DashboardStateController({
   latestLibrarySync,
   recentSorts,
   activities,
+  playlists,
+  reviewQueueCount,
+  newMusicSummary,
   canUseServerData,
   signOutAction
 }: DashboardStateControllerProps) {
@@ -94,6 +103,13 @@ export function DashboardStateController({
               latestSync={latestLibrarySync}
               recentSorts={recentSorts}
               activities={activities}
+            />
+          ) : null}
+          {state === "library_ready_no_sorts" || state === "library_ready_with_sorts" ? (
+            <PlatformQueuesCard
+              playlists={playlists}
+              reviewQueueCount={reviewQueueCount}
+              newMusicSummary={newMusicSummary}
             />
           ) : null}
         </>

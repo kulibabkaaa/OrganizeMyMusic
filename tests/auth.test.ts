@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseEmailPasswordForm } from "@/lib/auth/credentials";
 import { ensureProfileForUser, isMissingProfilesTableError } from "@/lib/auth/profile";
-import {
-  getAuthenticatedSession,
-  getLandingCtaRoutes,
-  type SupabaseAuthReader
-} from "@/lib/auth/session";
+import { getAuthenticatedSession, type SupabaseAuthReader } from "@/lib/auth/session";
 
 function formData(values: Record<string, string>) {
   const data = new FormData();
@@ -81,26 +77,6 @@ describe("getAuthenticatedSession", () => {
     await expect(getAuthenticatedSession(client)).resolves.toMatchObject({
       status: "signed_out",
       user: null
-    });
-  });
-});
-
-describe("getLandingCtaRoutes", () => {
-  it("sends signed-out visitors to auth", () => {
-    expect(getLandingCtaRoutes("signed_out")).toEqual({
-      openAppHref: "/auth",
-      startSortHref: "/auth"
-    });
-    expect(getLandingCtaRoutes("missing_config")).toEqual({
-      openAppHref: "/auth",
-      startSortHref: "/auth"
-    });
-  });
-
-  it("sends authenticated users into the platform while Sort creation is gated", () => {
-    expect(getLandingCtaRoutes("authenticated")).toEqual({
-      openAppHref: "/app",
-      startSortHref: "/app"
     });
   });
 });

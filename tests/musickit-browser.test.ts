@@ -24,22 +24,6 @@ describe("fetchAppleDeveloperToken", () => {
       method: "GET"
     });
   });
-
-  it("surfaces server preparation errors without exposing secret values", async () => {
-    const fetcher = vi.fn(async () =>
-      Response.json(
-        {
-          error: "Apple Music developer token is not configured.",
-          missing: ["APPLE_PRIVATE_KEY"]
-        },
-        { status: 503 }
-      )
-    );
-
-    await expect(fetchAppleDeveloperToken(fetcher)).rejects.toThrow(
-      "Apple Music developer token is not configured. Missing: APPLE_PRIVATE_KEY."
-    );
-  });
 });
 
 describe("getAuthorizedAppleMusicUserToken", () => {

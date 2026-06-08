@@ -67,7 +67,8 @@ const targetRangeValidation = {
 
 export const playlistRecipeCreateSchema = z
   .object({
-    sortRunId: z.string().uuid(),
+    sortRunId: z.string().uuid().optional().nullable(),
+    playlistId: z.string().uuid().optional().nullable(),
     position: z.number().int().min(0),
     name: trimmedText(120),
     playlistNote: nullableText(1000),
@@ -77,6 +78,10 @@ export const playlistRecipeCreateSchema = z
     allowExplicit: z.boolean().default(true),
     includeLibraryOnly: z.boolean().default(true),
     tags: z.array(playlistRecipeTagSchema).max(30).default([])
+  })
+  .refine((value) => value.sortRunId || value.playlistId, {
+    message: "sortRunId or playlistId is required",
+    path: ["sortRunId"]
   })
   .refine(
     (value) =>

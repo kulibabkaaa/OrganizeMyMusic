@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app/app-shell";
-import { PreviewPaywallPage } from "@/components/app/preview/preview-paywall-page";
+import { PreviewStartPage } from "@/components/app/preview/preview-start-page";
 import { Card } from "@/components/ui/card";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
@@ -51,9 +51,9 @@ export default async function SortPreviewPage({
     return (
       <AppShell
         title="Preview Sort"
-        subtitle="Review likely playlist output before unlocking full processing."
+        subtitle="Review likely playlist output before starting full organization."
       >
-        <PreviewPaywallPage sortName={sort.name} snapshot={preview.snapshot} />
+        <PreviewStartPage sortName={sort.name} snapshot={preview.snapshot} />
       </AppShell>
     );
   }
@@ -62,9 +62,9 @@ export default async function SortPreviewPage({
     return (
       <AppShell
         title="Preview Sort"
-        subtitle="Review likely playlist output before unlocking full processing."
+        subtitle="Review likely playlist output before starting full organization."
       >
-        <PreviewPaywallPage sortName={sort.name} snapshot={preview.snapshot} />
+        <PreviewStartPage sortName={sort.name} snapshot={preview.snapshot} />
       </AppShell>
     );
   }

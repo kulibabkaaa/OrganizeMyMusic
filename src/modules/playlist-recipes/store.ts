@@ -15,7 +15,8 @@ import type {
 type PlaylistRecipeRow = {
   id: string;
   user_id: string;
-  sort_run_id: string;
+  sort_run_id: string | null;
+  playlist_id: string | null;
   position: number;
   name: string;
   playlist_note: string | null;
@@ -31,6 +32,10 @@ type PlaylistRecipeRow = {
 
 export interface PlaylistRecipeStore {
   listRecipesForSort(input: { userId: string; sortRunId: string }): Promise<PlaylistRecipe[]>;
+  listRecipesForPlaylist(input: {
+    userId: string;
+    playlistId: string;
+  }): Promise<PlaylistRecipe[]>;
   createRecipe(input: { userId: string; recipe: PlaylistRecipeCreateInput }): Promise<PlaylistRecipe>;
   updateRecipe(input: {
     userId: string;
@@ -43,6 +48,11 @@ export interface PlaylistRecipeStore {
     sortRunId: string;
     positions: Array<{ id: string; position: number }>;
   }): Promise<PlaylistRecipe[]>;
+  reorderRecipesForPlaylist(input: {
+    userId: string;
+    playlistId: string;
+    positions: Array<{ id: string; position: number }>;
+  }): Promise<PlaylistRecipe[]>;
 }
 
 export function createSupabasePlaylistRecipeStore(
@@ -52,11 +62,24 @@ export function createSupabasePlaylistRecipeStore(
     async listRecipesForSort(input) {
       const { data, error } = await supabase
         .from("playlist_recipes")
-        .select(
-          "id,user_id,sort_run_id,position,name,playlist_note,target_track_min,target_track_max,duplicate_policy,allow_explicit,include_library_only,tags,created_at,updated_at"
-        )
+        .select(playlistRecipeSelect)
         .eq("user_id", input.userId)
         .eq("sort_run_id", input.sortRunId)
+        .order("position", { ascending: true });
+
+      if (error || !data) {
+        throw new Error(error?.message ?? "Unable to load Playlist Recipes.");
+      }
+
+      return (data as PlaylistRecipeRow[]).map(mapPlaylistRecipeRow);
+    },
+
+    async listRecipesForPlaylist(input) {
+      const { data, error } = await supabase
+        .from("playlist_recipes")
+        .select(playlistRecipeSelect)
+        .eq("user_id", input.userId)
+        .eq("playlist_id", input.playlistId)
         .order("position", { ascending: true });
 
       if (error || !data) {
@@ -72,7 +95,8 @@ export function createSupabasePlaylistRecipeStore(
         .from("playlist_recipes")
         .insert({
           user_id: input.userId,
-          sort_run_id: recipe.sortRunId,
+          sort_run_id: recipe.sortRunId ?? null,
+          playlist_id: recipe.playlistId ?? null,
           position: recipe.position,
           name: recipe.name,
           playlist_note: recipe.playlistNote,
@@ -83,9 +107,7 @@ export function createSupabasePlaylistRecipeStore(
           include_library_only: recipe.includeLibraryOnly,
           tags: recipe.tags
         })
-        .select(
-          "id,user_id,sort_run_id,position,name,playlist_note,target_track_min,target_track_max,duplicate_policy,allow_explicit,include_library_only,tags,created_at,updated_at"
-        )
+        .select(playlistRecipeSelect)
         .single();
 
       if (error || !data) {
@@ -116,9 +138,7 @@ export function createSupabasePlaylistRecipeStore(
         .update(patch)
         .eq("id", input.recipeId)
         .eq("user_id", input.userId)
-        .select(
-          "id,user_id,sort_run_id,position,name,playlist_note,target_track_min,target_track_max,duplicate_policy,allow_explicit,include_library_only,tags,created_at,updated_at"
-        )
+        .select(playlistRecipeSelect)
         .maybeSingle();
 
       if (error) {
@@ -167,15 +187,46 @@ export function createSupabasePlaylistRecipeStore(
         userId: input.userId,
         sortRunId: input.sortRunId
       });
+    },
+
+    async reorderRecipesForPlaylist(input) {
+      const results = await Promise.all(
+        input.positions.map((recipe) =>
+          supabase
+            .from("playlist_recipes")
+            .update({
+              position: recipe.position,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", recipe.id)
+            .eq("user_id", input.userId)
+            .eq("playlist_id", input.playlistId)
+        )
+      );
+
+      const error = results.find((result) => result.error)?.error;
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return this.listRecipesForPlaylist({
+        userId: input.userId,
+        playlistId: input.playlistId
+      });
     }
   };
 }
+
+const playlistRecipeSelect =
+  "id,user_id,sort_run_id,playlist_id,position,name,playlist_note,target_track_min,target_track_max,duplicate_policy,allow_explicit,include_library_only,tags,created_at,updated_at";
 
 function mapPlaylistRecipeRow(row: PlaylistRecipeRow): PlaylistRecipe {
   return {
     id: row.id,
     userId: row.user_id,
     sortRunId: row.sort_run_id,
+    playlistId: row.playlist_id,
     position: row.position,
     name: row.name,
     playlistNote: row.playlist_note,

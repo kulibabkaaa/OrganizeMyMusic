@@ -17,17 +17,16 @@ Add Stripe after the core flow works.
 
 Possible model:
 
-- One-time payment per sort.
-- Subscription later if there is recurring value.
+- Subscription for saved playlists, regeneration, new-track processing, and export/update volume.
+- One-time payment only if subscription positioning is rejected after user testing.
 
 ## Advanced editing
 
 Future features:
 
 - Drag/drop track editing.
-- User-defined playlist rules builder.
-- Save reusable playlist templates.
-- Re-run same template on new tracks.
+- Complex visual rule-builder logic.
+- Learning user taste from edits.
 
 ## Existing playlist cleanup
 
@@ -40,6 +39,21 @@ Future feature:
 - Remove tracks from existing playlists.
 
 Not in MVP because it risks destructive behavior.
+
+## Existing app-created playlist maintenance
+
+Now in MVP:
+
+- Saved app playlists.
+- Saved playlist recipes.
+- User-triggered regeneration.
+- Review before Apple Music export/update.
+
+Still post-MVP until Apple Music capability is verified:
+
+- Removing tracks from Apple Music playlists.
+- Reordering tracks in Apple Music playlists.
+- Perfect in-place replacement of Apple Music playlist contents.
 
 ## Recommendations
 

@@ -202,7 +202,7 @@ describe("generateAndStoreLightweightPreview", () => {
             estimatedTrackCount: 3,
             lockedTrackCount: 0,
             qualityWarnings: expect.arrayContaining([
-              "No tracks matched this playlist plan. Adjust tags before checkout.",
+              "No tracks matched this playlist plan. Adjust tags before starting full organization.",
               "12 library tracks could not be scored because metadata is missing."
             ]),
             sampleTracks: [
@@ -280,7 +280,7 @@ describe("generateAndStoreLightweightPreview", () => {
             qualityWarnings: [
               'Unsupported era tag "2000s" was ignored.',
               "Only 1 track matched this playlist plan.",
-              "Top matches are low-confidence. Review the tags before checkout."
+              "Top matches are low-confidence. Review the tags before starting full organization."
             ]
           }
         ]

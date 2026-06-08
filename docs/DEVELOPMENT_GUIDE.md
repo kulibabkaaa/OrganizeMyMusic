@@ -74,12 +74,6 @@ Use the roadmap:
 docs/ROADMAP_TO_MVP.md
 ```
 
-For UI/product flow work after the working Apple Music MVP, also use:
-
-```text
-docs/UI_PLATFORM_FLOW_ROADMAP.md
-```
-
 Do not build later phases before earlier phases work.
 
 ## Coding conventions
@@ -97,10 +91,7 @@ Do not build later phases before earlier phases work.
 
 ```text
 src/app
-  app
-  auth
   dashboard
-  login
   api
 
 src/components

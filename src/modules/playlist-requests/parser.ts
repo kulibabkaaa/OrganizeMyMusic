@@ -302,7 +302,7 @@ export function createSupabasePlaylistRequestStore(
         .select("id,user_prompt,parsed_rules");
 
       if (requestError || !requestRows) {
-        throw new Error(requestError?.message ?? "Unable to store playlist requests.");
+        throw new Error(requestError?.message ?? "Unable to store Playlist Recipes.");
       }
 
       return {

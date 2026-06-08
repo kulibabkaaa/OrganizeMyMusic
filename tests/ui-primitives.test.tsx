@@ -33,6 +33,7 @@ describe("UI primitives", () => {
     expect(markup).toContain("text-platform-danger");
     expect(markup).toContain("disabled");
     expect(markup).toContain("Submit action");
+    expect(markup).not.toContain('type="button">Submit action');
   });
 
   it("renders status pills with the platform tone set and legacy aliases", () => {

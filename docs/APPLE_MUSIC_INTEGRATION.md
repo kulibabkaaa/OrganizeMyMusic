@@ -10,9 +10,8 @@ The app needs to:
 2. Let users authorize Apple Music through MusicKit in the browser.
 3. Store the user's Apple Music token encrypted.
 4. Fetch the user's library songs.
-5. Create playlists in the user's Apple Music account after explicit
-   confirmation. In the platform UI roadmap this action is called export.
-6. Add selected tracks to those playlists.
+5. Create playlists in the user's Apple Music account after confirmation.
+6. Add approved tracks to those playlists.
 
 ## Token types
 
@@ -38,10 +37,6 @@ APPLE_TEAM_ID
 APPLE_KEY_ID
 APPLE_PRIVATE_KEY
 ```
-
-`APPLE_PRIVATE_KEY` must contain the full `.p8` private key. The app accepts
-normal PEM newlines or escaped `\n` sequences, but a short key ID or MusicKit
-identifier cannot sign the developer token.
 
 ## Music user token
 
@@ -154,7 +149,7 @@ At minimum:
 
 ## Playlist creation requirements
 
-The export/write-back worker should:
+The write-back worker should:
 
 1. Load confirmed sort run.
 2. Load selected generated playlists.
@@ -166,12 +161,7 @@ The export/write-back worker should:
 8. Emit job events.
 9. Mark run completed or failed.
 
-The platform export endpoint is `POST /api/app/sorts/:sortId/export`. It
-persists the reviewed playlist selection, removed tracks, and reviewed playlist
-titles, then queues the `playlist-create` worker job. Legacy confirmation
-endpoints must not queue Apple Music write-back.
-
-`MVP-021` registers the `playlist-create` worker job. It loads an exported
+`MVP-021` registers the `playlist-create` worker job. It loads a confirmed
 `creating_playlists` sort run, decrypts the Apple Music user token server-side,
 creates only the selected playlist shells in Apple Music, stores each returned
 `sort_playlists.apple_playlist_id`, skips playlists that already have an Apple
@@ -182,15 +172,15 @@ playlist, add Apple library song IDs to created playlists in batches, emit
 per-playlist progress events, and mark the sort run `completed` after all
 playlist track insertion succeeds.
 
-`MVP-023` adds retry routes for failed library syncs and failed playlist
-write-back. Library sync retry creates a new queued sync so partial raw imports
-are not mixed with the retry. Playlist write-back retry requeues the confirmed
-sort run, returns it to `creating_playlists`, and relies on stored
-`sort_playlists.apple_playlist_id` values to avoid duplicate playlist creation.
+`MVP-023` adds retry for failed library syncs. Library sync retry creates a new
+queued sync so partial raw imports are not mixed with the retry. Legacy Sort
+write-back retry is disabled in the platform-first MVP; stale clients must
+reopen the Sort review screen and export approved tracks through the platform
+export endpoint.
 
 ## Idempotency
 
-Playlist creation must avoid duplicates during retry.
+Playlist creation must avoid duplicates during worker retries.
 
 Recommended approach:
 
@@ -213,7 +203,7 @@ Handle:
 
 ## What not to do
 
-- Do not write playlists before explicit confirmation/export.
+- Do not write playlists before confirmation.
 - Do not modify or delete existing Apple Music playlists in MVP.
 - Do not try to sync Spotify or YouTube Music in MVP.
 - Do not expose Apple private key in client bundle.

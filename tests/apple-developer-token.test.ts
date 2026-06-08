@@ -45,6 +45,19 @@ describe("createAppleDeveloperTokenFromConfig", () => {
     } satisfies Partial<AppleDeveloperTokenConfigError>);
   });
 
+  it("throws a clear error when the Apple private key cannot be parsed", async () => {
+    await expect(
+      createAppleDeveloperTokenFromConfig({
+        teamId: "TEAMID1234",
+        keyId: "KEYID12345",
+        privateKey: "not-a-private-key"
+      })
+    ).rejects.toMatchObject({
+      name: "AppleDeveloperTokenInvalidConfigError",
+      message: "Apple Music private key could not be parsed."
+    } satisfies Partial<AppleDeveloperTokenInvalidConfigError>);
+  });
+
   it("creates an ES256 Apple Music developer JWT without exposing the private key", async () => {
     const { privateKeyPem, publicKey } = createTestKeyPair();
     const issuedAt = new Date("2026-05-22T12:00:00.000Z");
@@ -74,15 +87,5 @@ describe("createAppleDeveloperTokenFromConfig", () => {
     });
     expect(result.expiresAt).toBe("2026-05-22T12:30:00.000Z");
     expect(result.developerToken).not.toContain("PRIVATE KEY");
-  });
-
-  it("throws a clear configuration error when the private key is not a full .p8 key", async () => {
-    await expect(
-      createAppleDeveloperTokenFromConfig({
-        teamId: "TEAMID1234",
-        keyId: "KEYID12345",
-        privateKey: "not-a-real-private-key"
-      })
-    ).rejects.toBeInstanceOf(AppleDeveloperTokenInvalidConfigError);
   });
 });

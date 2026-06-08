@@ -1,12 +1,12 @@
-import { getDeploymentRevision } from "@/lib/deployment-revision";
 import { loadRuntimeEnv } from "@/lib/load-runtime-env";
-import { logger } from "@/lib/logger";
-import { createPrivacySafeFailure } from "@/modules/activity/privacy-safe-observability";
+
+loadRuntimeEnv();
 
 async function checkWorkerDatabase() {
-  loadRuntimeEnv();
-  const [{ env }, { createPgBoss }] = await Promise.all([
+  const [{ env }, { getDeploymentRevision }, { logger }, { createPgBoss }] = await Promise.all([
     import("@/lib/env"),
+    import("@/lib/deployment-revision"),
+    import("@/lib/logger"),
     import("@/lib/pg-boss")
   ]);
 
@@ -31,18 +31,9 @@ async function checkWorkerDatabase() {
   }
 }
 
-checkWorkerDatabase().catch((error) => {
-  const failure = createPrivacySafeFailure({
-    workflowName: "Worker health check",
-    error
-  });
+checkWorkerDatabase().catch(async (error) => {
+  const { logger } = await import("@/lib/logger");
 
-  logger.error(
-    {
-      eventType: "worker_health_check_failed",
-      failureCategory: failure.category
-    },
-    "Worker database health check failed."
-  );
+  logger.error(error, "Worker database health check failed.");
   process.exit(1);
 });

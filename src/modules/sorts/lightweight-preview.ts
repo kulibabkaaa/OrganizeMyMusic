@@ -214,12 +214,65 @@ function createLightweightPreviewPlaylist(
     playlistName: recipe.name,
     tags: recipe.tags,
     estimatedTrackCount,
-    confidenceLabel: playlist?.confidenceLabel ?? "medium",
+    confidenceLabel:
+      playlist?.confidenceLabel === "high" ? "medium" : playlist?.confidenceLabel ?? "medium",
     fitLabel: fitLabelForTrackCount(estimatedTrackCount),
     sampleTracks,
     lockedTrackCount: Math.max(0, estimatedTrackCount - sampleTracks.length),
-    ...(playlist?.qualityWarnings?.length ? { qualityWarnings: playlist.qualityWarnings } : {})
+    ...(getLightweightQualityWarnings({
+      recipe,
+      playlist,
+      matchedTrackCount: tracks.length,
+      libraryTrackCount: libraryTracks.length
+    }).length
+      ? {
+          qualityWarnings: getLightweightQualityWarnings({
+            recipe,
+            playlist,
+            matchedTrackCount: tracks.length,
+            libraryTrackCount: libraryTracks.length
+          })
+        }
+      : {})
   };
+}
+
+function getLightweightQualityWarnings(input: {
+  recipe: PlaylistRecipe;
+  playlist: GeneratedPlaylist | undefined;
+  matchedTrackCount: number;
+  libraryTrackCount: number;
+}) {
+  const warnings: string[] = [];
+
+  for (const tag of input.recipe.tags) {
+    if (["era", "region", "artist_style", "custom"].includes(tag.category)) {
+      warnings.push(`Unsupported ${tag.category} tag "${tag.value}" was ignored.`);
+    }
+  }
+
+  if (input.matchedTrackCount === 0) {
+    warnings.push("No tracks matched this playlist plan. Adjust tags before starting full organization.");
+  } else if (input.matchedTrackCount < 5) {
+    warnings.push(
+      `Only ${input.matchedTrackCount} track${input.matchedTrackCount === 1 ? "" : "s"} matched this playlist plan.`
+    );
+  }
+
+  const missingClassificationCount =
+    input.playlist?.matchStats?.missingClassificationCount ?? input.libraryTrackCount;
+  if (input.matchedTrackCount === 0 && missingClassificationCount > 0) {
+    warnings.push(
+      `${missingClassificationCount} library track${missingClassificationCount === 1 ? "" : "s"} could not be scored because metadata is missing.`
+    );
+  }
+
+  const topScore = input.playlist?.tracks[0]?.score ?? 0;
+  if (input.matchedTrackCount > 0 && topScore < 0.6) {
+    warnings.push("Top matches are low-confidence. Review the tags before starting full organization.");
+  }
+
+  return warnings;
 }
 
 function fallbackSampleTracks(

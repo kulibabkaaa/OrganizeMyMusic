@@ -4,8 +4,8 @@ export type SortUiStatus =
   | "draft"
   | "preview_generating"
   | "preview_ready"
-  | "awaiting_payment"
-  | "paid"
+  | "ready_to_start"
+  | "organizing"
   | "processing"
   | "ready_for_review"
   | "exporting"
@@ -64,11 +64,11 @@ export function getSortUiStatus(input: SortUiStatusInput): SortUiStatus {
   }
 
   if (input.state === "paid") {
-    return "paid";
+    return "organizing";
   }
 
   if (input.state === "awaiting_payment") {
-    return "awaiting_payment";
+    return "ready_to_start";
   }
 
   if (input.state === "preview_ready" && input.hasPreviewSnapshot) {
@@ -86,9 +86,9 @@ export function getSortPrimaryRoute(sortId: string, status: SortUiStatus) {
       return `/app/sorts/${encodedSortId}/builder`;
     case "preview_generating":
     case "preview_ready":
-    case "awaiting_payment":
+    case "ready_to_start":
       return `/app/sorts/${encodedSortId}/preview`;
-    case "paid":
+    case "organizing":
     case "processing":
       return `/app/sorts/${encodedSortId}/processing`;
     case "ready_for_review":

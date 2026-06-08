@@ -25,6 +25,8 @@ export interface PreviewSortRun {
   paymentStatus: PaymentStatus;
   previewSnapshot: PreviewSnapshot | null;
   requests: ParsedPlaylistRequest[];
+  generatedPlaylistCount?: number;
+  applePlaylistIdCount?: number;
   events?: PreviewSortRunJobEvent[];
 }
 
@@ -75,9 +77,6 @@ export type PreviewSnapshotResult =
     }
   | {
       status: "not_found";
-    }
-  | {
-      status: "missing_library_sync";
     };
 
 const immutablePreviewStates = new Set<SortRunState>([
@@ -87,11 +86,8 @@ const immutablePreviewStates = new Set<SortRunState>([
   "completed"
 ]);
 
-export function isPreviewImmutable(input: {
-  state: SortRunState;
-  paymentStatus: PaymentStatus;
-}) {
-  return immutablePreviewStates.has(input.state) || input.paymentStatus !== "pending";
+export function isPreviewImmutable(sortRun: Pick<PreviewSortRun, "state" | "paymentStatus">) {
+  return immutablePreviewStates.has(sortRun.state) || sortRun.paymentStatus === "paid";
 }
 
 export async function generateAndStorePreviewSnapshot(input: {
@@ -124,7 +120,7 @@ export async function generateAndStorePreviewSnapshot(input: {
   }
 
   if (!sortRun.librarySyncId) {
-    return { status: "missing_library_sync" };
+    return { status: "not_found" };
   }
 
   const tracks = await input.store.listTracksForPreview({
@@ -165,13 +161,9 @@ export async function generateAndStorePreviewSnapshot(input: {
 
 export async function saveSortRunPreviewSnapshotOnly<TSnapshot>(input: {
   supabase: SupabaseClient;
-  sortRun: Pick<PreviewSortRun, "id" | "userId" | "state" | "paymentStatus">;
+  sortRun: PreviewSortRun;
   snapshot: TSnapshot;
-}): Promise<TSnapshot> {
-  if (isPreviewImmutable(input.sortRun)) {
-    return input.snapshot;
-  }
-
+}) {
   const { error } = await input.supabase
     .from("sort_runs")
     .update({
@@ -181,8 +173,7 @@ export async function saveSortRunPreviewSnapshotOnly<TSnapshot>(input: {
     })
     .eq("id", input.sortRun.id)
     .eq("user_id", input.sortRun.userId)
-    .eq("state", input.sortRun.state)
-    .eq("payment_status", "pending");
+    .eq("state", input.sortRun.state);
 
   if (error) {
     throw new Error(error.message);
@@ -248,6 +239,11 @@ type SortRunJobEventRow = {
   created_at: string;
 };
 
+type SortPlaylistStatusRow = {
+  id: string;
+  apple_playlist_id: string | null;
+};
+
 export function createSupabasePreviewSnapshotStore(
   supabase: SupabaseClient
 ): PreviewSnapshotStore {
@@ -268,7 +264,7 @@ export function createSupabasePreviewSnapshotStore(
         return null;
       }
 
-      const [requestsResult, eventsResult] = await Promise.all([
+      const [requestsResult, eventsResult, playlistsResult] = await Promise.all([
         supabase
           .from("playlist_requests")
           .select("user_prompt,parsed_rules")
@@ -278,18 +274,27 @@ export function createSupabasePreviewSnapshotStore(
           .select("id,sort_run_id,stage,level,message,details,created_at")
           .eq("sort_run_id", input.sortRunId)
           .order("created_at", { ascending: false })
-          .limit(20)
+          .limit(20),
+        supabase
+          .from("sort_playlists")
+          .select("id,apple_playlist_id")
+          .eq("sort_run_id", input.sortRunId)
       ]);
 
       if (requestsResult.error || !requestsResult.data) {
-        throw new Error(requestsResult.error?.message ?? "Unable to load playlist requests.");
+        throw new Error(requestsResult.error?.message ?? "Unable to load Playlist Recipes.");
       }
 
       if (eventsResult.error || !eventsResult.data) {
         throw new Error(eventsResult.error?.message ?? "Unable to load sort run events.");
       }
 
+      if (playlistsResult.error || !playlistsResult.data) {
+        throw new Error(playlistsResult.error?.message ?? "Unable to load Sort playlists.");
+      }
+
       const row = sortRun as SortRunRow;
+      const playlists = playlistsResult.data as SortPlaylistStatusRow[];
 
       return {
         id: row.id,
@@ -302,6 +307,8 @@ export function createSupabasePreviewSnapshotStore(
           userPrompt: request.user_prompt,
           parsedRules: request.parsed_rules
         })),
+        generatedPlaylistCount: playlists.length,
+        applePlaylistIdCount: playlists.filter((playlist) => playlist.apple_playlist_id).length,
         events: (eventsResult.data as SortRunJobEventRow[]).map((event) => ({
           id: event.id,
           sortRunId: event.sort_run_id,

@@ -6,9 +6,9 @@ export type AppNavigationItem = {
 
 export const appNavigationItems: AppNavigationItem[] = [
   { label: "Dashboard", href: "/app", marker: "D" },
-  { label: "Sorts", href: "/app/sorts", marker: "S" },
+  { label: "Playlists", href: "/app/playlists", marker: "P" },
   { label: "Library", href: "/app/library", marker: "L" },
-  { label: "Billing", href: "/app/billing", marker: "B" },
+  { label: "Sorts", href: "/app/sorts", marker: "S" },
   { label: "Settings", href: "/app/settings/libraries", marker: "T" }
 ];
 

@@ -17,6 +17,33 @@ export type SortSourceProvider = "apple_music";
 
 export type PlaylistDimension = "language" | "genre" | "mood" | "request";
 
+export type PlaylistStatus = "draft" | "active" | "archived";
+
+export type PlaylistGenerationStatus =
+  | "generating"
+  | "ready_for_review"
+  | "reviewed"
+  | "exporting"
+  | "exported"
+  | "failed";
+
+export type PlaylistTrackDecision = "keep" | "remove";
+
+export type PlaylistExportStatus = "queued" | "exporting" | "exported" | "failed";
+
+export type PlaylistRecipeTagCategory =
+  | "mood"
+  | "genre"
+  | "language"
+  | "era"
+  | "region"
+  | "energy"
+  | "activity"
+  | "artist_style"
+  | "custom";
+
+export type PlaylistRecipeDuplicatePolicy = "avoid_duplicates" | "allow_duplicates";
+
 export type TrackLanguage =
   | "english"
   | "ukrainian"
@@ -66,43 +93,6 @@ export type MoodLabel =
   | "Driving"
   | "Late-Night";
 
-export type PlaylistRecipeTagCategory =
-  | "mood"
-  | "genre"
-  | "language"
-  | "era"
-  | "region"
-  | "energy"
-  | "activity"
-  | "artist_style"
-  | "custom";
-
-export type PlaylistRecipeDuplicatePolicy = "avoid_duplicates" | "allow_duplicates";
-
-export interface PlaylistRecipeTag {
-  id: string;
-  category: PlaylistRecipeTagCategory;
-  value: string;
-  note?: string;
-}
-
-export interface PlaylistRecipe {
-  id: string;
-  userId: string;
-  sortRunId: string;
-  position: number;
-  name: string;
-  playlistNote: string | null;
-  targetTrackMin: number | null;
-  targetTrackMax: number | null;
-  duplicatePolicy: PlaylistRecipeDuplicatePolicy;
-  allowExplicit: boolean;
-  includeLibraryOnly: boolean;
-  tags: PlaylistRecipeTag[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface RawAppleTrack {
   id: string;
   name: string;
@@ -143,12 +133,95 @@ export interface TrackClassification {
   metadataHash: string;
 }
 
+export interface PersistentPlaylist {
+  id: string;
+  userId: string;
+  sourceProvider: SortSourceProvider;
+  name: string;
+  description: string | null;
+  status: PlaylistStatus;
+  applePlaylistId: string | null;
+  createdFromSortRunId: string | null;
+  latestLibrarySyncId: string | null;
+  lastProcessedNewMusicSyncId: string | null;
+  lastGeneratedAt: string | null;
+  lastExportedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+}
+
+export interface PlaylistRecipeTag {
+  id: string;
+  category: PlaylistRecipeTagCategory;
+  value: string;
+  note?: string;
+}
+
+export interface PlaylistRecipe {
+  id: string;
+  userId: string;
+  sortRunId?: string | null;
+  playlistId?: string | null;
+  position: number;
+  name: string;
+  playlistNote: string | null;
+  targetTrackMin: number | null;
+  targetTrackMax: number | null;
+  duplicatePolicy: PlaylistRecipeDuplicatePolicy;
+  allowExplicit: boolean;
+  includeLibraryOnly: boolean;
+  tags: PlaylistRecipeTag[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlaylistGeneration {
+  id: string;
+  userId: string;
+  playlistId: string;
+  recipeId: string | null;
+  sortRunId: string | null;
+  librarySyncId: string | null;
+  status: PlaylistGenerationStatus;
+  recipeSnapshot: Record<string, unknown>;
+  errorSummary: string | null;
+  generatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlaylistGenerationTrack {
+  id: string;
+  generationId: string;
+  normalizedTrackId: string;
+  position: number;
+  score: number | null;
+  reason: string | null;
+  decision: PlaylistTrackDecision;
+  createdAt: string;
+}
+
+export interface PlaylistExport {
+  id: string;
+  userId: string;
+  playlistId: string;
+  generationId: string | null;
+  sortRunId: string | null;
+  applePlaylistId: string | null;
+  status: PlaylistExportStatus;
+  selectedTrackCount: number;
+  errorSummary: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface GeneratedPlaylist {
   id: string;
   dimension: PlaylistDimension;
   title: string;
   description: string;
-  confidenceLabel: "high" | "medium";
+  confidenceLabel: "high" | "medium" | "low";
   trackCount: number;
   trackFingerprints: string[];
   appleSongIds: string[];
@@ -199,6 +272,5 @@ export interface JobEvent {
   stage: string;
   level: "info" | "warn" | "error";
   message: string;
-  details?: Record<string, unknown> | null;
   createdAt: string;
 }

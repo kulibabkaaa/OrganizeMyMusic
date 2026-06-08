@@ -4,11 +4,13 @@ export async function POST(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  await context.params;
+  const { id } = await context.params;
 
   return NextResponse.json(
     {
-      error: "Playlist creation requires the MVP-020 confirmation flow."
+      error: "Legacy playlist creation is disabled. Use the platform review export flow to create Apple Music playlists and add approved tracks.",
+      nextPath: `/app/sorts/${encodeURIComponent(id)}/review`,
+      nextApiPath: `/api/app/sorts/${encodeURIComponent(id)}/export`
     },
     { status: 409 }
   );

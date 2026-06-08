@@ -3,7 +3,7 @@ import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
 
-export function SiteHeader({ openAppHref = "/auth" }: { openAppHref?: string }) {
+export function SiteHeader({ openAppHref = "/app" }: { openAppHref?: Route }) {
   return (
     <header className="absolute inset-x-0 top-0 z-20">
       <div className="mx-auto flex max-w-[84rem] items-center justify-between px-5 py-6 sm:px-6 lg:px-8 xl:px-10">
@@ -18,7 +18,7 @@ export function SiteHeader({ openAppHref = "/auth" }: { openAppHref?: string }) 
           <a href="#faq">FAQ</a>
         </nav>
 
-        <Link href={openAppHref as Route}>
+        <Link href={openAppHref}>
           <Button className="bg-white text-black shadow-none">Open app</Button>
         </Link>
       </div>

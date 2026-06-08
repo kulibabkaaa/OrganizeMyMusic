@@ -30,7 +30,7 @@ export default async function AppBillingPage() {
   });
 
   return (
-    <AppShell title="Billing" subtitle="Pay-per-Sort billing and history.">
+    <AppShell title="Billing" subtitle="Billing is deferred while Apple Music quality is verified.">
       <BillingPage summary={summary} />
     </AppShell>
   );

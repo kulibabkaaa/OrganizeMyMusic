@@ -10,32 +10,21 @@ import { StatusPill } from "@/components/ui/status-pill";
 const providers = [
   {
     name: "Apple Music",
-    status: "Available now",
-    availability: "available" as const
-  },
-  {
-    name: "Spotify",
-    status: "Coming later",
-    availability: "coming_later" as const
-  },
-  {
-    name: "YouTube Music",
-    status: "Coming later",
-    availability: "coming_later" as const
+    status: "Available now"
   }
 ];
 
 const disabledModules = [
   {
-    title: "Recent Sorts",
-    description: "No Sorts yet."
+    title: "Saved Playlists",
+    description: "Connect Apple Music first."
   },
   {
     title: "Library Status",
     description: "Not connected."
   },
   {
-    title: "Create Sort",
+    title: "Organize Library",
     description: "Connect a library first."
   }
 ];
@@ -66,13 +55,13 @@ export function DashboardEmpty({
             aria-describedby="create-sort-disabled-reason"
             className="min-w-44 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0"
           >
-            Create a Sort
+            Organize My Library
           </Button>
           <p
             id="create-sort-disabled-reason"
             className="mt-2 text-sm leading-6 text-platform-secondary"
           >
-            Connect Apple Music before creating a Sort.
+            Connect Apple Music before organizing your library.
           </p>
         </div>
       </section>

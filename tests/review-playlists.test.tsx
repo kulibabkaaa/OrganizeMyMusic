@@ -36,7 +36,7 @@ const snapshot: PreviewSnapshot = {
       trackFingerprints: ["fp_1", "fp_2"],
       appleSongIds: ["apple_1", "apple_2"],
       qualityWarnings: [
-        "Top matches are low-confidence. Review the tags before checkout.",
+        "Top matches are low-confidence. Review the tags before starting full organization.",
         "1 duplicate candidate skipped because this playlist plan avoids repeats."
       ],
       tracks: [
@@ -114,18 +114,19 @@ describe("review playlists page", () => {
     expect(markup).toContain("Matched tags");
     expect(markup).toContain("Actions");
     expect(markup).toContain("Sorting warnings");
-    expect(markup).toContain("Top matches are low-confidence. Review the tags before checkout.");
+    expect(markup).toContain("Top matches are low-confidence. Review the tags before starting full organization.");
     expect(markup).toContain("Back to dashboard");
     expect(markup).toContain("View all Sorts");
-    expect(markup).toContain("Export selected playlists");
-    expect(countOccurrences(markup, "Export selected playlists")).toBe(1);
+    expect(markup).toContain("Export approved tracks");
+    expect(countOccurrences(markup, "Export approved tracks")).toBe(1);
     expect(markup).not.toContain("Create playlists in Apple Music");
+    expect(markup).not.toContain("Export selected playlists");
     expect(markup).not.toContain("Export all playlists");
     expect(markup).not.toContain("Export this playlist");
     expect(markup).not.toContain("Save for later");
     expect(markup).not.toContain("Regenerate playlist");
     expect(markup).not.toContain("Keep");
-    expect(markup).toContain("Nothing is exported automatically. Existing Apple Music playlists will not be modified.");
+    expect(markup).toContain("Nothing is exported automatically. Export creates Apple Music playlists and adds approved tracks.");
   });
 
   it("renders generated playlist list, track table, details panel, and confirmation dialog", () => {
@@ -174,12 +175,14 @@ describe("review playlists page", () => {
     );
     expect(panelMarkup).toContain("Rename playlist");
     expect(panelMarkup).not.toContain("Regenerate playlist");
-    expect(panelMarkup).not.toContain("Regeneration stays disabled until full sorting jobs are reopened.");
+    expect(panelMarkup).not.toContain("Regeneration stays disabled until full organization jobs are reopened.");
     expect(panelMarkup).not.toContain("Save for later");
     expect(panelMarkup).toContain("Delete playlist");
-    expect(panelMarkup).toContain("Export selected playlists");
-    expect(countOccurrences(panelMarkup, "Export selected playlists")).toBe(1);
+    expect(panelMarkup).toContain("Approved tracks");
+    expect(panelMarkup).toContain("Export approved tracks");
+    expect(countOccurrences(panelMarkup, "Export approved tracks")).toBe(1);
     expect(panelMarkup).not.toContain("Create playlists in Apple Music");
+    expect(panelMarkup).not.toContain("Export selected playlists");
     expect(panelMarkup).not.toContain("Export all playlists");
     expect(panelMarkup).not.toContain("Export this playlist");
 
@@ -195,10 +198,13 @@ describe("review playlists page", () => {
     expect(dialogMarkup).toContain('role="dialog"');
     expect(dialogMarkup).toContain('aria-modal="true"');
     expect(dialogMarkup).toContain("Confirm Apple Music export");
-    expect(dialogMarkup).toContain("Export 2 selected playlists to Apple Music?");
-    expect(dialogMarkup).toContain("Export selected playlists");
-    expect(dialogMarkup).toContain("Organize Your Music will create new Apple Music playlists only. Existing playlists will not be modified.");
+    expect(dialogMarkup).toContain("Create 2 Apple Music playlists and add");
+    expect(dialogMarkup).toContain("3 approved tracks?");
+    expect(dialogMarkup).toContain("Create Apple Music playlists");
+    expect(dialogMarkup).toContain("Organize Your Music will create new Apple Music playlists only and add approved tracks from this review.");
+    expect(dialogMarkup).toContain("Existing Apple Music playlists will not be replaced, reordered, or removed.");
     expect(dialogMarkup).not.toContain("Create playlists in Apple Music");
+    expect(dialogMarkup).not.toContain("Export selected playlists");
   });
 
   it("renders accessible disabled explanations in review details", () => {

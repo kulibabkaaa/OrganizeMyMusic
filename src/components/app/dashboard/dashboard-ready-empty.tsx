@@ -21,26 +21,32 @@ export function DashboardReadyEmpty({ latestSync }: { latestSync: LibrarySyncSum
             Your music workspace
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            Build playlists by mood, genre, language, era, region, or custom rules.
+            Start with a full library organization, then keep saved playlists and recipes here.
           </p>
         </div>
-        <Link href="/app/sorts/new" className="inline-flex">
-          <Button className="min-w-44">Create a Sort</Button>
-        </Link>
+        <div className="flex flex-wrap gap-3 lg:justify-end">
+          <Link href="/app/sorts/new" className="inline-flex">
+            <Button className="min-w-44">Organize My Library</Button>
+          </Link>
+          <Link href="/app/playlists/new" className="inline-flex">
+            <Button variant="glass" className="min-w-40">Create Playlist</Button>
+          </Link>
+        </div>
       </section>
 
       <Card elevated className="grid gap-5 p-7 lg:grid-cols-[1fr_auto] lg:items-center">
         <div>
           <h2 className="font-display text-3xl font-semibold tracking-[0em] text-white">
-            Create your first Sort
+            Organize your library first
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            Build playlists by mood, genre, language, era, region, or custom rules.
+            Create several playlist ideas, add simple recipes, let AI fill them from your library,
+            review every track, then export approved playlists to Apple Music.
           </p>
         </div>
         <Link href="/app/sorts/new" className="inline-flex">
           <Button variant="glass" className="min-w-44">
-            Create a Sort
+            Organize My Library
           </Button>
         </Link>
       </Card>
@@ -52,11 +58,11 @@ export function DashboardReadyEmpty({ latestSync }: { latestSync: LibrarySyncSum
       </section>
 
       <EmptyState
-        title="Recent Sorts"
-        description="No Sorts yet."
+        title="Saved Playlists"
+        description="Your app-created playlists will appear here after the first organization run."
         action={
-          <Link href="/app/sorts/new" className="inline-flex">
-            <Button variant="glass">Create a Sort</Button>
+          <Link href="/app/playlists/new" className="inline-flex">
+            <Button variant="glass">Create Playlist</Button>
           </Link>
         }
       />

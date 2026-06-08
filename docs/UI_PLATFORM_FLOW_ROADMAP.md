@@ -1,5 +1,11 @@
 # Organize Your Music — Platform-First UI/Product Roadmap for Codex
 
+## Superseded scope note
+
+This file captured an earlier platform-first direction where Sorts remained reusable projects and payment unlocked individual Sorts. The current direction narrows `Sort` to full-library organization and makes persistent playlists plus playlist recipes the recurring product surface.
+
+Use `docs/PLATFORM_FIRST_MVP_MIGRATION.md` as the active source for migration work.
+
 ## Purpose
 
 This document rewrites the UI/product roadmap around the chosen platform-first user flow.
@@ -166,15 +172,16 @@ The target route structure should use `/app` as the platform home. Keep redirect
 /app/sorts/new                     Create Sort draft
 /app/sorts/[sortId]                Status-aware redirect
 /app/sorts/[sortId]/builder        Build/edit Playlist Recipes
-/app/sorts/[sortId]/preview        Lightweight preview + paywall panel
-/app/sorts/[sortId]/checkout       Payment page for this Sort
-/app/sorts/[sortId]/processing     Paid full-sort progress
+/app/sorts/[sortId]/preview        Lightweight preview + start panel
+/app/sorts/[sortId]/start          Full organization start page
+/app/sorts/[sortId]/checkout       Legacy redirect to /start
+/app/sorts/[sortId]/processing     Full-organization progress
 /app/sorts/[sortId]/review         Review generated playlists/tracks
 /app/sorts/[sortId]/exporting      Apple Music export progress
 /app/sorts/[sortId]/complete       Export complete
 /app/library                       Connected library overview
 /app/settings/libraries            Provider management
-/app/billing                       Billing and paid Sorts
+/app/billing                       Deferred billing and historical records
 /admin/sort-runs                   Admin/developer diagnostics only
 ```
 
@@ -218,7 +225,7 @@ Awaiting payment
   User has reached checkout but payment is not confirmed.
 
 Paid
-  Payment confirmed, full sorting job not yet started or just queued.
+  Payment confirmed, full-organization job not yet started or just queued.
 
 Processing
   Full sort job is running.
@@ -398,7 +405,7 @@ processing.html               FLOW-022 processing page.
 review-playlists.html         FLOW-023 three-pane review workspace.
 export-complete.html          FLOW-025 complete state.
 settings-libraries.html       FLOW-012 library/settings page.
-billing.html                  FLOW-026 pay-per-Sort billing.
+billing.html                  FLOW-026 historical billing surface.
 ```
 
 Reference interpretation rules:
@@ -489,7 +496,7 @@ The main gaps this roadmap addresses:
 2. Auth route is currently `/login`; target flow wants `/auth`.
 3. App home is currently `src/app/(app)/dashboard/page.tsx`; target flow wants `/app`.
 4. Current preview route is `src/app/(app)/sorts/[id]/page.tsx`; target flow wants status-aware `/app/sorts/[sortId]` routes.
-5. Current playlist request UI is a textarea in `PlaylistRequestCard`; target flow needs structured Playlist Recipes and Tags.
+5. Legacy playlist request UI has been retired; target flow uses structured Playlist Recipes and Tags.
 6. Current preview/review/write-back UI is too combined; target flow separates Preview, Checkout, Processing, Review, Exporting, and Complete.
 7. Stripe/payment is deferred or incomplete; target flow needs one-time unlock per Sort.
 8. Billing/settings/sorts index should become first-class platform surfaces.
@@ -627,7 +634,7 @@ export type SortUiStatus =
 Acceptance criteria:
 
 - Draft Sorts route to builder.
-- Preview-ready unpaid Sorts route to preview.
+- Preview-ready Sorts route to preview.
 - Paid/processing Sorts route to processing.
 - Ready-for-review Sorts route to review.
 - Exporting Sorts route to exporting.
@@ -1451,31 +1458,31 @@ src/components/app/preview/unlock-sort-card.tsx
 Tasks:
 
 - Left side: Playlist preview cards.
-- Right side: Unlock card/payment panel.
+- Right side: Start full organization panel.
 - Each preview card shows:
   - Playlist name
   - Estimated track count
   - Tags used
   - Sample tracks
   - Locked rows
-  - `Preview only. Final results are generated after checkout.`
+  - `Preview only. Final results are generated after you start full organization.`
 - Unlock card copy:
 
 ```text
-Unlock this Sort
+Start full organization
 Run the full library analysis and review every generated playlist before anything is created in Apple Music.
 ```
 
 - CTA:
 
 ```text
-Unlock full Sort
+Generate full results
 ```
 
 or
 
 ```text
-Continue to checkout
+Continue to billing
 ```
 
 Do not use vague `Continue` copy alone.
@@ -1495,7 +1502,9 @@ Real Stripe payment remains deferred.
 
 Completion notes:
 
-- Added the canonical `/app/sorts/[sortId]/checkout` page.
+- Added the canonical `/app/sorts/[sortId]/checkout` page at the time; current
+  platform-first UI uses `/app/sorts/[sortId]/start` and redirects the legacy
+  checkout page there.
 - Added `/api/app/sorts/[sortId]/checkout`.
 - Added `PAYMENTS_ENABLED` and `PAYMENTS_DEV_BYPASS_ENABLED` flags.
 - Checkout stays disabled by default.
@@ -1510,6 +1519,7 @@ Goal: add payment as a Sort-specific unlock step.
 Files:
 
 ```text
+src/app/(app)/app/sorts/[sortId]/start/page.tsx
 src/app/(app)/app/sorts/[sortId]/checkout/page.tsx
 src/app/api/app/sorts/[sortId]/checkout/route.ts
 src/app/api/stripe/webhook/route.ts
@@ -1542,11 +1552,11 @@ Generate full playlists from your Apple Music library, review the results, and e
   - Full library analysis
   - Generated playlists from your recipes
   - Track-level review before export
-  - Create playlists in Apple Music
+  - Create Apple Music playlists and add approved tracks
 - CTA:
 
 ```text
-Pay and start full Sort
+Pay and start full organization
 ```
 
 Feature flag:
@@ -1569,13 +1579,13 @@ Acceptance criteria:
 - Webhook verifies signatures.
 - Payment status updates the Sort.
 - Preview snapshot freezes before checkout.
-- Full sorting does not start until payment is confirmed.
+- Full organization does not start until payment is confirmed.
 
 ---
 
 ## Phase G — Full processing, review, export
 
-### FLOW-021 — Start full sorting job after payment
+### FLOW-021 — Start full-organization job after payment
 
 Status: complete on 2026-05-26 using the explicitly approved local FLOW-020
 dev-bypass payment confirmation path. Real Stripe confirmation remains deferred.
@@ -1584,14 +1594,14 @@ Completion notes:
 
 - Added a `full-sort` pg-boss job that runs only for Sorts with
   `payment_status = paid`.
-- Checkout dev-bypass confirmation now queues the full Sort job after the Sort
+- Checkout dev-bypass confirmation now queues the full-organization job after the Sort
   is marked paid.
-- The full Sort worker generates complete editable playlists from Playlist
+- The full-organization worker generates complete editable playlists from Playlist
   Recipes and stores them in `sort_playlists` / `sort_playlist_tracks`.
 - Low-match diagnostics are preserved in `playlist_rules`.
-- Review loads stored full Sort results separately from the lightweight preview
+- Review loads stored full-organization results separately from the lightweight preview
   snapshot.
-- Apple Music export is not triggered by payment, checkout, or full sorting.
+- Apple Music export is not triggered by payment, checkout, or full organization.
 
 Goal: separate pre-payment preview from paid full generation.
 
@@ -1601,12 +1611,11 @@ Files:
 src/modules/sorts/full-sort-job.ts
 src/worker/jobs/full-sort.ts
 src/app/api/app/sorts/[sortId]/start-full-sort/route.ts if needed
-src/modules/sorts/store.ts
 ```
 
 Tasks:
 
-- When payment is confirmed, queue full sorting job.
+- When payment is confirmed, queue full-organization job.
 - Set UI status to `processing`.
 - Full job should generate complete editable playlists from Playlist Recipes.
 - Store generated playlists and tracks in existing `sort_playlists` / `sort_playlist_tracks` tables or new versioned tables if needed.
@@ -1730,7 +1739,7 @@ Playlist actions:
 Primary CTA:
 
 ```text
-Create playlists in Apple Music
+Create Apple Music playlists
 ```
 
 Secondary CTA:
@@ -1742,7 +1751,7 @@ Save for later
 Trust copy:
 
 ```text
-Nothing is exported automatically. Existing Apple Music playlists will not be modified.
+Nothing is exported automatically. Export creates Apple Music playlists and adds approved tracks.
 ```
 
 Acceptance criteria:
@@ -1868,10 +1877,10 @@ Tasks:
 ```text
 Pay per Sort
 No active subscription.
-Each paid Sort unlocks full analysis, editable results, and Apple Music export for that Sort.
+Historical billing records remain visible for existing accounts while new billing is deferred.
 ```
 
-- Show paid Sorts.
+- Show historical organization billing records.
 - Show payment history.
 - Show receipts if Stripe provides them.
 - Add Manage billing settings placeholder or Stripe customer portal if configured.
@@ -1880,7 +1889,7 @@ Acceptance criteria:
 
 - No subscription-first wording.
 - Empty billing state works.
-- Paid Sorts appear when payment rows exist.
+- Historical organization billing records appear when payment rows exist.
 
 ---
 
@@ -1895,7 +1904,7 @@ Files:
 ```text
 src/components/app/pipeline-overview.tsx
 src/components/app/latest-sort-run-card.tsx
-src/components/app/playlist-request-card.tsx
+structured Sort Builder playlist recipe components
 src/app/(app)/dashboard/page.tsx
 new /app pages
 ```
@@ -1986,7 +1995,7 @@ and sync.
 
 Blockers:
 
-- The target account has no paid Sort yet, so the platform checkout,
+- The target account has no completed platform-first full-organization start,
   processing, review, and export path has not been executed through the UI.
 - The largest verified completed sync for the target account has 378 raw tracks,
   so the 500-track smoke target remains unverified.
@@ -2011,13 +2020,13 @@ Safe preflight completed:
   create its IPC pipe.
 - Supabase MCP aggregate preflight found one target profile, one connected
   Apple Music connection, two completed syncs, max 378 raw tracks, max 360
-  normalized tracks, two Sorts, zero paid Sorts, four generated playlists, and
+  normalized tracks, two Sorts, zero historical billing records, four generated playlists, and
   six generated playlist tracks.
 - No Apple Music export smoke was attempted.
 - The user completed real Apple Music sign-in in Safari and local sync now
   works. Supabase aggregate preflight found one connected Apple Music
   connection, five completed syncs, max 378 raw tracks, max 360 normalized
-  tracks, two Sorts, zero paid Sorts, and one historical export-started Sort.
+  tracks, two Sorts, zero historical billing records, and one historical export-started Sort.
 
 Goal: verify the redesigned platform flow works with the real backend.
 
@@ -2123,7 +2132,7 @@ The redesigned MVP is done only when all of these are true:
 - Users can preview before payment.
 - Paywall appears only after preview.
 - Payment belongs to one Sort.
-- Full sorting starts only after payment confirmation or explicit dev bypass.
+- Full organization starts only after payment confirmation or explicit dev bypass.
 - Processing can be left and resumed.
 - Users review playlists before export.
 - Apple Music export happens only after explicit user action.

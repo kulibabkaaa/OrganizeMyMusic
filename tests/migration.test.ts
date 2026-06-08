@@ -29,7 +29,23 @@ const sortDraftsMigration = readFileSync(
   join(process.cwd(), "supabase/migrations/0003_sort_drafts.sql"),
   "utf8"
 );
-const migration = `${initialMigration}\n${playlistRecipesMigration}\n${sortDraftsMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
+const platformPlaylistsMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0004_platform_playlists.sql"),
+  "utf8"
+);
+const fixPlaylistsUpdatedAtMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0005_fix_playlists_updated_at_default.sql"),
+  "utf8"
+);
+const playlistNewMusicProcessingMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0006_playlist_new_music_processing.sql"),
+  "utf8"
+);
+const uniqueZeroDollarUnlocksMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0007_unique_zero_dollar_sort_unlocks.sql"),
+  "utf8"
+);
+const migration = `${initialMigration}\n${playlistRecipesMigration}\n${sortDraftsMigration}\n${platformPlaylistsMigration}\n${fixPlaylistsUpdatedAtMigration}\n${playlistNewMusicProcessingMigration}\n${uniqueZeroDollarUnlocksMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
 
 const userOwnedTables = [
   "profiles",
@@ -41,9 +57,13 @@ const userOwnedTables = [
   "track_classifications",
   "sort_runs",
   "playlist_requests",
-  "playlist_recipes",
   "sort_playlists",
   "sort_playlist_tracks",
+  "playlist_recipes",
+  "playlists",
+  "playlist_generations",
+  "playlist_generation_tracks",
+  "playlist_exports",
   "payments",
   "job_events"
 ];
@@ -73,15 +93,125 @@ describe("initial Supabase migration", () => {
     expect(uniqueAppleMusicConnectionMigration).toContain(
       "idx_apple_music_connections_unique_user"
     );
-    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_select_own");
-    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_insert_own");
-    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_update_own");
-    expect(playlistRecipesMigration).toContain("create policy playlist_recipes_delete_own");
-    expect(playlistRecipesMigration).toContain("jsonb_typeof(tags) = 'array'");
-    expect(sortDraftsMigration).toContain("add column if not exists name text");
-    expect(sortDraftsMigration).toContain("add column if not exists source_provider text");
-    expect(sortDraftsMigration).toContain("sort_runs_source_provider_check");
+    expect(platformPlaylistsMigration).toContain("add column if not exists playlist_id");
+    expect(platformPlaylistsMigration).toContain("playlist_recipes_scope_check");
+    expect(platformPlaylistsMigration).toContain("create policy playlists_select_own");
+    expect(platformPlaylistsMigration).toContain("create policy playlist_generations_select_own");
+    expect(fixPlaylistsUpdatedAtMigration).toContain(
+      "alter column updated_at set default now()"
+    );
+    expect(fixPlaylistsUpdatedAtMigration).toContain("alter column updated_at set not null");
+    expect(playlistNewMusicProcessingMigration).toContain(
+      "last_processed_new_music_sync_id"
+    );
+    expect(uniqueZeroDollarUnlocksMigration).toContain(
+      "idx_payments_unique_zero_dollar_sort_unlock"
+    );
+    expect(uniqueZeroDollarUnlocksMigration).toContain("billing_deferred");
+    expect(uniqueZeroDollarUnlocksMigration).toContain("dev_bypass");
     expect(migration).not.toMatch(/\bdrop\s+table\b/i);
     expect(migration).not.toMatch(/\bdisable\s+row\s+level\s+security\b/i);
   });
+
+  it("keeps platform playlist browser grants narrow", () => {
+    expect(platformPlaylistsMigration).toContain("revoke all on playlists from anon, authenticated");
+    expect(platformPlaylistsMigration).toContain(
+      "revoke all on playlist_generations from anon, authenticated"
+    );
+    expect(platformPlaylistsMigration).toContain(
+      "revoke all on playlist_generation_tracks from anon, authenticated"
+    );
+    expect(platformPlaylistsMigration).toContain(
+      "revoke all on playlist_exports from anon, authenticated"
+    );
+
+    expect(platformPlaylistsMigration).toContain("grant select, insert, update on playlists to authenticated");
+    expect(platformPlaylistsMigration).toContain("grant select on playlist_generations to authenticated");
+    expect(platformPlaylistsMigration).toContain(
+      "grant select, update on playlist_generation_tracks to authenticated"
+    );
+    expect(platformPlaylistsMigration).toContain("grant select on playlist_exports to authenticated");
+    expect(platformPlaylistsMigration).not.toMatch(
+      /grant\s+(?:insert|update|delete|all privileges)[^;]+on\s+playlist_generations\s+to\s+authenticated/i
+    );
+    expect(platformPlaylistsMigration).not.toMatch(
+      /grant\s+(?:insert|delete|all privileges)[^;]+on\s+playlist_generation_tracks\s+to\s+authenticated/i
+    );
+    expect(platformPlaylistsMigration).not.toMatch(
+      /grant\s+(?:insert|update|delete|all privileges)[^;]+on\s+playlist_exports\s+to\s+authenticated/i
+    );
+  });
+
+  it("scopes platform playlist RLS policies to the signed-in user and parent ownership", () => {
+    expect(getPolicyBody(platformPlaylistsMigration, "playlists_select_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+    expect(getPolicyBody(platformPlaylistsMigration, "playlists_insert_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+    expect(getPolicyBody(platformPlaylistsMigration, "playlists_update_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+
+    const recipeInsertPolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_recipes_insert_own"
+    );
+    expect(recipeInsertPolicy).toContain("(select auth.uid()) = user_id");
+    expect(recipeInsertPolicy).toContain("from sort_runs");
+    expect(recipeInsertPolicy).toContain("sort_runs.user_id = (select auth.uid())");
+    expect(recipeInsertPolicy).toContain("from playlists");
+    expect(recipeInsertPolicy).toContain("playlists.user_id = (select auth.uid())");
+
+    const recipeUpdatePolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_recipes_update_own"
+    );
+    expect(recipeUpdatePolicy).toContain("(select auth.uid()) = user_id");
+    expect(recipeUpdatePolicy).toContain("from sort_runs");
+    expect(recipeUpdatePolicy).toContain("sort_runs.user_id = (select auth.uid())");
+    expect(recipeUpdatePolicy).toContain("from playlists");
+    expect(recipeUpdatePolicy).toContain("playlists.user_id = (select auth.uid())");
+
+    const generationTrackSelectPolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_generation_tracks_select_own"
+    );
+    expect(generationTrackSelectPolicy).toContain("from playlist_generations");
+    expect(generationTrackSelectPolicy).toContain(
+      "playlist_generations.user_id = (select auth.uid())"
+    );
+
+    const generationTrackUpdatePolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_generation_tracks_update_own"
+    );
+    expect(generationTrackUpdatePolicy).toContain("from playlist_generations");
+    expect(generationTrackUpdatePolicy).toContain(
+      "playlist_generations.user_id = (select auth.uid())"
+    );
+    expect(generationTrackUpdatePolicy).toContain("with check");
+
+    expect(getPolicyBody(platformPlaylistsMigration, "playlist_exports_select_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+  });
 });
+
+function getPolicyBody(source: string, policyName: string) {
+  const pattern = new RegExp(
+    `create policy ${policyName} on [\\s\\S]*?(?=\\ncreate policy |\\n$)`,
+    "i"
+  );
+  const match = source.match(pattern);
+
+  if (!match) {
+    throw new Error(`Policy ${policyName} was not found.`);
+  }
+
+  return normalizeSql(match[0]);
+}
+
+function normalizeSql(source: string) {
+  return source.replace(/\s+/g, " ").trim().toLowerCase();
+}

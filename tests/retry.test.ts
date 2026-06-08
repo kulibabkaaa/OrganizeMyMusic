@@ -1,17 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { LIBRARY_SYNC_JOB_NAME, type LibrarySyncQueue, type LibrarySyncStore } from "@/modules/library-syncs/queue";
 import {
-  retryLibrarySync,
-  retrySortRunWriteBack,
-  type SortRunRetryStore
-} from "@/modules/recovery/retry";
-import {
-  PLAYLIST_CREATION_JOB_NAME,
-  type PlaylistExportQueue
-} from "@/modules/sorts/export-selection";
-import type { LibrarySyncSummary } from "@/modules/library-syncs/queue";
-import type { SortRunState } from "@/types/domain";
+  LIBRARY_SYNC_JOB_NAME,
+  type LibrarySyncQueue,
+  type LibrarySyncStore,
+  type LibrarySyncSummary
+} from "@/modules/library-syncs/queue";
+import { retryLibrarySync } from "@/modules/recovery/retry";
 
 function syncSummary(overrides: Partial<LibrarySyncSummary> = {}): LibrarySyncSummary {
   return {
@@ -58,25 +53,6 @@ function createLibrarySyncQueue() {
     createQueue: vi.fn(async () => undefined),
     send: vi.fn(async () => "library_job_1")
   } satisfies LibrarySyncQueue;
-}
-
-function createSortRunStore(state: SortRunState = "failed") {
-  return {
-    getSortRunForRetry: vi.fn(async () => ({
-      id: "sort_1",
-      userId: "user_1",
-      state
-    })),
-    markCreatingPlaylists: vi.fn(async () => undefined),
-    createJobEvent: vi.fn(async () => undefined)
-  } satisfies SortRunRetryStore;
-}
-
-function createPlaylistCreationQueue() {
-  return {
-    createQueue: vi.fn(async () => undefined),
-    send: vi.fn(async () => "playlist_job_1")
-  } satisfies PlaylistExportQueue;
 }
 
 describe("retryLibrarySync", () => {
@@ -141,73 +117,5 @@ describe("retryLibrarySync", () => {
 
     expect(queue.send).not.toHaveBeenCalled();
     expect(store.createQueuedSync).not.toHaveBeenCalled();
-  });
-});
-
-describe("retrySortRunWriteBack", () => {
-  it("marks a failed sort run as creating and requeues playlist creation", async () => {
-    const store = createSortRunStore();
-    const queue = createPlaylistCreationQueue();
-
-    await expect(
-      retrySortRunWriteBack({
-        store,
-        queue,
-        sortRunId: "sort_1",
-        userId: "user_1"
-      })
-    ).resolves.toEqual({
-      status: "retried",
-      sortRunId: "sort_1",
-      state: "creating_playlists",
-      jobId: "playlist_job_1"
-    });
-
-    expect(store.markCreatingPlaylists).toHaveBeenCalledWith({
-      sortRunId: "sort_1",
-      userId: "user_1"
-    });
-    expect(queue.send).toHaveBeenCalledWith(
-      PLAYLIST_CREATION_JOB_NAME,
-      {
-        sortRunId: "sort_1",
-        userId: "user_1"
-      },
-      {
-        retryLimit: 3,
-        retryDelay: 30,
-        retryBackoff: true,
-        singletonKey: "sort_1"
-      }
-    );
-    expect(store.createJobEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sortRunId: "sort_1",
-        stage: "playlist_creation",
-        level: "info",
-        details: expect.objectContaining({
-          retryJobName: PLAYLIST_CREATION_JOB_NAME
-        })
-      })
-    );
-  });
-
-  it("does not requeue sort runs that are not failed", async () => {
-    const store = createSortRunStore("preview_ready");
-    const queue = createPlaylistCreationQueue();
-
-    await expect(
-      retrySortRunWriteBack({
-        store,
-        queue,
-        sortRunId: "sort_1",
-        userId: "user_1"
-      })
-    ).resolves.toMatchObject({
-      status: "not_failed"
-    });
-
-    expect(store.markCreatingPlaylists).not.toHaveBeenCalled();
-    expect(queue.send).not.toHaveBeenCalled();
   });
 });

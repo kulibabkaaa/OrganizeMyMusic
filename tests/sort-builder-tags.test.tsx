@@ -62,7 +62,7 @@ describe("Sort builder tags", () => {
     );
 
     expect(markup).toContain("Review context only");
-    expect(markup).toContain("Tag notes are saved with the playlist plan for review.");
+    expect(markup).toContain("Tag notes are saved with the playlist recipe for review.");
     expect(markup).toContain("They do not change sorting.");
     expect(markup).toContain("Note for Sad");
     expect(markup).toContain("Example: save for review: slower, melancholic, not angry.");

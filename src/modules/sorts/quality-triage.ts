@@ -6,7 +6,7 @@ import type { GeneratedPlaylistMatchStats } from "@/types/domain";
 export interface QualityTriagePlaylistSummary {
   id: string;
   title: string;
-  confidenceLabel: "high" | "medium";
+  confidenceLabel: "high" | "medium" | "low";
   proposedTrackCount: number;
   selectedTrackCount: number;
   warningCount: number;

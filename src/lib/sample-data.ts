@@ -1,4 +1,4 @@
-import type { JobEvent, SortRunSummary } from "@/types/domain";
+import type { SortRunSummary } from "@/types/domain";
 
 export const demoSortRun: SortRunSummary = {
   id: "sort_demo_001",
@@ -55,30 +55,3 @@ export const demoSortRun: SortRunSummary = {
     }
   ]
 };
-
-export const demoJobEvents: JobEvent[] = [
-  {
-    id: "evt_1",
-    sortRunId: demoSortRun.id,
-    stage: "library_sync",
-    level: "info",
-    message: "Synced 312 library songs from Apple Music.",
-    createdAt: "2026-04-06T16:01:00.000Z"
-  },
-  {
-    id: "evt_2",
-    sortRunId: demoSortRun.id,
-    stage: "dedupe",
-    level: "info",
-    message: "Collapsed 27 duplicates into canonical track records.",
-    createdAt: "2026-04-06T16:04:00.000Z"
-  },
-  {
-    id: "evt_3",
-    sortRunId: demoSortRun.id,
-    stage: "classification",
-    level: "warn",
-    message: "19 tracks required AI fallback for ambiguous mood labeling.",
-    createdAt: "2026-04-06T16:08:00.000Z"
-  }
-];

@@ -51,7 +51,7 @@ export function SortsIndex({
           href="/app/sorts/new"
           className="inline-flex min-w-44 items-center justify-center rounded-full bg-accent-sweep px-5 py-3 text-sm font-semibold text-white shadow-pulse transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
         >
-          Create a Sort
+          Organize My Library
         </Link>
       </section>
 

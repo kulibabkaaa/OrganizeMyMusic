@@ -61,7 +61,7 @@ export function createDefaultBuilderRecipe(position: number): BuilderRecipe {
   return {
     id: `local_${Date.now()}_${position}`,
     position,
-    name: "New playlist plan",
+    name: "New playlist",
     playlistNote: null,
     targetTrackMin: DEFAULT_TARGET_TRACK_MIN,
     targetTrackMax: DEFAULT_TARGET_TRACK_MAX,
@@ -126,7 +126,7 @@ export function validateSortBuilder(input: {
     return {
       canSave: false,
       canPreview: false,
-      message: "Name this Sort and add at least one playlist plan."
+      message: "Name this Sort and add at least one playlist recipe."
     };
   }
 
@@ -154,7 +154,7 @@ export function validateSortBuilder(input: {
     return {
       canSave: true,
       canPreview: false,
-      message: "You can save this draft now. Preview unlocks when the library index is ready."
+      message: "You can save this draft now. Preview becomes available when the library index is ready."
     };
   }
 
@@ -217,22 +217,22 @@ export function getTargetSizeValidationMessage(
   recipe: Pick<BuilderRecipe, "targetTrackMin" | "targetTrackMax">
 ) {
   if (recipe.targetTrackMin == null || recipe.targetTrackMax == null) {
-    return "Set a minimum and maximum target size for every playlist plan.";
+    return "Set a minimum and maximum target size for every playlist recipe.";
   }
 
   if (recipe.targetTrackMin > recipe.targetTrackMax) {
-    return "Keep each playlist plan target minimum less than or equal to its maximum.";
+    return "Keep each playlist recipe target minimum less than or equal to its maximum.";
   }
 
   if (recipe.targetTrackMin < 1 || recipe.targetTrackMax < 1) {
-    return "Keep every playlist plan target size at one track or more.";
+    return "Keep every playlist recipe target size at one track or more.";
   }
 
   if (
     recipe.targetTrackMin > MAX_TARGET_TRACK_COUNT ||
     recipe.targetTrackMax > MAX_TARGET_TRACK_COUNT
   ) {
-    return "Keep every playlist plan target size at 500 tracks or fewer.";
+    return "Keep every playlist recipe target size at 500 tracks or fewer.";
   }
 
   return null;

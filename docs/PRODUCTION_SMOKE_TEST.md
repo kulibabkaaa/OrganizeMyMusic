@@ -2,198 +2,214 @@
 
 ## Purpose
 
-Use this checklist to verify the full Apple Music platform flow before a real
-user test or production release. It is written for a tester who does not know
-the codebase.
+This runbook verifies the platform-first Apple Music MVP once, end to end.
 
-The test account's Apple Music library is private data. Do not paste raw track
-payloads, Apple Music user tokens, developer tokens, private keys, or
-track-level debug dumps into tickets, chat, logs, or screenshots.
+Do not run this test with a shared Apple Music account. The app reads private
+library data and creates real playlists only after explicit confirmation.
 
-## Scope
+## Required preflight
 
-This smoke covers:
-
-- Signup or sign in.
-- Apple Music connect.
-- Library sync.
-- Draft Sort creation.
-- Preview generation.
-- Checkout or approved development bypass.
-- Full Sort processing.
-- Review.
-- Explicit export to Apple Music.
-- Rollback/reset notes.
-
-Out of scope:
-
-- Spotify and YouTube Music.
-- Native app flows.
-- Automatic edits to existing Apple Music playlists.
-- Real payment implementation while payment remains blocked.
-
-## Hard Stop Conditions
-
-Stop the smoke immediately when any condition is true:
-
-- The app shows or logs a raw Apple Music user token.
-- The app exposes `APPLE_PRIVATE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
-  `OPENAI_API_KEY`, `ENCRYPTION_KEY`, `STRIPE_SECRET_KEY`, or a raw Apple Music
-  user token.
-- Any Apple Music write-back is possible before review plus explicit export
-  confirmation.
-- The tester is signed into the wrong Apple Music account.
-- The worker is offline, repeatedly crashing, or not processing `pg-boss` jobs.
-- Checkout requires real payment while payment remains blocked.
-- A reset or rollback step would delete or edit Apple Music library content.
-
-## Preflight
-
-Run these checks before opening the app:
-
-- Local required checks pass:
+- Local checks pass:
   - `npm run typecheck`
   - `npm run lint`
   - `npm run test`
   - `npm run build`
-- Vercel or the target host is deployed from the intended commit.
-- The persistent worker is deployed from the same intended commit.
-- Supabase migrations are applied.
+- Vercel Production runs the current MVP build.
+- Vercel Production and Railway use the same current Supabase `DATABASE_URL`.
+- Railway worker is online and running `npm run worker`.
 - Supabase has the `pgboss` schema initialized.
-- The worker process is running outside Vercel serverless.
-- `NEXT_PUBLIC_APP_URL` matches the target URL.
-- Apple Music developer credentials are present in the web app and worker
-  environments.
-- `ENCRYPTION_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, and
-  `DATABASE_URL` are present only in server/worker environments.
-- `PAYMENTS_ENABLED` is unset or false unless payment implementation has been
-  explicitly reopened.
-- `PAYMENTS_DEV_BYPASS_ENABLED` is unset or false by default.
-- If a local development bypass was explicitly approved for this smoke, set
-  `PAYMENTS_DEV_BYPASS_ENABLED=true` only in the local/test environment and
-  record that approval in the smoke notes.
+- Supabase migration history includes `platform_playlists`,
+  `fix_playlists_updated_at_default`, `playlist_new_music_processing`, and
+  `unique_zero_dollar_sort_unlocks`.
+- Supabase has platform tables `playlists`, `playlist_generations`,
+  `playlist_generation_tracks`, and `playlist_exports` with RLS enabled.
+- `playlist_recipes_scope_check` is validated, `playlists.updated_at` is not
+  nullable with a `now()` default, and
+  `idx_payments_unique_zero_dollar_sort_unlock` exists.
+- `npm run platform:check` passes in the deployment environment.
+- Apple Music credentials are configured in Vercel and Railway.
+- `NEXT_PUBLIC_APP_URL` matches the URL being tested.
 
-## Test Account Setup
+## Smoke path
 
-- Use a dedicated Apple Music test account, not a shared personal account.
-- Confirm the account has enough saved songs to exercise sorting quality. The
-  target is at least 500 saved songs; record the real count if lower.
-- Confirm the account can create new Apple Music playlists.
-- Create or identify a dedicated app account email for the smoke.
-- Keep the app account email available for rollback via `/admin/reset-user`.
+1. Open the Production app URL.
+2. Signup or sign in.
+3. Confirm the dashboard shows the signed-in state.
+4. Apple Music connect with MusicKit.
+5. Confirm the dashboard shows Apple Music connected.
+6. Library sync.
+7. Wait for sync completion.
+8. Click `Organize My Library`.
+9. Create a full-library Sort with at least three playlist recipes.
+10. Confirm the Sort Builder shows playlist plans on the left and the selected
+    recipe editor on the right.
+11. Confirm the Sort preview/generation action remains blocked until library
+    sync is completed.
+12. Confirm at least 500 raw library tracks are stored when the account has at
+    least 500 saved songs. If the smoke account has fewer saved songs, record
+    the actual count and continue only if the full library is synced correctly.
+13. Confirm normalized and duplicate counts are shown.
+14. Preview generation.
+15. Confirm the preview snapshot stays stable after the organization is started
+    and before export; playlist names, counts, and selected tracks should not
+    silently change across refreshes.
+16. Use at least three playlist recipes, for example:
+    - Ukrainian rap
+    - gym rap
+    - sad Slavic songs
+17. Start full organization from `/app/sorts/{sortId}/start` with billing
+    deferred; use development bypass only in approved local/staging smoke.
+18. Full-organization processing.
+19. Review playlist names, descriptions, track counts, and included tracks.
+20. Deselect playlists or remove tracks that should not be created.
+21. If any playlist has zero matched tracks, confirm review can still be
+    completed and the empty generation does not stay in the review queue.
+22. Confirm export copy uses `Create Apple Music playlist`, `Export`, or `add
+    approved tracks`, and does not promise replacement, reorder, automatic sync,
+    or automatic removal.
+23. Explicit export to Apple Music only when the review is acceptable.
+24. Verify the app queues playlist creation.
+25. Verify the Railway worker completes the job.
+26. Verify the playlists appear in the real Apple Music account.
+27. Verify exported app-created playlists appear in `/app/playlists`.
+28. Open one exported playlist in `/app/playlists/:playlistId`.
+29. Confirm the playlist shows recipe details, latest generated tracks, export
+    status, and generation history.
+30. Create one new playlist from `/app/playlists/new` without starting a Sort.
+31. Save its playlist-owned recipe.
+32. Generate proposed tracks from the latest synced Apple Music library.
+33. Review every proposed track, remove or restore at least one track, click
+    `Mark Review Complete`, then queue `Create Apple Music playlist`.
+34. Verify the individual playlist export is processed by the persistent worker
+    and the app playlist receives an Apple playlist ID.
+35. Run a second library sync after adding at least one song to Apple Music.
+36. Click `Process New Music` from the library page.
+37. Confirm recommendations are review-only and based on saved playlist recipes.
+38. Confirm matching recommendations are saved as playlist review queues and
+    visible when opening the recommended playlist.
+39. Retry `Process New Music` and confirm the same latest sync does not create
+    duplicate new-music review queues.
+40. Record any partial failures and retry behavior.
 
-## Smoke Checklist
+## Historical Sort-first smoke path
 
-Use the `Result` column as: `Pass`, `Fail`, `Blocked`, or `Skipped`.
+The old Sort-first smoke path is retained only as historical context in earlier
+roadmap notes and old smoke evidence. Do not execute it as an MVP acceptance
+gate. Current completion must use the platform-first smoke path above.
 
-| Step | Action | Expected result | Result | Notes |
-| --- | --- | --- | --- | --- |
-| 1 | Open the target app URL. | Landing page loads. Primary CTA goes to `/auth` for signed-out users. |  |  |
-| 2 | Sign up or sign in with the dedicated app account. | Auth completes and routes to `/app` or legacy `/dashboard` redirecting into the app. |  |  |
-| 3 | Open `/app`. | Dashboard renders without private debug data. |  |  |
-| 4 | Connect Apple Music. | MusicKit authorization opens in the browser and returns to the app. |  |  |
-| 5 | Confirm connection state. | The app shows Apple Music connected. No raw token appears in browser UI, logs, or network response bodies. |  |  |
-| 6 | Start library sync. | Sync queues as background work. User can navigate away. |  |  |
-| 7 | Watch sync status. | Dashboard or Library page shows queued/running/completed state with latest counts. |  |  |
-| 8 | Verify worker processing. | Worker logs show safe event types/counts. No raw library payloads or tokens appear. |  |  |
-| 9 | Confirm sync completion. | Raw, normalized, duplicate, and classification counts are visible or queryable. Record counts. |  |  |
-| 10 | Open `/app/sorts/new`. | New Sort creation starts without payment or export side effects. |  |  |
-| 11 | Create a draft Sort. | Sort draft is saved and reachable from `/app/sorts`. |  |  |
-| 12 | Add at least three playlist plans. | Plans have clear names, supported tags, target sizes, and validation feedback. |  |  |
-| 13 | Generate preview. | Preview uses existing library tracks only and does not create Apple Music playlists. |  |  |
-| 14 | Inspect preview quality. | Playlist names, counts, warnings, and sample tracks are understandable. Low/empty matches show warnings. |  |  |
-| 15 | Continue to checkout. | If payments are disabled, checkout clearly says payment is paused/unavailable. |  |  |
-| 16 | If approved, use development bypass. | Only explicit `PAYMENTS_DEV_BYPASS_ENABLED=true` enables the bypass. CTA labels it as a dev bypass. |  |  |
-| 17 | Verify full Sort processing. | A `full-sort` pg-boss job runs and the processing page updates without manual refresh. |  |  |
-| 18 | Open review. | Generated playlists are editable before export. User can remove/undo tracks or playlists. |  |  |
-| 19 | Confirm no automatic write-back. | Existing Apple Music playlists remain untouched before export confirmation. |  |  |
-| 20 | Select playlists for export. | Export CTA is disabled until at least one playlist with tracks is selected. |  |  |
-| 21 | Open export confirmation. | Modal states new playlists will be created and existing Apple Music playlists will not be modified. |  |  |
-| 22 | Explicitly confirm export. | App queues playlist creation only after confirmation. |  |  |
-| 23 | Watch export processing. | Exporting page polls status and shows progress. Worker processes `playlist-create`. |  |  |
-| 24 | Confirm complete state. | Complete page lists created playlists and any partial failures. |  |  |
-| 25 | Open Apple Music. | New playlists appear in the test Apple Music account with expected tracks. |  |  |
-| 26 | Retry if partial failure occurred. | Retry is visible only for failed/retryable app jobs and does not modify existing Apple Music playlists. |  |  |
-| 27 | Review admin diagnostics. | `/admin/sort-runs` and run inspection show stages, counts, failure categories if any, and no private payloads. |  |  |
+## Stop conditions
 
-## Expected Results Summary
+Stop before confirmation when:
 
-The smoke passes only when:
+- The preview is empty or clearly wrong.
+- The app shows the wrong Apple Music account.
+- Playlist counts do not match the confirmation screen.
+- Any write-back action is available before explicit confirmation.
+- Any Apple Music write-back is possible before review and explicit export
+  confirmation.
+- Any product copy promises exact replacement, reorder, automatic sync, or
+  automatic removal from Apple Music.
+- Railway worker is offline or crashing.
+- Vercel API routes cannot reach Supabase.
+- Apple Music authorization fails or returns a stale token.
 
-- Signup/sign-in works.
-- Apple Music connect works.
-- Library sync completes through the persistent worker.
-- Draft creation and autosave work.
-- Preview is generated before checkout.
-- Payment is either clearly blocked or an explicitly approved development
-  bypass is used.
-- Full Sort processing completes.
-- Review is available before export.
-- Export requires explicit confirmation.
-- Apple Music receives only newly created playlists.
-- Existing Apple Music playlists are not edited or deleted.
-- Admin/job visibility is diagnostic without exposing private music data.
+## Current status
 
-## Payment Notes
+As of 2026-06-08:
 
-Payment implementation is blocked until explicitly reopened.
+- The platform-first code path builds locally and passes typecheck, lint, tests,
+  and production build.
+- `/app` is the canonical platform dashboard. `/dashboard` redirects to `/app`
+  for compatibility with older links and smoke checks.
+- The dashboard, playlist hub, and playlist detail screens use the simplified
+  MVP structure: primary organization action, playlist queue visibility, inline
+  safety copy, track review, explicit export, and collapsed generation history.
+- Logger redaction now recursively sanitizes token-like and secret-like fields.
+- Hosted Supabase has platform migrations `platform_playlists` and
+  `fix_playlists_updated_at_default` applied.
+- Hosted schema was checked directly: `playlist_recipes_scope_check` is
+  validated, no playlist recipe rows are unscoped, `playlists.updated_at` is
+  not nullable with `now()` default, and platform playlist tables exist.
+- Vercel preview deployment
+  `https://organize-my-music-git-codex-platfo-cbc5d7-kulibabkaaas-projects.vercel.app`
+  built successfully and responded through authenticated Vercel curl for `/`,
+  `/app`, `/dashboard`, `/app/playlists`, and `/app/billing`.
+- Plain public curl returns `401` because the preview is protected by Vercel.
+- `/app` renders the new signed-out workspace state, `/dashboard` redirects to
+  `/app`, and signed-out protected app subroutes redirect to `/auth`.
+- The preview homepage copy was checked through `vercel curl` and matches the
+  platform-first, billing-deferred MVP direction.
+- No fatal/error runtime logs were found for preview deployment
+  `dpl_4kn5o2LVkDNchBJjGDYrozQULvfg`.
+- Local `npm run worker:check` passes against hosted Supabase.
+- Local `npm run platform:check` passes against hosted Supabase.
+- Hosted pg-boss has `library-sync`, `full-sort`, `playlist-create`, and
+  `playlist-generation-export` queues registered, with no active, queued,
+  retrying, or failed jobs for those queues at verification time.
+- Hosted Supabase has `unique_zero_dollar_sort_unlocks` applied; duplicate
+  deferred/dev Sort unlock markers were cleaned up and the unique index is in
+  place.
+- Platform-first production smoke verification is pending.
+- Worker deployment verification, real Apple Music authorization, library sync,
+  Sort export, individual playlist export, and new-music processing still need
+  to be verified in the configured environment.
 
-For production-like smoke:
+Historical Sort-first smoke from 2026-05-23:
 
-- Leave `PAYMENTS_ENABLED` false or unset.
-- Verify checkout explains payment is unavailable.
-- Do not enter real card details.
+- Railway worker is online.
+- Supabase MCP confirms `pgboss` tables exist.
+- Current MVP worktree has been deployed to Vercel Production and is available
+  through `https://organize-my-music.vercel.app`.
+- Production alias `https://organize-my-music.vercel.app` responds publicly.
+- Safe smoke checks for `/`, `/dashboard`, and `/login` returned `200`.
+- Vercel Production `DATABASE_URL` was validated indirectly through an
+  authenticated production sync request.
+- A full smoke test was run with a real Apple Music account and explicit user
+  confirmation before write-back.
 
-For local or test-environment smoke with approved bypass:
+Smoke result:
 
-- Set `PAYMENTS_DEV_BYPASS_ENABLED=true` only for that environment.
-- Verify the UI labels the action as a development bypass.
-- Unset `PAYMENTS_DEV_BYPASS_ENABLED` after the smoke.
-- Never enable a development bypass by default or in production.
+- App account sign-in worked.
+- MusicKit Apple Music authorization worked.
+- The Apple Music user token was persisted server-side and connection status
+  appeared on the dashboard.
+- Library sync `9d30ecd1-d786-4aff-aec3-4c839e858a1f` completed with 377 raw
+  tracks, 359 normalized tracks, and 18 duplicates.
+- Playlist requests were saved for Ukrainian rap, gym rap, and sad Slavic
+  songs.
+- Sort run `4fede120-bc0e-4d9b-861b-477cc236a2e5` reached `preview_ready`,
+  then explicit user confirmation queued write-back.
+- Railway processed the playlist creation job and Supabase recorded the sort
+  run as `completed`.
+- Apple Music write-back created two playlists and added three tracks.
+- The user verified the two playlists appeared in the Apple Music app.
 
-## Rollback And Reset
+Known issues from this smoke:
 
-Use the least destructive reset that clears the app state:
+- The test account had 377 raw tracks, so the 500-track scale target remains
+  unverified.
+- Sorting quality is weak in the first real run: output playlists were very
+  small, and one requested playlist had no tracks.
+- Empty or low-match playlists need stronger preview warnings before the user
+  confirms write-back.
+- Stripe remains deferred.
 
-1. If no export was confirmed, use `/admin/reset-user` to preview and reset the
-   dedicated app account by email. Confirm row counts before typing the reset
-   phrase.
-2. Confirm `/admin/reset-user` removes pg-boss jobs before deleting the
-   Supabase auth user.
-3. If export was confirmed, delete only the newly created Apple Music playlists
-   manually from the test Apple Music account. The app must not automatically
-   delete or edit Apple Music playlists.
-4. Do not run manual SQL unless the admin reset tool is unavailable and an
-   engineer has reviewed the exact SQL.
-5. Record the reset result and any remaining Apple Music playlists in the smoke
-   notes.
+## Payment and bypass status
 
-## Evidence To Record
+Stripe payment implementation is deferred until explicitly reopened.
 
-Record these items in the smoke notes:
+Billing is deferred by default for the platform-first MVP. Use
+`PAYMENTS_DEV_BYPASS_ENABLED=true` only for an approved local or staging smoke
+test when you need to exercise that legacy path.
 
-- Target URL and commit/deployment identifier.
-- Test app account email.
-- Whether payment was blocked or an approved development bypass was used.
-- Library raw, normalized, duplicate, and classification counts.
-- Sort id.
-- Preview playlist count and warning summary.
-- Full Sort job result.
-- Export job result.
-- Created Apple Music playlist names and track counts.
-- Any failure category shown in admin diagnostics.
-- Rollback/reset action taken.
+Never enable a development bypass by default or in production.
 
-Do not record raw tokens, private keys, raw Apple Music payloads, or full
-track-level library exports.
+## Export safety
 
-## Historical Notes
+App queues playlist creation only after confirmation.
 
-The 2026-05-23 MVP smoke completed with a real Apple Music account and explicit
-user confirmation before write-back. It created two Apple Music playlists. The
-test account had 377 raw tracks, so the 500-track scale target remained
-unverified.
+Existing Apple Music playlists are not edited or deleted.
 
-The 2026-05-26 platform route smoke partially unblocked `/app`, Apple Music
-sign-in, and sync, but checkout, processing, review, and export were not fully
-executed through the platform UI because the target account had no paid Sort.
+## Rollback/reset notes
+
+Use `/admin/reset-user` only for test accounts when a smoke run needs cleanup.

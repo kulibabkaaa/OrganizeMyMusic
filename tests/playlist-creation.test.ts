@@ -63,6 +63,7 @@ function createStore(overrides: Partial<PlaylistCreationStore> = {}) {
       ];
     },
     setApplePlaylistId: vi.fn(async () => undefined),
+    markPlaylistTracksExported: vi.fn(async () => undefined),
     createJobEvent: vi.fn(async () => undefined),
     markSortRunFailed: vi.fn(async () => undefined),
     markSortRunCompleted: vi.fn(async () => undefined)
@@ -120,6 +121,16 @@ describe("handlePlaylistCreationJob", () => {
       sortRunId: "sort_1",
       sortPlaylistId: "sort_playlist_1",
       applePlaylistId: "p.created"
+    });
+    expect(store.markPlaylistTracksExported).toHaveBeenCalledWith({
+      sortRunId: "sort_1",
+      sortPlaylistId: "sort_playlist_1",
+      applePlaylistId: "p.created"
+    });
+    expect(store.markPlaylistTracksExported).toHaveBeenCalledWith({
+      sortRunId: "sort_1",
+      sortPlaylistId: "sort_playlist_2",
+      applePlaylistId: "p.existing"
     });
     expect(addTracksToPlaylist).toHaveBeenNthCalledWith(
       1,
@@ -213,6 +224,11 @@ describe("handlePlaylistCreationJob", () => {
       sortPlaylistId: "sort_playlist_2",
       applePlaylistId: "p.created"
     });
+    expect(store.markPlaylistTracksExported).toHaveBeenCalledWith({
+      sortRunId: "sort_1",
+      sortPlaylistId: "sort_playlist_2",
+      applePlaylistId: "p.created"
+    });
     expect(store.markSortRunFailed).toHaveBeenCalledWith({
       sortRunId: "sort_1",
       userId: "user_1",
@@ -257,6 +273,11 @@ describe("handlePlaylistCreationJob", () => {
       sortPlaylistId: "sort_playlist_1",
       applePlaylistId: "p.created"
     });
+    expect(store.markPlaylistTracksExported).not.toHaveBeenCalledWith({
+      sortRunId: "sort_1",
+      sortPlaylistId: "sort_playlist_1",
+      applePlaylistId: "p.created"
+    });
     expect(store.markSortRunCompleted).not.toHaveBeenCalled();
     expect(store.markSortRunFailed).toHaveBeenCalledWith({
       sortRunId: "sort_1",
@@ -269,6 +290,59 @@ describe("handlePlaylistCreationJob", () => {
         message: 'Failed to add tracks to "Ukrainian Rap": Track unavailable.'
       })
     );
+  });
+
+  it("marks app export state exported when no addable Apple song IDs remain", async () => {
+    const store = createStore({
+      async listSelectedPlaylists() {
+        return [
+          {
+            id: "sort_playlist_1",
+            title: "Local Files",
+            description: "Tracks without Apple song IDs.",
+            applePlaylistId: null,
+            tracks: [
+              {
+                normalizedTrackId: "track_1",
+                appleSongId: null,
+                position: 1
+              }
+            ]
+          }
+        ];
+      }
+    });
+    const addTracksToPlaylist = vi.fn(async () => undefined);
+
+    await expect(
+      handlePlaylistCreationJob({
+        store,
+        data: {
+          sortRunId: "sort_1",
+          userId: "user_1"
+        },
+        createDeveloperToken: vi.fn(async () => ({
+          developerToken: "developer-token",
+          expiresAt: "2026-05-22T20:30:00.000Z"
+        })),
+        decryptUserToken: vi.fn(() => "music-user-token"),
+        createLibraryPlaylist: vi.fn(async () => ({ id: "p.created" })),
+        addTracksToPlaylist
+      })
+    ).resolves.toEqual({
+      createdCount: 1,
+      skippedCount: 0,
+      playlistTrackCount: 0,
+      trackBatchCount: 0,
+      failedCount: 0
+    });
+
+    expect(addTracksToPlaylist).not.toHaveBeenCalled();
+    expect(store.markPlaylistTracksExported).toHaveBeenCalledWith({
+      sortRunId: "sort_1",
+      sortPlaylistId: "sort_playlist_1",
+      applePlaylistId: "p.created"
+    });
   });
 
   it("fails before Apple calls when no encrypted user token is available", async () => {

@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   FULL_SORT_JOB_NAME,
+  createSupabaseFullSortStore,
   handleFullSortJob,
-  queueFullSortAfterPayment
+  queueFullSortAfterStart
 } from "@/modules/sorts/full-sort-job";
 import type { FullSortStore } from "@/modules/sorts/full-sort-job";
 import type { PlaylistRecipe, TrackClassification } from "@/types/domain";
@@ -43,7 +44,7 @@ const classification: TrackClassification = {
 
 function createStore(overrides: Partial<FullSortStore> = {}): FullSortStore {
   return {
-    getPaidSortRunForFullSort: vi.fn().mockResolvedValue({
+    getStartableSortRunForFullSort: vi.fn().mockResolvedValue({
       id: "sort_1",
       userId: "user_1",
       librarySyncId: "sync_1",
@@ -78,7 +79,7 @@ function createStore(overrides: Partial<FullSortStore> = {}): FullSortStore {
 }
 
 describe("full sort job", () => {
-  it("queues full sorting only after payment is confirmed", async () => {
+  it("queues full organization after the Sort is unlocked for start", async () => {
     const store = createStore();
     const queue = {
       createQueue: vi.fn().mockResolvedValue(undefined),
@@ -86,7 +87,7 @@ describe("full sort job", () => {
     };
 
     await expect(
-      queueFullSortAfterPayment({
+      queueFullSortAfterStart({
         store,
         queue,
         sortRunId: "sort_1",
@@ -115,9 +116,9 @@ describe("full sort job", () => {
     );
   });
 
-  it("does not queue when the Sort is not paid", async () => {
+  it("does not queue when the Sort is not startable", async () => {
     const store = createStore({
-      getPaidSortRunForFullSort: vi.fn().mockResolvedValue(null)
+      getStartableSortRunForFullSort: vi.fn().mockResolvedValue(null)
     });
     const queue = {
       createQueue: vi.fn().mockResolvedValue(undefined),
@@ -125,7 +126,7 @@ describe("full sort job", () => {
     };
 
     await expect(
-      queueFullSortAfterPayment({
+      queueFullSortAfterStart({
         store,
         queue,
         sortRunId: "sort_1",
@@ -133,7 +134,7 @@ describe("full sort job", () => {
       })
     ).resolves.toEqual({
       status: "not_ready",
-      message: "Paid Sort is not ready for full sorting."
+      message: "Organization is not ready to start."
     });
 
     expect(queue.send).not.toHaveBeenCalled();
@@ -178,12 +179,185 @@ describe("full sort job", () => {
     expect(store.createJobEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         stage: "preparing_review",
-        message: "Full Sort generated 1 playlists with 1 tracks."
+        message: "Full organization generated 1 playlists with 1 tracks."
       })
     );
   });
 
-  it("records failed full Sort jobs without raw track names or tokens", async () => {
+  it("links Sort-created recipes to three persistent playlists for later playlist editing", async () => {
+    const tableCalls: Array<{ table: string; operation: string; payload?: unknown }> = [];
+    const playlistRows = [{ id: "playlist_1" }, { id: "playlist_2" }, { id: "playlist_3" }];
+    const sortPlaylistRows = [
+      { id: "sort_playlist_1" },
+      { id: "sort_playlist_2" },
+      { id: "sort_playlist_3" }
+    ];
+    const generationRows = [
+      { id: "generation_1" },
+      { id: "generation_2" },
+      { id: "generation_3" }
+    ];
+    const recipeUpdateFilters: Array<[string, string]> = [];
+    const recipes = [
+      recipe,
+      { ...recipe, id: "recipe_2", name: "Gym rap", position: 1 },
+      { ...recipe, id: "recipe_3", name: "Sad Slavic songs", position: 2 }
+    ];
+
+    const createQuery = (table: string) => {
+      const query = {
+        delete: vi.fn(() => {
+          tableCalls.push({ table, operation: "delete" });
+          return {
+            eq: vi.fn(async () => ({ error: null }))
+          };
+        }),
+        insert: vi.fn((payload: unknown) => {
+          tableCalls.push({ table, operation: "insert", payload });
+
+          if (table === "sort_playlist_tracks" || table === "playlist_generation_tracks") {
+            return Promise.resolve({ error: null });
+          }
+
+          return {
+            select: vi.fn(async () => ({
+              data:
+                table === "playlists"
+                  ? playlistRows
+                  : table === "sort_playlists"
+                    ? sortPlaylistRows
+                    : generationRows,
+              error: null
+            }))
+          };
+        }),
+        update: vi.fn((payload: unknown) => {
+          tableCalls.push({ table, operation: "update", payload });
+          const updateQuery = {
+            eq: vi.fn((column: string, value: string) => {
+              recipeUpdateFilters.push([column, value]);
+              return updateQuery;
+            }),
+            then: (resolve: (value: { error: null }) => void) => resolve({ error: null })
+          };
+
+          return updateQuery;
+        })
+      };
+
+      return query;
+    };
+    const supabase = {
+      from: vi.fn((table: string) => createQuery(table))
+    };
+    const store = createSupabaseFullSortStore(supabase as never);
+
+    await expect(
+      store.saveFullSortResult({
+        sortRun: {
+          id: "sort_1",
+          userId: "user_1",
+          librarySyncId: "sync_1",
+          state: "paid",
+          paymentStatus: "paid",
+          generatedPlaylistCount: 0
+        },
+        snapshot: {
+          sortRunId: "sort_1",
+          librarySyncId: "sync_1",
+          generatedAt: "2026-05-26T12:00:00.000Z",
+          playlists: recipes.map((playlistRecipe, index) => ({
+            id: playlistRecipe.id,
+            dimension: "request",
+            title: playlistRecipe.name,
+            description: `${playlistRecipe.name} from saved tracks.`,
+            confidenceLabel: "medium",
+            trackCount: 1,
+            trackFingerprints: [`fp_${index + 1}`],
+            appleSongIds: [`apple_${index + 1}`],
+            tracks: [
+              {
+                fingerprint: `fp_${index + 1}`,
+                normalizedTrackId: `track_${index + 1}`,
+                appleSongId: `apple_${index + 1}`,
+                position: 0,
+                score: 0.9 - index * 0.1,
+                reason: "Recipe tags match this track."
+              }
+            ]
+          }))
+        }
+      })
+    ).resolves.toBeUndefined();
+
+    expect(tableCalls).toContainEqual({
+      table: "playlists",
+      operation: "insert",
+      payload: expect.arrayContaining([
+        expect.objectContaining({
+          user_id: "user_1",
+          name: "Ukrainian rap",
+          created_from_sort_run_id: "sort_1",
+          latest_library_sync_id: "sync_1",
+          last_generated_at: "2026-05-26T12:00:00.000Z"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          name: "Gym rap",
+          created_from_sort_run_id: "sort_1"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          name: "Sad Slavic songs",
+          created_from_sort_run_id: "sort_1"
+        })
+      ])
+    });
+    expect(tableCalls).toContainEqual({
+      table: "playlist_generations",
+      operation: "insert",
+      payload: [
+        expect.objectContaining({
+          user_id: "user_1",
+          playlist_id: "playlist_1",
+          recipe_id: recipe.id,
+          sort_run_id: "sort_1",
+          status: "ready_for_review"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          playlist_id: "playlist_2",
+          recipe_id: "recipe_2",
+          sort_run_id: "sort_1",
+          status: "ready_for_review"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          playlist_id: "playlist_3",
+          recipe_id: "recipe_3",
+          sort_run_id: "sort_1",
+          status: "ready_for_review"
+        })
+      ]
+    });
+    expect(
+      tableCalls.filter((call) => call.table === "playlist_recipes" && call.operation === "update")
+    ).toEqual([
+      { table: "playlist_recipes", operation: "update", payload: { playlist_id: "playlist_1" } },
+      { table: "playlist_recipes", operation: "update", payload: { playlist_id: "playlist_2" } },
+      { table: "playlist_recipes", operation: "update", payload: { playlist_id: "playlist_3" } }
+    ]);
+    expect(recipeUpdateFilters).toEqual([
+      ["id", recipe.id],
+      ["sort_run_id", "sort_1"],
+      ["id", "recipe_2"],
+      ["sort_run_id", "sort_1"],
+      ["id", "recipe_3"],
+      ["sort_run_id", "sort_1"]
+    ]);
+  });
+
+  it("records failed full-organization jobs without raw track names or tokens", async () => {
     const store = createStore({
       listRecipesForSort: vi.fn().mockRejectedValue(
         new Error("raw-music-user-token failed while sorting Track One by Artist One.")
@@ -195,19 +369,19 @@ describe("full sort job", () => {
         store,
         data: { sortRunId: "sort_1", userId: "user_1" }
       })
-    ).rejects.toThrow("Full Sort failed. Failure category: authentication.");
+    ).rejects.toThrow("Full organization failed. Failure category: authentication.");
 
     expect(store.markSortRunFailed).toHaveBeenCalledWith({
       sortRunId: "sort_1",
       userId: "user_1",
-      errorSummary: "Full Sort failed. Failure category: authentication."
+      errorSummary: "Full organization failed. Failure category: authentication."
     });
     expect(store.createJobEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         sortRunId: "sort_1",
         stage: "full_sort",
         level: "error",
-        message: "Full Sort failed.",
+        message: "Full organization failed.",
         details: expect.objectContaining({
           eventType: "full_sort_failed",
           failureCategory: "authentication",

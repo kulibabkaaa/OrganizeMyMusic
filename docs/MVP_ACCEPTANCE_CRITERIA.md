@@ -6,12 +6,19 @@ The MVP is done only when a real user can complete the full flow:
 
 1. Create or access an app account.
 2. Connect Apple Music.
-3. Sync their Apple Music saved library.
-4. Request custom playlists.
-5. See a preview.
-6. Review the output.
-7. Explicitly confirm/export the reviewed playlists.
-8. See playlists appear in their Apple Music account.
+3. Sync their Apple Music saved library. There is no fixed track-count minimum
+   for completion, but a smoke account with at least 500 saved songs should
+   verify that 500-track scale works.
+4. Click `Organize My Library`.
+5. Create playlist recipes for at least three playlists.
+6. Generate proposed playlist tracks.
+7. Review every playlist and track.
+8. Confirm the output.
+9. See playlists appear in their Apple Music account.
+10. See app-created playlists persist in the dashboard or playlist hub.
+11. Create or regenerate one saved playlist without starting a new Sort.
+12. Process newly synced music through saved playlist recipes without automatic
+    Apple Music writes.
 
 ## Required user flow
 
@@ -19,9 +26,8 @@ The MVP is done only when a real user can complete the full flow:
 
 - User can sign up or sign in.
 - User has a profile row.
-- User can access the private dashboard.
-- During the platform UI migration, `/app` becomes the canonical dashboard and
-  `/dashboard` remains a redirect or alias.
+- User can access `/app` as the canonical dashboard. `/dashboard` may redirect
+  to `/app` for compatibility.
 - Signed-out users cannot access private user data.
 
 ### 2. Apple Music connection
@@ -48,55 +54,62 @@ The MVP is done only when a real user can complete the full flow:
 - App stores classification source, confidence, version, and metadata hash.
 - Ukrainian, Russian, mixed-language, instrumental, and unknown tracks are supported.
 
-### 5. Playlist request and planning
+### 5. Playlist recipe and planning
 
-- User can request playlists in natural language.
-- App converts requests into playlist rules.
+- User can create playlist objects.
+- User can define playlist recipes with product-style fields.
 - App matches existing tracks to rules.
 - App produces playlist titles, descriptions, track lists, and confidence/reasons.
-- App handles empty or low-confidence playlists gracefully.
+- App handles empty or low-confidence playlists gracefully, including letting a
+  user complete review for an empty generation so it does not stay in the
+  review queue forever.
 
 ### 6. Preview
 
 - User can inspect playlist output before anything is written to Apple Music.
 - User can deselect playlists.
-- User can remove tracks if implemented.
-- Preview snapshot is stable after confirmation/payment state begins.
+- User can remove tracks from the proposed export.
+- Preview snapshot is stable after confirmation/start state begins, so the
+  reviewed output cannot silently change before export.
 
-### 7. Review and export confirmation
+### 7. Confirmation
 
-- App requires explicit review/export confirmation.
+- App requires explicit confirmation.
 - App clearly states how many playlists and tracks will be created.
-- No Apple Music writes happen before confirmation/export.
+- No Apple Music writes happen before confirmation.
 
 ### 8. Apple Music write-back
 
 - App creates confirmed playlists in Apple Music.
 - App adds confirmed tracks to each playlist.
 - App stores Apple playlist IDs.
+- App stores persistent app playlist rows linked to Apple playlist IDs.
+- App shows exported playlists in the playlist hub.
 - App shows completion status.
 - App records partial failures.
+- Individual playlist exports run through the persistent worker, not directly in
+  the browser request.
+- Product copy says export/create/add approved tracks. It does not promise exact
+  replacement, reorder, automatic sync, or automatic removal from Apple Music.
 
-### 9. Safety
+### 9. Recurring platform value
 
-- Raw Apple Music user token is never stored.
+- User can create a saved playlist without full organization.
+- User can save a playlist-owned recipe.
+- User can regenerate that playlist from the latest synced library.
+- User can view generation history on playlist detail.
+- User can process new music after a later sync.
+- New-music recommendations are saved as reviewable playlist generations.
+- New-music recommendations are review-only and do not automatically update
+  Apple Music.
+
+### 10. Safety
+
+- Raw Apple Music user token is never stored unencrypted.
 - Raw Apple Music user token is never logged.
 - Apple private key is never exposed to browser code.
 - Users cannot access other users' music data.
 - Failed jobs can be retried without duplicating already created playlists.
-
-## Platform UI acceptance layer
-
-After the working Apple Music MVP, UI work should follow
-`UI_PLATFORM_FLOW_ROADMAP.md`:
-
-- Preserve the public landing page visuals.
-- Route users through `/auth` and `/app`.
-- Use Sorts and Playlist Recipes as product terms.
-- Show preview before payment.
-- Scope payment to one Sort.
-- Keep review separate from export.
-- Export creates new Apple Music playlists only after explicit user action.
 
 ## MVP is not done if
 
@@ -104,7 +117,7 @@ After the working Apple Music MVP, UI work should follow
 - Apple Music connect is not real.
 - Tracks are not fetched from Apple Music.
 - AI produces output but nothing is written back to Apple Music.
-- Playlists are written without confirmation.
+- Playlists can be written without review and explicit export confirmation.
 - User token is stored unencrypted.
 - RLS policies are missing.
 - Deployment cannot run the background worker.

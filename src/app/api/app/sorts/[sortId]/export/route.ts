@@ -46,30 +46,31 @@ export async function POST(
 
   const { sortId } = await context.params;
   const previewStore = createSupabasePreviewSnapshotStore(supabase);
+  const getSortRunForExport: typeof previewStore.getSortRunForPreview = async (input) => {
+    const sortRun = await previewStore.getSortRunForPreview(input);
+
+    if (
+      !sortRun ||
+      sortRun.previewSnapshot ||
+      (sortRun.state !== "paid" && sortRun.state !== "failed")
+    ) {
+      return sortRun;
+    }
+
+    const storedSnapshot = await loadStoredFullSortReviewSnapshot({
+      supabase,
+      sortRunId: sortRun.id,
+      librarySyncId: sortRun.librarySyncId
+    });
+
+    return {
+      ...sortRun,
+      previewSnapshot: storedSnapshot
+    };
+  };
   const result = await withPgBoss((queue) =>
     exportReviewedPlaylists({
-      store: createSupabaseSortRunExportStore(supabase, async (input) => {
-        const sortRun = await previewStore.getSortRunForPreview(input);
-
-        if (!sortRun) {
-          return null;
-        }
-
-        if (sortRun.state !== "paid") {
-          return sortRun;
-        }
-
-        const fullSortSnapshot = await loadStoredFullSortReviewSnapshot({
-          supabase,
-          sortRunId: sortRun.id,
-          librarySyncId: sortRun.librarySyncId
-        });
-
-        return {
-          ...sortRun,
-          previewSnapshot: fullSortSnapshot ?? sortRun.previewSnapshot
-        };
-      }),
+      store: createSupabaseSortRunExportStore(supabase, getSortRunForExport),
       queue,
       sortRunId: sortId,
       userId: session.user.id,

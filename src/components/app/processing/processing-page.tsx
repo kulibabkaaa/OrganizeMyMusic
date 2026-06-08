@@ -19,9 +19,6 @@ export function ProcessingPage({
   sortName: string;
   progress: SortProcessingProgress;
 }) {
-  const isReady = progress.status === "ready";
-  const reviewHref = `/app/sorts/${encodeURIComponent(sortId)}/review` as Route;
-
   return (
     <div className="space-y-6">
       <section className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
@@ -30,15 +27,22 @@ export function ProcessingPage({
             Processing
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-[0em] text-white md:text-4xl">
-            {isReady ? "Ready for review" : "Sorting your library"}
+            Sorting your library
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            {isReady
-              ? "Your generated playlists are ready. Apple Music export still waits for your confirmation."
-              : "You can leave and return later. Processing jobs stay attached to this Sort."}
+            You can leave and return later. Processing jobs stay attached to this Sort.
           </p>
         </div>
-        <StatusPill label={`${progress.percent}%`} tone={progress.status === "failed" ? "danger" : "pink"} />
+        <StatusPill
+          label={progress.status === "ready" ? "Ready for review" : `${progress.percent}%`}
+          tone={
+            progress.status === "failed"
+              ? "danger"
+              : progress.status === "ready"
+                ? "success"
+                : "pink"
+          }
+        />
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
@@ -60,7 +64,7 @@ export function ProcessingPage({
           </div>
 
           <Progress
-            label="Full Sort progress"
+            label="Full organization progress"
             value={progress.percent}
             helper={`${progress.recipeCount} Playlist Recipes · ${formatCount(progress.trackCountProcessed)} tracks processed`}
           />
@@ -70,13 +74,7 @@ export function ProcessingPage({
 
         <Card elevated className="space-y-5 self-start">
           <StatusPill
-            label={
-              progress.status === "failed"
-                ? "Needs attention"
-                : isReady
-                  ? "Ready for review"
-                  : "Payment confirmed"
-            }
+            label={progress.status === "failed" ? "Needs attention" : "Organization started"}
             tone={progress.status === "failed" ? "danger" : "success"}
           />
           <div>
@@ -101,22 +99,23 @@ export function ProcessingPage({
           <p className="text-sm leading-7 text-platform-secondary">
             Apple Music export will wait for your review.
           </p>
-          {progress.status === "running" ? (
-            <WorkflowStatusPoller isActive label="Processing status" />
-          ) : null}
+          <WorkflowStatusPoller
+            isActive={progress.status === "running"}
+            label="Processing status"
+          />
           <div className="space-y-3">
-            {isReady ? (
+            <WorkflowEscapeActions />
+            {progress.status === "ready" ? (
               <Link
-                href={reviewHref}
-                className="inline-flex w-full items-center justify-center rounded-full bg-accent-sweep px-5 py-3 text-sm font-semibold text-white shadow-pulse transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
+                href={`/app/sorts/${encodeURIComponent(sortId)}/review` as Route}
+                className="inline-flex items-center justify-center rounded-full bg-accent-sweep px-5 py-3 text-sm font-semibold text-white shadow-pulse transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
               >
                 Review playlists
               </Link>
             ) : null}
-            <WorkflowEscapeActions />
             {progress.recoveryActionLabel ? (
               <Link
-                href={reviewHref}
+                href={`/app/sorts/${encodeURIComponent(sortId)}/review` as Route}
                 className="inline-flex items-center justify-center rounded-full border border-[rgba(255,77,109,0.35)] bg-[rgba(255,77,109,0.10)] px-5 py-3 text-sm font-semibold text-platform-danger transition hover:-translate-y-0.5 hover:bg-[rgba(255,77,109,0.15)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
               >
                 {progress.recoveryActionLabel}

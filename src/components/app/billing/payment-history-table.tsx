@@ -17,22 +17,22 @@ export function PaymentHistoryTable({
           Payment history
         </h2>
         <p className="mt-2 text-sm leading-6 text-platform-secondary">
-          One-time Sort unlocks and receipts.
+          Existing receipts remain visible. New billing is deferred for the MVP.
         </p>
       </div>
 
       {payments.length === 0 ? (
         <EmptyState
           title="No payment history yet."
-          description="Payment rows will appear after Stripe checkout is enabled and completed."
+          description="Payment rows will appear only after billing is enabled and completed."
         />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-            <caption className="sr-only">Payment history for unlocked Sorts</caption>
+            <caption className="sr-only">Payment history for organization billing records</caption>
             <thead className="border-b border-white/10 text-xs uppercase tracking-[0.16em] text-platform-muted">
               <tr>
-                <th scope="col" className="px-3 py-3 font-medium">Sort</th>
+                <th scope="col" className="px-3 py-3 font-medium">Organization</th>
                 <th scope="col" className="px-3 py-3 font-medium">Date</th>
                 <th scope="col" className="px-3 py-3 font-medium">Amount</th>
                 <th scope="col" className="px-3 py-3 font-medium">Status</th>

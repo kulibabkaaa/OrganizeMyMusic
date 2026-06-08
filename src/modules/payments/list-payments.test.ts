@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { summarizeBillingData } from "@/modules/payments/list-payments";
 
 describe("billing summary", () => {
-  it("lists paid Sorts and payment history without subscription wording", () => {
+  it("lists historical organization billing records with deferred billing copy", () => {
     const summary = summarizeBillingData({
       sortRuns: [
         {
@@ -36,10 +36,10 @@ describe("billing summary", () => {
     });
 
     expect(summary.currentPlan).toEqual({
-      name: "Pay per Sort",
-      description: "No active subscription.",
+      name: "Billing deferred",
+      description: "No active subscription or paid plan.",
       details:
-        "Each paid Sort unlocks full analysis, editable results, and Apple Music export for that Sort."
+        "The MVP is focused on Apple Music quality, playlist recipes, review, and app-created playlist export before subscription packaging is introduced."
     });
     expect(summary.paidSorts).toEqual([
       {

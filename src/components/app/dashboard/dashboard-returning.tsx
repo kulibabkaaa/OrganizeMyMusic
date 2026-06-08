@@ -30,12 +30,17 @@ export function DashboardReturning({
             Your music workspace
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            Manage Sorts, library sync, processing, reviews, and Apple Music exports from one dashboard.
+            Manage saved playlists, recipes, library sync, organization work, and Apple Music exports.
           </p>
         </div>
-        <Link href="/app/sorts/new" className="inline-flex">
-          <Button className="min-w-44">Create a Sort</Button>
-        </Link>
+        <div className="flex flex-wrap gap-3 lg:justify-end">
+          <Link href="/app/sorts/new" className="inline-flex">
+            <Button className="min-w-44">Organize My Library</Button>
+          </Link>
+          <Link href="/app/playlists/new" className="inline-flex">
+            <Button variant="glass" className="min-w-40">Create Playlist</Button>
+          </Link>
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -47,10 +52,10 @@ export function DashboardReturning({
       <section>
         <div className="mb-4">
           <h3 className="font-display text-2xl font-semibold tracking-[0em] text-white">
-            Recent Sorts
+            Recent Organization Work
           </h3>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-platform-secondary">
-            Sorts are reusable projects. Review drafts, resume jobs, or export approved playlists.
+            Sorts are full-library projects. Use them for initial organization or major restructuring.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

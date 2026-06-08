@@ -46,12 +46,27 @@ describe("Playlist Recipe schema", () => {
     });
   });
 
+  it("allows playlist-owned recipes during the platform migration", () => {
+    const recipe = playlistRecipeCreateSchema.parse({
+      playlistId: "33333333-3333-4333-8333-333333333333",
+      position: 0,
+      name: "Ukrainian Rap"
+    });
+
+    expect(recipe).toMatchObject({
+      playlistId: "33333333-3333-4333-8333-333333333333",
+      position: 0,
+      name: "Ukrainian Rap"
+    });
+    expect("sortRunId" in recipe).toBe(false);
+  });
+
   it("rejects invalid categories, empty names, and inverted target ranges", () => {
     expect(() =>
       playlistRecipeTagSchema.parse({
         id: "bad",
         category: "provider",
-        value: "Spotify"
+        value: "External provider"
       })
     ).toThrow();
 
@@ -72,6 +87,13 @@ describe("Playlist Recipe schema", () => {
         name: "Oversized playlist",
         targetTrackMin: 50,
         targetTrackMax: 501
+      })
+    ).toThrow();
+
+    expect(() =>
+      playlistRecipeCreateSchema.parse({
+        position: 0,
+        name: "Missing owner"
       })
     ).toThrow();
   });

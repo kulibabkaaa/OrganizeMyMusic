@@ -8,7 +8,7 @@ import { createAppleDeveloperToken } from "@/modules/apple-music/developer-token
 import type {
   AppleMusicConnectionSummary
 } from "@/modules/library-syncs/queue";
-import type { PlaylistCreationJobData } from "@/modules/sorts/export-selection";
+import type { PlaylistCreationJobData } from "@/modules/sorts/playlist-creation-queue";
 
 export interface ConfirmedSortRunForPlaylistCreation {
   id: string;
@@ -18,6 +18,7 @@ export interface ConfirmedSortRunForPlaylistCreation {
 
 export interface SelectedPlaylistForCreation {
   id: string;
+  playlistId?: string | null;
   title: string;
   description: string;
   applePlaylistId: string | null;
@@ -38,6 +39,11 @@ export interface PlaylistCreationStore {
   getConnectedAppleMusicConnection(userId: string): Promise<AppleMusicConnectionSummary | null>;
   listSelectedPlaylists(sortRunId: string): Promise<SelectedPlaylistForCreation[]>;
   setApplePlaylistId(input: {
+    sortRunId: string;
+    sortPlaylistId: string;
+    applePlaylistId: string;
+  }): Promise<void>;
+  markPlaylistTracksExported(input: {
     sortRunId: string;
     sortPlaylistId: string;
     applePlaylistId: string;
@@ -83,6 +89,7 @@ type AppleMusicConnectionRow = {
 
 type SortPlaylistRow = {
   id: string;
+  playlist_id: string | null;
   title: string;
   description: string;
   apple_playlist_id: string | null;
@@ -223,6 +230,20 @@ export async function handlePlaylistCreationJob(input: {
         }
       }
 
+      if (!applePlaylistId) {
+        failedCount += 1;
+        await input.store.createJobEvent({
+          sortRunId: sortRun.id,
+          stage: "playlist_creation",
+          level: "error",
+          message: `Apple Music playlist ID is unavailable for "${playlist.title}".`,
+          details: {
+            sortPlaylistId: playlist.id
+          }
+        });
+        continue;
+      }
+
       const addableTracks = playlist.tracks
         .filter((track) => track.appleSongId)
         .sort((left, right) => left.position - right.position)
@@ -246,6 +267,11 @@ export async function handlePlaylistCreationJob(input: {
       }
 
       if (addableTracks.length === 0) {
+        await input.store.markPlaylistTracksExported({
+          sortRunId: sortRun.id,
+          sortPlaylistId: playlist.id,
+          applePlaylistId
+        });
         continue;
       }
 
@@ -255,13 +281,18 @@ export async function handlePlaylistCreationJob(input: {
         for (const batch of batches) {
           await (input.addTracksToPlaylist ?? addTracksToAppleMusicPlaylist)(
             credentials,
-            applePlaylistId ?? "",
+            applePlaylistId,
             batch
           );
           trackBatchCount += 1;
         }
 
         playlistTrackCount += addableTracks.length;
+        await input.store.markPlaylistTracksExported({
+          sortRunId: sortRun.id,
+          sortPlaylistId: playlist.id,
+          applePlaylistId
+        });
         await input.store.createJobEvent({
           sortRunId: sortRun.id,
           stage: "playlist_creation",
@@ -432,7 +463,7 @@ export function createSupabasePlaylistCreationStore(
     async listSelectedPlaylists(sortRunId) {
       const { data, error } = await supabase
         .from("sort_playlists")
-        .select("id,title,description,apple_playlist_id")
+        .select("id,playlist_id,title,description,apple_playlist_id")
         .eq("sort_run_id", sortRunId)
         .eq("selected", true)
         .order("created_at", { ascending: true });
@@ -456,6 +487,7 @@ export function createSupabasePlaylistCreationStore(
 
           return {
             id: playlist.id,
+            playlistId: playlist.playlist_id,
             title: playlist.title,
             description: playlist.description,
             applePlaylistId: playlist.apple_playlist_id,
@@ -476,6 +508,17 @@ export function createSupabasePlaylistCreationStore(
     },
 
     async setApplePlaylistId(input) {
+      const { data: playlistRow, error: playlistLoadError } = await supabase
+        .from("sort_playlists")
+        .select("playlist_id")
+        .eq("id", input.sortPlaylistId)
+        .eq("sort_run_id", input.sortRunId)
+        .maybeSingle();
+
+      if (playlistLoadError) {
+        throw new Error(playlistLoadError.message);
+      }
+
       const { error } = await supabase
         .from("sort_playlists")
         .update({
@@ -483,6 +526,103 @@ export function createSupabasePlaylistCreationStore(
         })
         .eq("id", input.sortPlaylistId)
         .eq("sort_run_id", input.sortRunId);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const playlistId = (playlistRow as { playlist_id: string | null } | null)?.playlist_id;
+
+      if (!playlistId) {
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const { error: playlistError } = await supabase
+        .from("playlists")
+        .update({
+          apple_playlist_id: input.applePlaylistId,
+          updated_at: now
+        })
+        .eq("id", playlistId);
+
+      if (playlistError) {
+        throw new Error(playlistError.message);
+      }
+
+      const { error: generationError } = await supabase
+        .from("playlist_generations")
+        .update({
+          updated_at: now
+        })
+        .eq("playlist_id", playlistId)
+        .eq("sort_run_id", input.sortRunId);
+
+      if (generationError) {
+        throw new Error(generationError.message);
+      }
+
+      const { error: exportError } = await supabase
+        .from("playlist_exports")
+        .update({
+          apple_playlist_id: input.applePlaylistId,
+          updated_at: now
+        })
+        .eq("playlist_id", playlistId)
+        .eq("sort_run_id", input.sortRunId);
+
+      if (exportError) {
+        throw new Error(exportError.message);
+      }
+    },
+
+    async markPlaylistTracksExported(input) {
+      const { data: playlistRow, error: playlistLoadError } = await supabase
+        .from("sort_playlists")
+        .select("playlist_id")
+        .eq("id", input.sortPlaylistId)
+        .eq("sort_run_id", input.sortRunId)
+        .maybeSingle();
+
+      if (playlistLoadError) {
+        throw new Error(playlistLoadError.message);
+      }
+
+      const playlistId = (playlistRow as { playlist_id: string | null } | null)?.playlist_id;
+
+      if (!playlistId) {
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const [playlistResult, generationResult, exportResult] = await Promise.all([
+        supabase
+          .from("playlists")
+          .update({
+            apple_playlist_id: input.applePlaylistId,
+            last_exported_at: now,
+            updated_at: now
+          })
+          .eq("id", playlistId),
+        supabase
+          .from("playlist_generations")
+          .update({
+            status: "exported",
+            updated_at: now
+          })
+          .eq("playlist_id", playlistId)
+          .eq("sort_run_id", input.sortRunId),
+        supabase
+          .from("playlist_exports")
+          .update({
+            apple_playlist_id: input.applePlaylistId,
+            status: "exported",
+            updated_at: now
+          })
+          .eq("playlist_id", playlistId)
+          .eq("sort_run_id", input.sortRunId)
+      ]);
+      const error = playlistResult.error ?? generationResult.error ?? exportResult.error;
 
       if (error) {
         throw new Error(error.message);
@@ -504,14 +644,36 @@ export function createSupabasePlaylistCreationStore(
     },
 
     async markSortRunFailed(input) {
-      const { error } = await supabase
-        .from("sort_runs")
-        .update({
-          state: "failed",
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", input.sortRunId)
-        .eq("user_id", input.userId);
+      const now = new Date().toISOString();
+      const [sortRunResult, generationResult, exportResult] = await Promise.all([
+        supabase
+          .from("sort_runs")
+          .update({
+            state: "failed",
+            updated_at: now
+          })
+          .eq("id", input.sortRunId)
+          .eq("user_id", input.userId),
+        supabase
+          .from("playlist_generations")
+          .update({
+            status: "failed",
+            error_summary: input.errorSummary,
+            updated_at: now
+          })
+          .eq("sort_run_id", input.sortRunId)
+          .neq("status", "exported"),
+        supabase
+          .from("playlist_exports")
+          .update({
+            status: "failed",
+            error_summary: input.errorSummary,
+            updated_at: now
+          })
+          .eq("sort_run_id", input.sortRunId)
+          .neq("status", "exported")
+      ]);
+      const error = sortRunResult.error ?? generationResult.error ?? exportResult.error;
 
       if (error) {
         throw new Error(error.message);

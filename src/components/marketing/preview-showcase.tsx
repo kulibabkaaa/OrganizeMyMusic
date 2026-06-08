@@ -1,3 +1,5 @@
+import React from "react";
+
 import { demoSortRun } from "@/lib/sample-data";
 
 import { StatusPill } from "@/components/ui/status-pill";
@@ -12,7 +14,7 @@ export function PreviewShowcase() {
             The app feels operational, not ornamental, once the library is in motion.
           </h2>
           <p className="mt-5 max-w-lg text-base leading-7 text-black/68">
-            Sync state, duplicate cleanup, classification progress, payment state, and creation
+            Sync state, duplicate cleanup, classification progress, playlist review, and export
             status stay visible in one place so users always know what the system is doing.
           </p>
         </div>
@@ -21,7 +23,7 @@ export function PreviewShowcase() {
           <div className="flex items-center justify-between border-b border-black/8 pb-4">
             <div>
               <p className="font-display text-2xl tracking-[-0.03em]">Preview bundle</p>
-              <p className="mt-1 text-sm text-black/54">Before payment, fully reviewable.</p>
+              <p className="mt-1 text-sm text-black/54">Review every track before export.</p>
             </div>
             <StatusPill label="Preview ready" tone="accent" />
           </div>
@@ -44,4 +46,3 @@ export function PreviewShowcase() {
     </section>
   );
 }
-

@@ -7,24 +7,28 @@ export function StatusPill({
   tone = "neutral"
 }: {
   label: string;
-  tone?: "neutral" | "pink" | "success" | "warning" | "danger" | "muted" | "inverse" | "accent";
+  tone?:
+    | "neutral"
+    | "inverse"
+    | "accent"
+    | "pink"
+    | "success"
+    | "warning"
+    | "danger"
+    | "muted";
 }) {
-  const resolvedTone = tone === "accent" ? "pink" : tone === "inverse" ? "muted" : tone;
-
   return (
     <span
       className={cn(
-        "inline-flex max-w-full rounded-full border px-3 py-1 text-left text-xs font-medium uppercase leading-4 tracking-[0.2em]",
-        resolvedTone === "neutral" && "border-white/10 bg-white/[0.08] text-white/80",
-        resolvedTone === "pink" &&
-          "border-[rgba(255,45,85,0.25)] bg-[rgba(255,45,85,0.15)] text-platform-pink",
-        resolvedTone === "success" &&
-          "border-[rgba(57,217,138,0.25)] bg-[rgba(57,217,138,0.10)] text-platform-success",
-        resolvedTone === "warning" &&
-          "border-[rgba(255,176,32,0.25)] bg-[rgba(255,176,32,0.10)] text-platform-warning",
-        resolvedTone === "danger" &&
-          "border-[rgba(255,77,109,0.25)] bg-[rgba(255,77,109,0.10)] text-platform-danger",
-        resolvedTone === "muted" && "border-white/10 bg-white/10 text-platform-secondary"
+        "inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-[0.2em]",
+        tone === "neutral" && "bg-white/[0.08] text-platform-secondary",
+        tone === "inverse" && "bg-white/10 text-white/70",
+        tone === "accent" && "bg-[#ffe5eb] text-[#cf143a]",
+        tone === "pink" && "bg-[rgba(255,45,85,0.12)] text-platform-pink",
+        tone === "success" && "bg-[rgba(52,211,153,0.12)] text-platform-success",
+        tone === "warning" && "bg-[rgba(251,191,36,0.14)] text-platform-warning",
+        tone === "danger" && "bg-[rgba(255,69,99,0.12)] text-platform-danger",
+        tone === "muted" && "bg-white/[0.055] text-platform-secondary"
       )}
     >
       {label}

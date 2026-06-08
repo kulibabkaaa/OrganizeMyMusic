@@ -72,7 +72,7 @@ export default async function SortProcessingPage({
   return (
     <AppShell
       title="Processing"
-      subtitle="Track full Sort progress. Apple Music export still requires review."
+      subtitle="Track full-organization progress. Apple Music export still requires review."
     >
       <ProcessingPage sortId={sort.id} sortName={sort.name} progress={progress} />
     </AppShell>

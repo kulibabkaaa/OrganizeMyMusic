@@ -1,23 +1,25 @@
+import React from "react";
+
 const sections = [
   {
     eyebrow: "How it works",
-    title: "Pay once, then let the sort begin.",
+    title: "Start with one full-library organization.",
     body:
-      "We scan your Apple Music library, analyze your tracks, and build a playlist set for you to inspect before anything is added to your account.",
+      "Create playlist plans, tune the recipe behind each playlist, then let the app select tracks from your synced Apple Music library.",
     anchor: "how-it-works"
   },
   {
-    eyebrow: "Why it feels useful",
-    title: "Common categories when you want speed. Custom criteria when you want control.",
+    eyebrow: "Ongoing value",
+    title: "Keep playlists as saved objects, not one-off sessions.",
     body:
-      "Use familiar playlist criteria like genre, mood, language, era, and energy, or describe a more specific idea in your own words. The result can be broad, narrow, or highly specific.",
+      "After the first Sort, create new playlists any time, regenerate from the same recipe, and review every proposed track before export.",
     anchor: "preview"
   },
   {
-    eyebrow: "Payment model",
-    title: "Pay once. Sort your library. Keep the result.",
+    eyebrow: "MVP access",
+    title: "Billing stays deferred while Apple Music quality is verified.",
     body:
-      "Pay once, and we will scan and organize your library. Once your playlists are ready, you can review them before saving them to Apple Music.",
+      "The MVP focuses on safe Apple Music sync, editable playlist review, and app-created playlist export before subscription packaging is introduced.",
     anchor: "pricing"
   }
 ];

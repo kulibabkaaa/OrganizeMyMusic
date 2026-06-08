@@ -8,6 +8,7 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  void request;
   const session = await getAuthenticatedSession();
 
   if (session.status !== "authenticated") {
@@ -30,13 +31,15 @@ export async function GET(
   });
 
   if (!sortRun) {
-    return NextResponse.json({ error: "Sort not found." }, { status: 404 });
+    return NextResponse.json({ error: "Sort run not found." }, { status: 404 });
   }
 
   return NextResponse.json({
     sortRunId: sortRun.id,
     state: sortRun.state,
     paymentStatus: sortRun.paymentStatus,
+    nextPath: `/app/sorts/${encodeURIComponent(sortRun.id)}`,
+    nextApiPath: `/api/app/sorts/${encodeURIComponent(sortRun.id)}`,
     previewSnapshot: sortRun.previewSnapshot,
     playlistRequests: sortRun.requests
   });

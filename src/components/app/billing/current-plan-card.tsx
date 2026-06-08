@@ -16,14 +16,15 @@ export function CurrentPlanCard({ plan }: { plan: CurrentPlanSummary }) {
             {plan.name}
           </h2>
         </div>
-        <StatusPill label="One-time" tone="pink" />
+        <StatusPill label="Deferred" tone="pink" />
       </div>
       <p className="text-sm font-semibold text-white">{plan.description}</p>
       <p className="text-sm leading-7 text-platform-secondary">{plan.details}</p>
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <p className="text-sm font-semibold text-white">Manage billing settings</p>
+        <p className="text-sm font-semibold text-white">Billing controls paused</p>
         <p className="mt-2 text-sm leading-6 text-platform-secondary">
-          Stripe customer portal settings will appear here when billing management is configured.
+          Account billing controls will appear here after Apple Music generation and export
+          quality are verified.
         </p>
       </div>
     </Card>

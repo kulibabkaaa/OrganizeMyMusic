@@ -33,13 +33,16 @@ pg-boss worker
 Responsibilities:
 
 - Landing page.
-- Platform dashboard (`/app`) with `/dashboard` kept as a legacy redirect or alias during migration.
+- Dashboard.
 - Auth UI.
 - Apple Music connect UI.
 - Library sync controls.
-- Sort and Playlist Recipe UI.
-- Preview/paywall UI.
-- Review and export UI.
+- Playlist request UI.
+- Persistent playlist UI.
+- Playlist recipe UI.
+- Preview UI.
+- Review and edit-every-track UI.
+- Confirmation UI.
 - Status and error UI.
 
 ### API routes
@@ -51,8 +54,11 @@ Responsibilities:
 - Apple connection endpoint.
 - Sync start endpoint.
 - Sort-run creation endpoint.
+- Persistent playlist endpoints.
+- Playlist recipe endpoints.
+- Playlist generation endpoints.
 - Preview endpoint.
-- Review/export confirmation endpoint.
+- Confirmation endpoint.
 - Status endpoints.
 
 API routes should be thin. Domain logic should live in reusable server modules.
@@ -65,6 +71,7 @@ Responsibilities:
 - Normalization and dedupe.
 - Classification.
 - Playlist planning if queued.
+- Playlist generation and regeneration.
 - Apple Music write-back.
 - Retryable job processing.
 - Job event logging.
@@ -81,7 +88,12 @@ Supabase Postgres stores:
 - Normalized track records.
 - User track ownership.
 - Classifications.
-- Playlist requests and, after the platform UI migration, structured Playlist Recipes.
+- Playlist requests.
+- Persistent playlists.
+- Playlist recipes.
+- Playlist generations.
+- Playlist generation tracks.
+- Playlist exports.
 - Sort runs.
 - Generated playlists.
 - Playlist-track relationships.
@@ -138,30 +150,41 @@ Worker updates sync status
 Dashboard polls or refreshes status
 ```
 
-### Preview a Sort
+### Organize library with a Sort
 
 ```text
-User creates a Sort
-User adds playlist requests or Playlist Recipes
-API creates sort_run and playlist request/recipe rows
+User clicks Organize My Library
+API creates sort_run
+User creates playlist drafts inside the Sort
+User defines one recipe per playlist
 Worker classifies tracks if needed
-Worker parses request into rules
-Worker plans playlists from classifications
-Worker stores preview snapshot
-App shows preview
+Worker generates tracks for each playlist recipe
+Worker stores playlist generations for review
+Review UI shows proposed playlists and tracks
 ```
 
-### Review and export to Apple Music
+### Create or regenerate one playlist
 
 ```text
-User reviews generated playlists
-User confirms export of selected playlists
+User opens Playlists
+User creates or selects one playlist
+User edits playlist recipe
+User clicks Generate or Regenerate
+Worker plans tracks from latest library sync
+Worker stores a playlist_generation and proposed tracks
+User reviews every track
+User confirms export/update
+```
+
+### Confirm and write to Apple Music
+
+```text
+User reviews generated playlist tracks
+User confirms selected playlists/tracks
 API queues playlist creation job
 Worker decrypts Apple user token
-Worker creates Apple Music playlists
-Worker adds selected tracks
-Worker stores Apple playlist IDs
-Worker marks run completed
+Worker creates Apple Music playlists or adds approved tracks
+Worker stores Apple playlist IDs and export status
 Dashboard shows complete state
 ```
 
@@ -226,24 +249,15 @@ failed
 
 Payment state may remain unused until the core MVP flow works.
 
-## Platform UI routing target
-
-The product is moving to the route model in
-`docs/UI_PLATFORM_FLOW_ROADMAP.md`:
+Persistent playlist generation states:
 
 ```text
-/auth
-/app
-/app/sorts
-/app/sorts/[sortId]/builder
-/app/sorts/[sortId]/preview
-/app/sorts/[sortId]/checkout
-/app/sorts/[sortId]/processing
-/app/sorts/[sortId]/review
-/app/sorts/[sortId]/exporting
-/app/sorts/[sortId]/complete
+generating
+ready_for_review
+reviewed
+exporting
+exported
+failed
 ```
 
-Do not rename database states just to match UI labels. Use an adapter such as
-`getSortUiStatus()` so existing backend state remains stable while the product
-language changes.
+`Sort` states remain for batch organization. Playlist generation states should become the main recurring workflow state.

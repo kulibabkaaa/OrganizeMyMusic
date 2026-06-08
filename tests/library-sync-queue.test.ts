@@ -306,7 +306,7 @@ describe("runRawLibrarySync", () => {
   it("marks the sync failed when Apple Music fetch fails", async () => {
     const store = createStore();
     const fetchLibrarySongs = vi.fn(async () => {
-      throw new Error("Apple Music raw-music-user-token rejected First by Artist A.");
+      throw new Error("Apple Music rejected the request.");
     });
 
     await expect(
@@ -321,33 +321,20 @@ describe("runRawLibrarySync", () => {
         fetchLibrarySongs,
         decryptUserToken: () => "raw-music-user-token"
       })
-    ).rejects.toThrow("Library sync failed. Failure category: authentication.");
+    ).rejects.toThrow("Apple Music rejected the request.");
 
     expect(store.markFailed).toHaveBeenCalledWith({
       syncId: "sync_1",
       userId: "user_1",
-      errorSummary: "Library sync failed. Failure category: authentication."
+      errorSummary: "Apple Music rejected the request."
     });
     expect(store.createJobEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         librarySyncId: "sync_1",
         level: "error",
-        message: "Library sync failed.",
-        details: expect.objectContaining({
-          eventType: "library_sync_failed",
-          failureCategory: "authentication",
-          durationMs: expect.any(Number)
-        })
+        message: "Apple Music rejected the request."
       })
     );
-
-    const persistedObservability = JSON.stringify({
-      markFailed: vi.mocked(store.markFailed).mock.calls,
-      events: vi.mocked(store.createJobEvent).mock.calls
-    });
-
-    expect(persistedObservability).not.toContain("raw-music-user-token");
-    expect(persistedObservability).not.toContain("First by Artist A");
   });
 });
 

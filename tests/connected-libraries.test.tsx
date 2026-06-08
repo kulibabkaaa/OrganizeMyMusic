@@ -3,8 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { AppleMusicLibraryCard } from "@/components/app/library/apple-music-library-card";
-import { ComingSoonProviderCard } from "@/components/app/library/coming-soon-provider-card";
 import { ConnectedLibrariesPage } from "@/components/app/library/connected-libraries-page";
+import {
+  NewMusicCard,
+  NewMusicRecommendationList
+} from "@/components/app/library/new-music-card";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/app/settings/libraries",
@@ -34,11 +37,18 @@ const connectedLibrary = {
 };
 
 describe("connected libraries page", () => {
-  it("renders Apple Music access, sync status, actions, disabled providers, and access note", () => {
+  it("renders Apple Music access, sync status, actions, MVP scope, and access note", () => {
     const markup = renderToStaticMarkup(
       <ConnectedLibrariesPage
         appleMusicConnection={connectedLibrary.connection}
         latestSync={connectedLibrary.latestSync}
+        newMusicSummary={{
+          latestSyncId: "sync_2",
+          previousSyncId: "sync_1",
+          newTrackCount: 4,
+          canProcess: true,
+          message: "4 new songs detected since the previous sync."
+        }}
       />
     );
 
@@ -57,10 +67,12 @@ describe("connected libraries page", () => {
     expect(markup).toContain("Disconnect");
     expect(markup).toContain('aria-describedby="apple-music-disconnect-disabled-reason"');
     expect(markup).toContain("Disconnect is paused for MVP safety.");
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("YouTube Music");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("Unavailable");
+    expect(markup).toContain("Apple Music only for MVP");
+    expect(markup).not.toContain("Spotify");
+    expect(markup).not.toContain("YouTube Music");
+    expect(markup).toContain("Process New Music");
+    expect(markup).toContain("4 new songs detected since the previous sync.");
+    expect(markup).toContain("Creates review-only playlist queues.");
     expect(markup).toContain(
       "Organize Your Music reads library metadata to classify tracks. Playlist creation requires your review and explicit export action."
     );
@@ -100,12 +112,54 @@ describe("connected libraries page", () => {
     expect(markup).toContain("Refresh status");
   });
 
-  it("renders coming-soon providers as disabled", () => {
-    const markup = renderToStaticMarkup(<ComingSoonProviderCard name="Spotify" />);
+  it("renders new-music recommendations with a review-first playlist link", () => {
+    const markup = renderToStaticMarkup(
+      <NewMusicRecommendationList
+        recommendations={[
+          {
+            playlistId: "playlist_1",
+            playlistName: "Ukrainian Rap",
+            recipeId: "recipe_1",
+            recipeName: "Ukrainian Rap",
+            trackCount: 1,
+            tracks: [
+              {
+                normalizedTrackId: "track_1",
+                appleSongId: "song_1",
+                name: "Kyiv Night",
+                artistName: "Artist",
+                albumName: "Album",
+                score: 0.91,
+                reason: "Matched language and genre."
+              }
+            ]
+          }
+        ]}
+      />
+    );
 
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("Unavailable");
-    expect(markup).toContain("aria-disabled");
+    expect(markup).toContain("Ukrainian Rap");
+    expect(markup).toContain("Review only");
+    expect(markup).toContain("Open the playlist to review these saved suggestions");
+    expect(markup).toContain("Open playlist");
+    expect(markup).toContain("/app/playlists/playlist_1");
+    expect(markup).toContain("Kyiv Night - Artist");
+  });
+
+  it("shows state-aware disabled copy for new music processing", () => {
+    const markup = renderToStaticMarkup(
+      <NewMusicCard
+        summary={{
+          latestSyncId: null,
+          previousSyncId: null,
+          newTrackCount: 0,
+          canProcess: false,
+          message: "Complete a library sync before processing new music."
+        }}
+      />
+    );
+
+    expect(markup).toContain("Complete a library sync before processing new music.");
+    expect(markup).not.toContain("Run another library sync to detect songs that were added later.");
   });
 });

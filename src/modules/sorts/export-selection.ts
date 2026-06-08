@@ -1,14 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  PLAYLIST_CREATION_JOB_NAME,
+  type PlaylistCreationJobData
+} from "@/modules/sorts/playlist-creation-queue";
 import type { PreviewSortRun } from "@/modules/sorts/preview-snapshot";
 import type { SortRunState } from "@/types/domain";
-
-export const PLAYLIST_CREATION_JOB_NAME = "playlist-create";
-
-export interface PlaylistCreationJobData {
-  sortRunId: string;
-  userId: string;
-}
 
 export interface PlaylistExportQueue {
   createQueue?(name: typeof PLAYLIST_CREATION_JOB_NAME): Promise<void>;
@@ -121,7 +118,11 @@ export async function exportReviewedPlaylists(input: {
     };
   }
 
-  if (!isReadyForReviewedExport(sortRun)) {
+  if (
+    sortRun.state !== "preview_ready" &&
+    sortRun.state !== "paid" &&
+    sortRun.state !== "failed"
+  ) {
     return {
       status: "invalid_state",
       message: "Generated playlists must be ready for review before export."
@@ -233,18 +234,20 @@ export async function exportReviewedPlaylists(input: {
   };
 }
 
-function isReadyForReviewedExport(sortRun: PreviewSortRun) {
-  return (
-    sortRun.state === "preview_ready" ||
-    (sortRun.state === "paid" && sortRun.paymentStatus === "paid")
-  );
-}
-
 type SortPlaylistRow = {
   id: string;
+  playlist_id: string | null;
   playlist_rules: {
     generatedPlaylistId?: string;
   } | null;
+};
+
+type PlaylistGenerationIdRow = {
+  id: string;
+};
+
+type PlaylistExportIdRow = {
+  id: string;
 };
 
 export function createSupabaseSortRunExportStore(
@@ -257,7 +260,7 @@ export function createSupabaseSortRunExportStore(
     async saveExportSelection(input) {
       const { data: playlistRows, error: playlistError } = await supabase
         .from("sort_playlists")
-        .select("id,playlist_rules")
+        .select("id,playlist_id,playlist_rules")
         .eq("sort_run_id", input.sortRun.id);
 
       if (playlistError || !playlistRows) {
@@ -338,6 +341,111 @@ export function createSupabaseSortRunExportStore(
 
         if (removeTrackError) {
           throw new Error(removeTrackError.message);
+        }
+      }
+
+      const selectedRows = rows.filter(
+        (row) =>
+          row.playlist_rules?.generatedPlaylistId &&
+          selectedByGeneratedId.has(row.playlist_rules.generatedPlaylistId)
+      );
+      const now = new Date().toISOString();
+
+      for (const row of selectedRows) {
+        if (!row.playlist_id || !row.playlist_rules?.generatedPlaylistId) {
+          continue;
+        }
+
+        const selected = selectedByGeneratedId.get(row.playlist_rules.generatedPlaylistId);
+
+        if (!selected) {
+          continue;
+        }
+
+        const { error: generationError } = await supabase
+          .from("playlist_generations")
+          .update({
+            status: "exporting",
+            updated_at: now
+          })
+          .eq("playlist_id", row.playlist_id)
+          .eq("sort_run_id", input.sortRun.id);
+
+        if (generationError) {
+          throw new Error(generationError.message);
+        }
+
+        const { data: generationRows, error: generationLoadError } = await supabase
+          .from("playlist_generations")
+          .select("id")
+          .eq("playlist_id", row.playlist_id)
+          .eq("sort_run_id", input.sortRun.id);
+
+        if (generationLoadError || !generationRows) {
+          throw new Error(
+            generationLoadError?.message ?? "Unable to load playlist generations."
+          );
+        }
+
+        const generationIds = (generationRows as PlaylistGenerationIdRow[]).map(
+          (generation) => generation.id
+        );
+
+        if (generationIds.length > 0) {
+          const { error: keepDecisionError } = await supabase
+            .from("playlist_generation_tracks")
+            .update({ decision: "keep" })
+            .in("generation_id", generationIds);
+
+          if (keepDecisionError) {
+            throw new Error(keepDecisionError.message);
+          }
+
+          const { error: removeDecisionError } = await supabase
+            .from("playlist_generation_tracks")
+            .update({ decision: "remove" })
+            .in("generation_id", generationIds)
+            .not("normalized_track_id", "in", `(${selected.includedNormalizedTrackIds.join(",")})`);
+
+          if (removeDecisionError) {
+            throw new Error(removeDecisionError.message);
+          }
+        }
+
+        const { data: exportRows, error: exportLoadError } = await supabase
+          .from("playlist_exports")
+          .select("id")
+          .eq("playlist_id", row.playlist_id)
+          .eq("sort_run_id", input.sortRun.id);
+
+        if (exportLoadError) {
+          throw new Error(exportLoadError.message);
+        }
+
+        const existingExportIds = ((exportRows ?? []) as PlaylistExportIdRow[]).map(
+          (exportRow) => exportRow.id
+        );
+        const exportPayload = {
+          status: "queued",
+          selected_track_count: selected.includedNormalizedTrackIds.length,
+          error_summary: null,
+          updated_at: now
+        };
+        const { error: exportError } =
+          existingExportIds.length > 0
+            ? await supabase
+                .from("playlist_exports")
+                .update(exportPayload)
+                .in("id", existingExportIds)
+            : await supabase.from("playlist_exports").insert({
+                user_id: input.sortRun.userId,
+                playlist_id: row.playlist_id,
+                sort_run_id: input.sortRun.id,
+                ...exportPayload
+              });
+
+        if (exportError) {
+          throw new Error(exportError.message);
         }
       }
 

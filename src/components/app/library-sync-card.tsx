@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -38,7 +39,6 @@ export function LibrarySyncCard({
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const isBusy = isPending || state === "queueing";
-  const disabledReasonId = !canStart && disabledReason ? "library-sync-disabled-reason" : undefined;
   const visibleStatus: LibrarySyncVisibleStatus =
     currentSync?.status ?? (state === "queued" ? "queued" : "not_started");
   const displayState = getLibrarySyncDisplayState(visibleStatus, currentSync?.errorSummary);
@@ -103,7 +103,7 @@ export function LibrarySyncCard({
 
   function startSync() {
     setState("queueing");
-    setMessage("Queueing background sync...");
+    setMessage("Queueing library sync...");
 
     startTransition(async () => {
       try {
@@ -121,7 +121,7 @@ export function LibrarySyncCard({
         }
 
         setState("queued");
-        setMessage("Library sync queued. Your library will keep updating in the background.");
+        setMessage("Library sync queued. The worker will pick it up in the background.");
         router.refresh();
       } catch (error) {
         setState("error");
@@ -163,28 +163,6 @@ export function LibrarySyncCard({
     });
   }
 
-  function refreshStatus() {
-    setMessage("Refreshing sync status...");
-
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/library-syncs", { cache: "no-store" });
-        const payload = (await response.json()) as LatestSyncResponse;
-
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Unable to refresh sync status.");
-        }
-
-        setCurrentSync(payload.sync ?? null);
-        setCurrentEvents(payload.events ?? []);
-        setMessage("Sync status refreshed.");
-        router.refresh();
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Unable to refresh sync status.");
-      }
-    });
-  }
-
   return (
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-7">
       <div className="flex items-start justify-between gap-4">
@@ -203,11 +181,11 @@ export function LibrarySyncCard({
 
       <div
         className="mt-5"
-        aria-label="Library sync progress"
-        aria-valuemax={100}
-        aria-valuemin={0}
-        aria-valuenow={displayState.progressPercent}
         role="progressbar"
+        aria-label="Library sync progress"
+        aria-valuenow={displayState.progressPercent}
+        aria-valuemin={0}
+        aria-valuemax={100}
       >
         <div className="h-2 overflow-hidden rounded-full bg-black/30">
           <div
@@ -232,7 +210,7 @@ export function LibrarySyncCard({
         </p>
       ) : null}
       {!canStart && disabledReason ? (
-        <p id={disabledReasonId} className="mt-3 text-sm leading-6 text-amber-100">{disabledReason}</p>
+        <p className="mt-3 text-sm leading-6 text-amber-100">{disabledReason}</p>
       ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -242,15 +220,10 @@ export function LibrarySyncCard({
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
-        <Button
-          disabled={!canStart || isBusy || displayState.isActive}
-          aria-describedby={disabledReasonId}
-          onClick={startSync}
-          className="min-w-44"
-        >
-          {getStartButtonLabel({ currentSync, isBusy, state })}
+        <Button disabled={!canStart || isBusy || displayState.isActive} onClick={startSync} className="min-w-44">
+          {isBusy ? "Queueing..." : "Start background sync"}
         </Button>
-        <Button variant="glass" onClick={refreshStatus} className="min-w-36">
+        <Button variant="ghost" onClick={() => router.refresh()}>
           Refresh status
         </Button>
         {currentSync?.status === "failed" ? (
@@ -285,30 +258,6 @@ export function LibrarySyncCard({
       ) : null}
     </section>
   );
-}
-
-function getStartButtonLabel({
-  currentSync,
-  isBusy,
-  state
-}: {
-  currentSync: LibrarySyncSummary | null;
-  isBusy: boolean;
-  state: SyncActionState;
-}) {
-  if (isBusy) {
-    return "Queueing...";
-  }
-
-  if (state === "queued" || currentSync?.status === "queued") {
-    return "Sync queued";
-  }
-
-  if (currentSync?.status === "syncing" || currentSync?.status === "normalizing") {
-    return "Sync running";
-  }
-
-  return "Start background sync";
 }
 
 function Metric({ label, value }: { label: string; value: number }) {

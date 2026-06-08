@@ -7,10 +7,10 @@ import type { BillingSummary } from "@/modules/payments/list-payments";
 
 const emptySummary: BillingSummary = {
   currentPlan: {
-    name: "Pay per Sort",
-    description: "No active subscription.",
+    name: "Billing deferred",
+    description: "No active subscription or paid plan.",
     details:
-      "Each paid Sort unlocks full analysis, editable results, and Apple Music export for that Sort."
+      "The MVP is focused on Apple Music quality, playlist recipes, review, and app-created playlist export before subscription packaging is introduced."
   },
   paidSorts: [],
   paymentHistory: []
@@ -41,21 +41,26 @@ const paidSummary: BillingSummary = {
 };
 
 describe("billing page", () => {
-  it("renders the pay-per-Sort plan and empty billing state", () => {
+  it("renders deferred billing and empty historical payment state", () => {
     const markup = renderToStaticMarkup(<BillingPage summary={emptySummary} />);
 
     expect(markup).toContain("Billing");
-    expect(markup).toContain("Pay per Sort");
-    expect(markup).toContain("No active subscription.");
-    expect(markup).toContain("Each paid Sort unlocks full analysis, editable results, and Apple Music export for that Sort.");
-    expect(markup).toContain("No paid Sorts yet.");
+    expect(markup).toContain("Billing deferred");
+    expect(markup).toContain("No active subscription or paid plan.");
+    expect(markup).toContain("Billing is paused while the Apple Music platform workflow is verified.");
+    expect(markup).toContain("playlist recipes, review, and app-created playlist export");
+    expect(markup).toContain("No billing records yet.");
     expect(markup).toContain("No payment history yet.");
-    expect(markup).toContain("Manage billing settings");
+    expect(markup).toContain("Billing controls paused");
     expect(markup).not.toContain("monthly");
     expect(markup).not.toContain("subscription plan");
+    expect(markup).not.toContain("Pay per Sort");
+    expect(markup).not.toContain("checkout controls");
+    expect(markup).not.toContain("Pay per Sort");
+    expect(markup).toContain("Historical organization billing records will appear here");
   });
 
-  it("renders paid Sorts, payment history, and receipt links", () => {
+  it("renders historical organization billing records, payment history, and receipt links", () => {
     const markup = renderToStaticMarkup(<BillingPage summary={paidSummary} />);
 
     expect(markup).toContain("My Apple Music cleanup");

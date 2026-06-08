@@ -13,20 +13,22 @@ describe("app platform navigation", () => {
   it("contains the canonical platform destinations without Admin", () => {
     expect(appNavigationItems.map((item) => [item.label, item.href])).toEqual([
       ["Dashboard", "/app"],
-      ["Sorts", "/app/sorts"],
+      ["Playlists", "/app/playlists"],
       ["Library", "/app/library"],
-      ["Billing", "/app/billing"],
+      ["Sorts", "/app/sorts"],
       ["Settings", "/app/settings/libraries"]
     ]);
     expect(appNavigationItems.some((item) => item.label === "Admin")).toBe(false);
+    expect(appNavigationItems.some((item) => item.label === "Billing")).toBe(false);
   });
 
   it("marks the most specific app route as active", () => {
     expect(isAppNavigationItemActive("/app", "/app")).toBe(true);
+    expect(isAppNavigationItemActive("/app/playlists", "/app/playlists/new")).toBe(true);
     expect(isAppNavigationItemActive("/app/sorts", "/app/sorts/new")).toBe(true);
     expect(isAppNavigationItemActive("/app/settings/libraries", "/app/settings/libraries")).toBe(true);
     expect(isAppNavigationItemActive("/app", "/app/sorts")).toBe(false);
-    expect(isAppNavigationItemActive("/app/library", "/app/billing")).toBe(false);
+    expect(isAppNavigationItemActive("/app/library", "/app/playlists")).toBe(false);
   });
 
   it("renders a keyboard skip link and focusable main landmark", () => {

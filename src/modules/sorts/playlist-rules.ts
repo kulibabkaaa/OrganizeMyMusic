@@ -1,11 +1,4 @@
 import type { ParsedPlaylistRequest } from "@/modules/playlist-requests/parser";
-import { assemblePlaylists } from "@/modules/sorting/playlist-assembler";
-import { compilePlaylistRules, type CompiledRuleWarning } from "@/modules/sorting/rule-compiler";
-import {
-  scoreTracksAgainstPlaylistRules,
-  type TrackScoringResult
-} from "@/modules/sorting/scoring";
-import { createTrackFeatureProfiles } from "@/modules/sorting/track-profile";
 import type {
   GeneratedPlaylist,
   GeneratedPlaylistMatchStats,
@@ -14,6 +7,7 @@ import type {
   NormalizedTrack,
   PlaylistDimension,
   PlaylistRecipe,
+  PlaylistRecipeTag,
   TrackClassification
 } from "@/types/domain";
 
@@ -21,7 +15,6 @@ const MIN_TRACKS_PER_PLAYLIST = 12;
 const LOW_MATCH_TRACK_COUNT = 5;
 const MAX_PLAYLISTS = 10;
 const MIN_REQUEST_SCORE = 0.45;
-const LOW_CONFIDENCE_SCORE = 0.5;
 
 type GroupKey = string;
 interface GroupedTrack {
@@ -293,6 +286,218 @@ function qualityWarningsForMatchedCount(matchedTrackCount: number) {
   return [];
 }
 
+export function generateRecipePlaylists(input: {
+  recipes: PlaylistRecipe[];
+  tracks: NormalizedTrack[];
+  classifications: TrackClassification[];
+}) {
+  const classificationsByFingerprint = new Map(
+    input.classifications.map((classification) => [classification.fingerprint, classification])
+  );
+
+  return input.recipes.map((recipe) => {
+    const matchStats = createEmptyMatchStats(input.tracks.length);
+    const targetMax = recipe.targetTrackMax ?? input.tracks.length;
+    const tracks = input.tracks
+      .flatMap((track) => {
+        const classification = classificationsByFingerprint.get(track.fingerprint);
+
+        if (!classification) {
+          return [];
+        }
+
+        matchStats.classifiedTrackCount += 1;
+        matchStats.missingClassificationCount -= 1;
+
+        const scored = scoreTrackForRecipe({
+          track,
+          classification,
+          recipe
+        });
+
+        if (scored.status === "matched") {
+          matchStats.matchedTrackCount += 1;
+          return [scored.track];
+        }
+
+        updateRejectionStats(matchStats, scored.reason);
+        return [];
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, targetMax)
+      .map((track, position) => ({
+        ...track,
+        position
+      }));
+
+    return {
+      id: recipe.id,
+      dimension: "request" as PlaylistDimension,
+      title: recipe.name,
+      description:
+        recipe.playlistNote ??
+        `Generated from ${recipe.tags.length} saved recipe tag${recipe.tags.length === 1 ? "" : "s"}.`,
+      confidenceLabel: confidenceLabelForRecipeTracks(tracks),
+      trackCount: tracks.length,
+      trackFingerprints: tracks.map((track) => track.fingerprint),
+      appleSongIds: tracks
+        .map((track) => track.appleSongId)
+        .filter((value): value is string => Boolean(value)),
+      tracks,
+      qualityWarnings: qualityWarningsForRecipe(recipe, tracks.length),
+      matchStats
+    } satisfies GeneratedPlaylist;
+  });
+}
+
+function scoreTrackForRecipe(input: {
+  track: NormalizedTrack;
+  classification: TrackClassification;
+  recipe: PlaylistRecipe;
+}): RequestScoreResult {
+  const { track, classification, recipe } = input;
+
+  if (!recipe.allowExplicit && track.contentRating === "explicit") {
+    return { status: "rejected", reason: "explicit" };
+  }
+
+  const supportedTags = recipe.tags.filter(isRecipeScoringTag);
+  if (supportedTags.length === 0) {
+    return { status: "rejected", reason: "below_score" };
+  }
+
+  const matchedReasons = supportedTags.flatMap((tag) =>
+    getRecipeTagMatchReason({ tag, track, classification })
+  );
+  const score = matchedReasons.length / supportedTags.length;
+
+  if (score < MIN_REQUEST_SCORE) {
+    return { status: "rejected", reason: getPrimaryRecipeRejectionReason(supportedTags) };
+  }
+
+  return {
+    status: "matched",
+    track: {
+      fingerprint: track.fingerprint,
+      normalizedTrackId: track.id,
+      appleSongId: track.appleSongId,
+      name: track.name,
+      artistName: track.artistName,
+      albumName: track.albumName,
+      score: clampScore(score * classification.confidence),
+      reason: matchedReasons.join("; ")
+    }
+  };
+}
+
+function isRecipeScoringTag(tag: PlaylistRecipeTag) {
+  return ["language", "genre", "mood", "energy", "activity"].includes(tag.category);
+}
+
+function getRecipeTagMatchReason({
+  tag,
+  track,
+  classification
+}: {
+  tag: PlaylistRecipeTag;
+  track: NormalizedTrack;
+  classification: TrackClassification;
+}) {
+  const value = tag.value.trim().toLowerCase();
+
+  if (!value) {
+    return [];
+  }
+
+  if (tag.category === "language") {
+    return classification.language.toLowerCase() === value || value === "mixed"
+      ? [`Language matches ${value}`]
+      : [];
+  }
+
+  if (tag.category === "genre") {
+    const genreMatches =
+      classification.genre.toLowerCase().includes(value) ||
+      classification.subgenres.some((subgenre) => subgenre.toLowerCase().includes(value)) ||
+      track.genreNames.some((genre) => genre.toLowerCase().includes(value));
+    return genreMatches ? [`Genre matches ${value}`] : [];
+  }
+
+  if (tag.category === "mood") {
+    return classification.moods.some((mood) => mood.toLowerCase() === value)
+      ? [`Mood matches ${value}`]
+      : [];
+  }
+
+  if (tag.category === "energy") {
+    return energyMatchesTag(classification.energy, value) ? [`Energy matches ${value}`] : [];
+  }
+
+  if (tag.category === "activity") {
+    return activityMatchesTag(classification, value) ? [`Activity matches ${value}`] : [];
+  }
+
+  return [];
+}
+
+function energyMatchesTag(energy: number | null, value: string) {
+  if (energy === null) {
+    return false;
+  }
+
+  if (value === "low") return energy <= 0.35;
+  if (value === "medium" || value === "warm") return energy > 0.35 && energy < 0.72;
+  if (value === "high" || value === "intense") return energy >= 0.72;
+
+  return false;
+}
+
+function activityMatchesTag(classification: TrackClassification, value: string) {
+  const moods = classification.moods.map((mood) => mood.toLowerCase());
+
+  if (value === "workout") return moods.includes("workout") || classification.energy === null || classification.energy >= 0.72;
+  if (value === "driving") return moods.includes("driving");
+  if (value === "focus") return moods.includes("focus");
+  if (value === "party") return moods.includes("party") || classification.energy !== null && classification.energy >= 0.72;
+  if (value === "late night") return moods.includes("late-night") || moods.includes("chill");
+
+  return false;
+}
+
+function getPrimaryRecipeRejectionReason(tags: PlaylistRecipeTag[]): Exclude<
+  RequestScoreResult,
+  { status: "matched" }
+>["reason"] {
+  if (tags.some((tag) => tag.category === "language")) return "language";
+  if (tags.some((tag) => tag.category === "genre")) return "genre";
+  if (tags.some((tag) => tag.category === "mood")) return "mood";
+  if (tags.some((tag) => tag.category === "energy" || tag.category === "activity")) return "energy";
+
+  return "below_score";
+}
+
+function confidenceLabelForRecipeTracks(tracks: GeneratedPlaylistTrack[]): GeneratedPlaylist["confidenceLabel"] {
+  if (tracks.length === 0) return "low";
+
+  const averageScore = tracks.reduce((sum, track) => sum + track.score, 0) / tracks.length;
+  if (tracks.length >= 10 && averageScore >= 0.78) return "high";
+  if (averageScore < 0.45) return "low";
+
+  return "medium";
+}
+
+function qualityWarningsForRecipe(recipe: PlaylistRecipe, matchedTrackCount: number) {
+  const warnings = qualityWarningsForMatchedCount(matchedTrackCount);
+
+  if (recipe.targetTrackMin && matchedTrackCount < recipe.targetTrackMin) {
+    warnings.push(
+      `Matched ${matchedTrackCount} of the requested minimum ${recipe.targetTrackMin} tracks.`
+    );
+  }
+
+  return warnings;
+}
+
 export function generateRequestedPlaylists(input: {
   requests: ParsedPlaylistRequest[];
   tracks: NormalizedTrack[];
@@ -353,134 +558,4 @@ export function generateRequestedPlaylists(input: {
   }
 
   return playlists;
-}
-
-export function generateRecipePlaylists(input: {
-  recipes: PlaylistRecipe[];
-  tracks: NormalizedTrack[];
-  classifications: TrackClassification[];
-}) {
-  const profiles = createTrackFeatureProfiles({
-    tracks: input.tracks,
-    classifications: input.classifications
-  });
-  const sortedRecipes = input.recipes.slice().sort((left, right) => left.position - right.position);
-  const compiledRules = sortedRecipes.map((recipe) => compilePlaylistRules(recipe));
-  const scoredByRecipe = compiledRules.map((rules) => ({
-    rules,
-    candidates: scoreTracksAgainstPlaylistRules({
-      profiles,
-      rules
-    })
-  }));
-  const assembledPlaylists = assemblePlaylists(scoredByRecipe);
-
-  return assembledPlaylists.map((playlist, index): GeneratedPlaylist => {
-    const rules = compiledRules[index];
-    const scored = scoredByRecipe[index];
-
-    if (!rules || !scored) {
-      throw new Error("Unable to assemble playlist from compiled rules.");
-    }
-
-    const matchStats = createRecipeMatchStats(scored.candidates, playlist.tracks.length);
-
-    return {
-      id: `request_${slugifyPlaylistId(rules.title)}`,
-      dimension: "request",
-      title: rules.title,
-      description:
-        playlist.tracks.length === 0
-          ? `No matching tracks were found for playlist plan: ${rules.title}.`
-          : `Generated from playlist plan: ${rules.title}.`,
-      confidenceLabel: playlist.tracks[0]?.score && playlist.tracks[0].score >= 0.75 ? "high" : "medium",
-      trackCount: playlist.tracks.length,
-      trackFingerprints: playlist.tracks.map((track) => track.fingerprint),
-      appleSongIds: playlist.tracks.flatMap((track) => (track.appleSongId ? [track.appleSongId] : [])),
-      tracks: playlist.tracks,
-      qualityWarnings: [
-        ...warningsForCompiledTags(rules.warnings),
-        ...warningsForRecipeQuality({
-          trackCount: playlist.tracks.length,
-          topScore: playlist.tracks[0]?.score ?? null,
-          matchStats
-        }),
-        ...playlist.qualityWarnings
-      ],
-      matchStats
-    };
-  });
-}
-
-function createRecipeMatchStats(
-  candidates: TrackScoringResult[],
-  selectedTrackCount: number
-): GeneratedPlaylistMatchStats {
-  const stats = createEmptyMatchStats(candidates.length);
-
-  stats.classifiedTrackCount = candidates.filter((candidate) => candidate.profile.hasClassification).length;
-  stats.missingClassificationCount = candidates.length - stats.classifiedTrackCount;
-  stats.matchedTrackCount = selectedTrackCount;
-
-  for (const candidate of candidates) {
-    if (candidate.status === "matched") {
-      continue;
-    }
-
-    if (candidate.reason === "explicit") {
-      stats.rejectedExplicitCount += 1;
-    } else if (candidate.reason === "language") {
-      stats.rejectedLanguageCount += 1;
-    } else if (candidate.reason === "genre") {
-      stats.rejectedGenreCount += 1;
-    } else if (candidate.reason === "mood" || candidate.reason === "activity") {
-      stats.rejectedMoodCount += 1;
-    } else if (candidate.reason === "energy") {
-      stats.rejectedEnergyCount += 1;
-    } else if (candidate.reason !== "missing_classification") {
-      stats.belowScoreCount += 1;
-    }
-  }
-
-  return stats;
-}
-
-function warningsForCompiledTags(warnings: CompiledRuleWarning[]) {
-  return warnings.map((warning) =>
-    warning.reason === "unsupported_category"
-      ? `Unsupported ${warning.category} tag "${warning.value}" was ignored.`
-      : `Unknown ${warning.category} tag "${warning.value}" was ignored.`
-  );
-}
-
-function warningsForRecipeQuality(input: {
-  trackCount: number;
-  topScore: number | null;
-  matchStats: GeneratedPlaylistMatchStats;
-}) {
-  const warnings: string[] = [];
-
-  if (input.trackCount === 0) {
-    warnings.push("No tracks matched this playlist plan. Adjust tags before checkout.");
-  } else if (input.trackCount < LOW_MATCH_TRACK_COUNT) {
-    warnings.push(
-      `Only ${input.trackCount} track${input.trackCount === 1 ? "" : "s"} matched this playlist plan.`
-    );
-  }
-
-  if (input.topScore !== null && input.topScore < LOW_CONFIDENCE_SCORE) {
-    warnings.push("Top matches are low-confidence. Review the tags before checkout.");
-  }
-
-  if (input.matchStats.missingClassificationCount > 0) {
-    warnings.push(
-      `${input.matchStats.missingClassificationCount} library track${input.matchStats.missingClassificationCount === 1 ? "" : "s"} could not be scored because metadata is missing.`
-    );
-  }
-
-  return warnings;
-}
-
-function slugifyPlaylistId(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "playlist";
 }

@@ -28,7 +28,7 @@ export interface FullSortJobData {
   userId: string;
 }
 
-export interface PaidSortRunForFullSort {
+export interface StartableSortRunForFullSort {
   id: string;
   userId: string;
   librarySyncId: string | null;
@@ -52,10 +52,10 @@ export interface FullSortQueue {
 }
 
 export interface FullSortStore {
-  getPaidSortRunForFullSort(input: {
+  getStartableSortRunForFullSort(input: {
     sortRunId: string;
     userId: string;
-  }): Promise<PaidSortRunForFullSort | null>;
+  }): Promise<StartableSortRunForFullSort | null>;
   listRecipesForSort(input: { userId: string; sortRunId: string }): Promise<PlaylistRecipe[]>;
   listTracksForFullSort(input: {
     librarySyncId: string;
@@ -65,7 +65,7 @@ export interface FullSortStore {
     normalizedTrackIds: string[];
   }): Promise<PreviewTrackClassification[]>;
   saveFullSortResult(input: {
-    sortRun: PaidSortRunForFullSort;
+    sortRun: StartableSortRunForFullSort;
     snapshot: PreviewSnapshot;
   }): Promise<void>;
   createJobEvent(input: {
@@ -82,7 +82,7 @@ export interface FullSortStore {
   }): Promise<void>;
 }
 
-export type QueueFullSortAfterPaymentResult =
+export type QueueFullSortAfterStartResult =
   | {
       status: "queued";
       sortRunId: string;
@@ -136,13 +136,13 @@ export interface StoredFullSortTrack {
   reason: string;
 }
 
-export async function queueFullSortAfterPayment(input: {
+export async function queueFullSortAfterStart(input: {
   store: FullSortStore;
   queue: FullSortQueue;
   sortRunId: string;
   userId: string;
-}): Promise<QueueFullSortAfterPaymentResult> {
-  const sortRun = await input.store.getPaidSortRunForFullSort({
+}): Promise<QueueFullSortAfterStartResult> {
+  const sortRun = await input.store.getStartableSortRunForFullSort({
     sortRunId: input.sortRunId,
     userId: input.userId
   });
@@ -150,7 +150,7 @@ export async function queueFullSortAfterPayment(input: {
   if (!sortRun) {
     return {
       status: "not_ready",
-      message: "Paid Sort is not ready for full sorting."
+      message: "Organization is not ready to start."
     };
   }
 
@@ -180,7 +180,7 @@ export async function queueFullSortAfterPayment(input: {
     sortRunId: sortRun.id,
     stage: "full_sort",
     level: "info",
-    message: "Full Sort queued after payment confirmation.",
+    message: "Full organization queued after confirmation.",
     details: createPrivacySafeJobDetails({
       eventType: "full_sort_queued",
       jobName: FULL_SORT_JOB_NAME,
@@ -200,10 +200,10 @@ export async function handleFullSortJob(input: {
   data: FullSortJobData;
   now?: () => string;
 }): Promise<FullSortJobResult> {
-  const sortRun = await input.store.getPaidSortRunForFullSort(input.data);
+  const sortRun = await input.store.getStartableSortRunForFullSort(input.data);
 
   if (!sortRun) {
-    throw new Error("Paid Sort is not ready for full sorting.");
+    throw new Error("Organization is not ready to start.");
   }
 
   if (sortRun.generatedPlaylistCount > 0) {
@@ -218,14 +218,14 @@ export async function handleFullSortJob(input: {
 
   try {
     if (!sortRun.librarySyncId) {
-      throw new Error("Completed Apple Music library sync is required before full sorting.");
+      throw new Error("Completed Apple Music library sync is required before full organization.");
     }
 
     await input.store.createJobEvent({
       sortRunId: sortRun.id,
       stage: "preparing_library",
       level: "info",
-      message: "Preparing Apple Music library for full Sort.",
+      message: "Preparing Apple Music library for full organization.",
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_preparing_library",
         jobName: FULL_SORT_JOB_NAME
@@ -238,7 +238,7 @@ export async function handleFullSortJob(input: {
     });
 
     if (recipes.length === 0) {
-      throw new Error("At least one Playlist Recipe is required before full sorting.");
+      throw new Error("At least one Playlist Recipe is required before full organization.");
     }
 
     const tracks = await input.store.listTracksForFullSort({
@@ -263,7 +263,7 @@ export async function handleFullSortJob(input: {
       sortRunId: sortRun.id,
       stage: "full_sort",
       level: "info",
-      message: `Building full Sort from ${recipes.length} Playlist Recipes.`,
+      message: `Building full organization from ${recipes.length} Playlist Recipes.`,
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_building",
         counts: {
@@ -297,7 +297,7 @@ export async function handleFullSortJob(input: {
       sortRunId: sortRun.id,
       stage: "preparing_review",
       level: "info",
-      message: `Full Sort generated ${playlists.length} playlists with ${trackCount} tracks.`,
+      message: `Full organization generated ${playlists.length} playlists with ${trackCount} tracks.`,
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_completed",
         durationMs: getWorkflowDurationMs(startedAt),
@@ -318,7 +318,7 @@ export async function handleFullSortJob(input: {
     };
   } catch (error) {
     const failure = createPrivacySafeFailure({
-      workflowName: "Full Sort",
+      workflowName: "Full organization",
       error
     });
 
@@ -331,7 +331,7 @@ export async function handleFullSortJob(input: {
       sortRunId: sortRun.id,
       stage: "full_sort",
       level: "error",
-      message: "Full Sort failed.",
+      message: "Full organization failed.",
       details: createPrivacySafeJobDetails({
         eventType: "full_sort_failed",
         durationMs: getWorkflowDurationMs(startedAt),
@@ -389,7 +389,7 @@ export function createSupabaseFullSortStore(supabase: SupabaseClient): FullSortS
   const recipeStore = createSupabasePlaylistRecipeStore(supabase);
 
   return {
-    async getPaidSortRunForFullSort(input) {
+    async getStartableSortRunForFullSort(input) {
       const { data, error } = await supabase
         .from("sort_runs")
         .select("id,user_id,library_sync_id,state,payment_status")
@@ -445,11 +445,35 @@ export function createSupabaseFullSortStore(supabase: SupabaseClient): FullSortS
         return;
       }
 
+      const generatedAt = input.snapshot.generatedAt;
+      const { data: persistentPlaylistRows, error: persistentPlaylistError } = await supabase
+        .from("playlists")
+        .insert(
+          input.snapshot.playlists.map((playlist) => ({
+            user_id: input.sortRun.userId,
+            source_provider: "apple_music",
+            name: playlist.title,
+            description: playlist.description,
+            status: "active",
+            created_from_sort_run_id: input.sortRun.id,
+            latest_library_sync_id: input.sortRun.librarySyncId,
+            last_generated_at: generatedAt
+          }))
+        )
+        .select("id");
+
+      if (persistentPlaylistError || !persistentPlaylistRows) {
+        throw new Error(
+          persistentPlaylistError?.message ?? "Unable to store generated app playlists."
+        );
+      }
+
       const { data: playlistRows, error: playlistError } = await supabase
         .from("sort_playlists")
         .insert(
-          input.snapshot.playlists.map((playlist) => ({
+          input.snapshot.playlists.map((playlist, index) => ({
             sort_run_id: input.sortRun.id,
+            playlist_id: (persistentPlaylistRows[index] as { id: string } | undefined)?.id ?? null,
             dimension: playlist.dimension,
             title: playlist.title,
             description: playlist.description,
@@ -465,7 +489,33 @@ export function createSupabaseFullSortStore(supabase: SupabaseClient): FullSortS
         .select("id");
 
       if (playlistError || !playlistRows) {
-        throw new Error(playlistError?.message ?? "Unable to store full Sort playlists.");
+        throw new Error(playlistError?.message ?? "Unable to store full-organization playlists.");
+      }
+
+      const { data: generationRows, error: generationError } = await supabase
+        .from("playlist_generations")
+        .insert(
+          input.snapshot.playlists.map((playlist, index) => ({
+            user_id: input.sortRun.userId,
+            playlist_id: (persistentPlaylistRows[index] as { id: string }).id,
+            recipe_id: playlist.id,
+            sort_run_id: input.sortRun.id,
+            library_sync_id: input.sortRun.librarySyncId,
+            status: "ready_for_review",
+            recipe_snapshot: {
+              generatedPlaylistId: playlist.id,
+              title: playlist.title,
+              description: playlist.description,
+              matchStats: playlist.matchStats ?? null,
+              qualityWarnings: playlist.qualityWarnings ?? []
+            },
+            generated_at: generatedAt
+          }))
+        )
+        .select("id");
+
+      if (generationError || !generationRows) {
+        throw new Error(generationError?.message ?? "Unable to store playlist generations.");
       }
 
       const playlistTrackRows = input.snapshot.playlists.flatMap((playlist, playlistIndex) => {
@@ -499,6 +549,56 @@ export function createSupabaseFullSortStore(supabase: SupabaseClient): FullSortS
         if (tracksError) {
           throw new Error(tracksError.message);
         }
+      }
+
+      const generationTrackRows = input.snapshot.playlists.flatMap((playlist, playlistIndex) => {
+        const generationRow = generationRows[playlistIndex] as { id: string } | undefined;
+
+        if (!generationRow) {
+          return [];
+        }
+
+        return playlist.tracks.flatMap((track) =>
+          track.normalizedTrackId
+            ? [
+                {
+                  generation_id: generationRow.id,
+                  normalized_track_id: track.normalizedTrackId,
+                  position: track.position,
+                  score: track.score,
+                  reason: track.reason,
+                  decision: "keep"
+                }
+              ]
+            : []
+        );
+      });
+
+      if (generationTrackRows.length > 0) {
+        const { error: generationTracksError } = await supabase
+          .from("playlist_generation_tracks")
+          .insert(generationTrackRows);
+
+        if (generationTracksError) {
+          throw new Error(generationTracksError.message);
+        }
+      }
+
+      const recipeUpdateResults = await Promise.all(
+        input.snapshot.playlists.map((playlist, index) =>
+          supabase
+            .from("playlist_recipes")
+            .update({
+              playlist_id: (persistentPlaylistRows[index] as { id: string }).id
+            })
+            .eq("id", playlist.id)
+            .eq("sort_run_id", input.sortRun.id)
+        )
+      );
+
+      const recipeUpdateError = recipeUpdateResults.find((result) => result.error)?.error;
+      if (recipeUpdateError) {
+        throw new Error(recipeUpdateError.message);
       }
     },
 
@@ -567,7 +667,7 @@ export async function loadStoredFullSortReviewSnapshot(input: {
         .order("position", { ascending: true });
 
       if (trackError || !trackRows) {
-        throw new Error(trackError?.message ?? "Unable to load full Sort tracks.");
+        throw new Error(trackError?.message ?? "Unable to load full-organization tracks.");
       }
 
       return {

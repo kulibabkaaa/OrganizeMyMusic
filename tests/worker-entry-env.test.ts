@@ -13,5 +13,18 @@ describe("worker entry env loading", () => {
     expect(envImportIndex).toBeGreaterThan(loadIndex);
     expect(source).not.toContain('import { env } from "@/lib/env";');
     expect(source).not.toContain('import { createPgBoss } from "@/lib/pg-boss";');
+    expect(source).toContain('import("@/worker/jobs/full-sort")');
+    expect(source).toContain("registerFullSortWorker(boss)");
+  });
+
+  it("loads Next-style env files before the worker health check imports env", () => {
+    const source = readFileSync(join(process.cwd(), "src/worker/healthcheck.ts"), "utf8");
+    const loadIndex = source.indexOf("loadRuntimeEnv();");
+    const envImportIndex = source.indexOf('import("@/lib/env")');
+
+    expect(loadIndex).toBeGreaterThanOrEqual(0);
+    expect(envImportIndex).toBeGreaterThan(loadIndex);
+    expect(source).not.toContain('import { env } from "@/lib/env";');
+    expect(source).not.toContain('import { createPgBoss } from "@/lib/pg-boss";');
   });
 });

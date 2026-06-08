@@ -13,37 +13,33 @@ describe("dashboard empty state", () => {
     );
 
     expect(markup).toContain("Your music workspace");
-    expect(markup).toContain("Create a Sort");
+    expect(markup).toContain("Organize My Library");
     expect(markup).toContain("disabled");
     expect(markup).toContain('aria-describedby="create-sort-disabled-reason"');
-    expect(markup).toContain("Connect Apple Music before creating a Sort.");
+    expect(markup).toContain("Connect Apple Music before organizing your library.");
     expect(markup).toContain("Connect your first music library");
     expect(markup).toContain(
       "Connect Apple Music so Organize Your Music can read your library and prepare it for sorting."
     );
     expect(markup).toContain("Apple Music");
     expect(markup).toContain("Available now");
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("YouTube Music");
-    expect(markup).toContain("Recent Sorts");
+    expect(markup).not.toContain("Spotify");
+    expect(markup).not.toContain("YouTube Music");
+    expect(markup).toContain("Saved Playlists");
     expect(markup).toContain("Library Status");
     expect(markup).toContain("Connect a library first");
   });
 
-  it("renders available and disabled provider cards", () => {
+  it("renders Apple Music as the only setup provider", () => {
     const markup = renderToStaticMarkup(
       <div>
-        <ProviderCard name="Apple Music" status="Available now" availability="available" />
-        <ProviderCard name="Spotify" status="Coming later" availability="coming_later" />
+        <ProviderCard name="Apple Music" status="Available now" />
       </div>
     );
 
     expect(markup).toContain("Apple Music");
     expect(markup).toContain("Available now");
     expect(markup).toContain("Ready");
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("Disabled");
+    expect(markup).not.toContain("Coming later");
   });
 });

@@ -11,6 +11,11 @@ The existing schema is broadly correct for the product. It already separates:
 - Normalized tracks.
 - Track ownership.
 - Track classifications.
+- Persistent playlists.
+- Playlist recipes.
+- Playlist generations.
+- Playlist generation tracks.
+- Playlist exports.
 - Sort runs.
 - Generated playlists.
 - Generated playlist tracks.
@@ -185,11 +190,121 @@ mixed
 unknown
 ```
 
+## `playlists`
+
+Stores persistent app playlist objects.
+
+Important fields:
+
+- `user_id`
+- `source_provider`
+- `name`
+- `description`
+- `status`
+- `apple_playlist_id`
+- `created_from_sort_run_id`
+- `latest_library_sync_id`
+- `last_processed_new_music_sync_id`
+- `last_generated_at`
+- `last_exported_at`
+- `archived_at`
+
+Rules:
+
+- MVP supports only `apple_music`.
+- Only app-created playlists should be managed in MVP.
+- `apple_playlist_id` is set after export.
+- `last_processed_new_music_sync_id` records the latest completed sync that was
+  checked for user-triggered new-music recommendations for this playlist.
+- Archive instead of hard-delete in user-facing flows.
+
+## `playlist_recipes`
+
+Stores rules for a playlist.
+
+Current migration rule:
+
+- `playlist_id` is the target owner.
+- `sort_run_id` remains as a temporary bridge for existing Sort flows.
+- A row must have at least one of `playlist_id` or `sort_run_id`.
+
+Important fields:
+
+- `playlist_id`
+- `sort_run_id`
+- `name`
+- `playlist_note`
+- `target_track_min`
+- `target_track_max`
+- `duplicate_policy`
+- `allow_explicit`
+- `include_library_only`
+- `tags jsonb`
+
+## `playlist_generations`
+
+Stores each attempt to fill one playlist from the user's library.
+
+Important fields:
+
+- `playlist_id`
+- `recipe_id`
+- `sort_run_id`
+- `library_sync_id`
+- `status`
+- `recipe_snapshot`
+- `generated_at`
+- `error_summary`
+
+Rules:
+
+- Store a recipe snapshot so review stays stable after recipe edits.
+- A generation can be created by a Sort or by one-off playlist regeneration.
+
+## `playlist_generation_tracks`
+
+Stores proposed tracks for a generation.
+
+Important fields:
+
+- `generation_id`
+- `normalized_track_id`
+- `position`
+- `score`
+- `reason`
+- `decision`
+
+Rules:
+
+- `decision` starts as `keep`.
+- User review changes `decision` to `remove`.
+- Do not write removed tracks to Apple Music.
+
+## `playlist_exports`
+
+Stores explicit Apple Music write attempts.
+
+Important fields:
+
+- `playlist_id`
+- `generation_id`
+- `sort_run_id`
+- `apple_playlist_id`
+- `status`
+- `selected_track_count`
+- `error_summary`
+
+Rules:
+
+- Export requires explicit user confirmation.
+- Worker writes to Apple Music server-side.
+- Store partial failure state for support/retry.
+
 ## `playlist_requests`
 
-Recommended new table.
-
 Stores the user's original requested playlists.
+
+Legacy note: this remains useful for natural-language request flows, but platform-first playlist recipes should become the primary model.
 
 ```sql
 create table if not exists playlist_requests (
@@ -203,14 +318,12 @@ create table if not exists playlist_requests (
 
 ## `sort_runs`
 
-Tracks a playlist organization run.
+Tracks a full-library organization project.
 
 Important fields:
 
 - `user_id`
 - `library_sync_id`
-- `name`
-- `source_provider`
 - `state`
 - `payment_status`
 - `preview_snapshot`
@@ -221,52 +334,18 @@ Important fields:
 
 Rules:
 
+- A Sort is for initial library organization or major restructuring.
+- One-off playlist creation should not require a Sort.
 - Preview snapshot should become immutable after confirmation/payment begins.
 - Payment can remain unused until core MVP works.
 - MVP-018 stores `preview_snapshot` when playlist requests are planned.
 - Preview regeneration is blocked once state reaches `awaiting_payment`, `paid`, `creating_playlists`, or `completed`.
 
-Platform UI note: user-facing statuses should be derived through a UI adapter
-instead of renaming database states immediately. The target UI lifecycle is
-documented in `UI_PLATFORM_FLOW_ROADMAP.md`.
-
-FLOW-015 adds `name` and `source_provider` to support reusable Sort drafts
-before a completed library sync exists. `source_provider` is constrained to
-`apple_music` for the MVP.
-
-## `playlist_recipes`
-
-The platform UI roadmap adds structured Playlist Recipes as the replacement for
-textarea-only playlist requests. Keep existing `playlist_requests` rows for old
-Sorts and compatibility APIs.
-
-Implemented by `supabase/migrations/0002_playlist_recipes.sql`.
-
-Fields:
-
-- `user_id`
-- `sort_run_id`
-- `position`
-- `name`
-- `playlist_note`
-- target track min/max
-- duplicate policy
-- explicit-track preference
-- library-only preference
-- structured `tags` JSON
-
-RLS must scope recipes to the owning user. Tags and Tag Notes are private user
-sorting instructions and should not be logged with raw library data.
-
-Application code validates recipe create/update input with Zod in
-`src/modules/playlist-recipes/schema.ts`. The compatibility adapter in
-`src/modules/playlist-recipes/adapter.ts` converts structured Playlist Recipes
-into the existing parsed playlist request rules so old Sorts and the current
-planner path can continue to work during the UI migration.
-
 ## `sort_playlists`
 
 Stores generated playlists.
+
+Migration note: `sort_playlists.playlist_id` can link a generated Sort result to a persistent `playlists` row.
 
 Important fields:
 

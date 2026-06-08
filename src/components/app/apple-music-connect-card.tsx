@@ -84,7 +84,6 @@ export function AppleMusicConnectCard({
         setStorefront(result.storefront);
         setState("connected");
         setMessage("Apple Music authorization succeeded. The user token is encrypted and stored server-side.");
-        router.push("/app?connected=apple_music");
         router.refresh();
       })
       .catch((error) => {

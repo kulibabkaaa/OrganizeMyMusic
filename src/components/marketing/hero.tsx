@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,19 +11,19 @@ const stats: {
   valueClassName?: string;
   labelClassName?: string;
 }[] = [
-  { value: "3 min", label: "FROM MESS TO ORGANIZED" },
+  { value: "Full library", label: "FIRST ORGANIZATION FLOW" },
   {
-    value: "Endless categories",
-    label: "GENRE, MOOD, LANGUAGE, ERA, REGION",
+    value: "Saved recipes",
+    label: "REUSE PLAYLIST RULES LATER",
     valueClassName:
-      "whitespace-nowrap text-[1.5rem] tracking-[-0.05em] sm:text-[1.68rem] xl:text-[1.82rem]",
+      "whitespace-nowrap text-[1.5rem] tracking-[0em] sm:text-[1.68rem] xl:text-[1.82rem]",
     labelClassName:
       "whitespace-nowrap text-[0.6rem] tracking-[0.11em] sm:text-[0.68rem] sm:tracking-[0.13em] xl:text-[0.74rem]"
   },
-  { value: "1 click", label: "TO SORT YOUR MUSIC" }
+  { value: "Review first", label: "EXPORT ONLY AFTER APPROVAL" }
 ];
 
-export function Hero({ startSortHref = "/auth" }: { startSortHref?: string }) {
+export function Hero({ startSortHref = "/app" }: { startSortHref?: Route }) {
   return (
     <section className="relative min-h-[100svh] overflow-hidden bg-black text-white">
       <div className="absolute inset-0 bg-hero-bloom" />
@@ -32,7 +33,7 @@ export function Hero({ startSortHref = "/auth" }: { startSortHref?: string }) {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.11fr)_minmax(252px,0.56fr)] lg:items-center lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(292px,0.54fr)] xl:gap-12">
           <div className="max-w-[39rem] xl:max-w-[41rem]">
             <p className="mb-5 text-sm uppercase tracking-[0.34em] text-white/60">
-              Apple Music library sorter
+              Apple Music organization platform
             </p>
             <h1 className="font-display text-[clamp(2.8rem,4.9vw,4.85rem)] font-semibold leading-[1.04] tracking-[0em] lg:text-[clamp(2.7rem,4.05vw,4.35rem)] xl:text-[clamp(3rem,3.95vw,4.7rem)]">
               Turn a messy
@@ -42,12 +43,12 @@ export function Hero({ startSortHref = "/auth" }: { startSortHref?: string }) {
               <span className="inline lg:mt-[0.09em] lg:block">you&apos;ll actually use.</span>
             </h1>
             <p className="mt-5 max-w-[35rem] text-base leading-7 text-white/72 sm:text-lg sm:leading-8">
-              Connect Apple Music, scan your library, preview playlists organized by category,
-              and save them back to your account when ready.
+              Connect Apple Music, organize your library into persistent playlists, save the
+              recipe behind each playlist, and export only after reviewing every track.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link href={startSortHref as Route}>
+              <Link href={startSortHref}>
                 <Button className="min-h-14 min-w-52 px-7 py-4 text-base shadow-[0_28px_90px_rgba(255,4,54,0.22)]">
                   Start a sort
                 </Button>

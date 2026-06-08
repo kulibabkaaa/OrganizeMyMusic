@@ -70,7 +70,7 @@ function getSortTone(status: RecentSortRunSummary["uiStatus"]) {
     return "success" as const;
   }
 
-  if (["processing", "preview_generating", "exporting", "paid"].includes(status)) {
+  if (["processing", "preview_generating", "exporting", "organizing"].includes(status)) {
     return "pink" as const;
   }
 

@@ -2,9 +2,9 @@
 
 ## Purpose
 
-The worker processes long-running `pg-boss` jobs for library sync and Apple
-Music playlist creation. It must run as a persistent process outside Vercel
-serverless.
+The worker processes long-running `pg-boss` jobs for library sync, full-library
+organization, Apple Music playlist creation, and individual playlist generation exports. It
+must run as a persistent process outside Vercel serverless.
 
 ## Selected MVP Host
 
@@ -21,11 +21,26 @@ Do not run the worker as a Vercel Function or Vercel Cron job.
 
 ## Commands
 
+## Health Check Steps
+
 Health check:
 
 ```bash
 npm run worker:check
 ```
+
+Platform readiness check:
+
+```bash
+npm run platform:check
+```
+
+`platform:check` is read-only. It verifies required server env presence,
+`ENCRYPTION_KEY` minimum strength, hosted platform migrations, platform table
+RLS, playlist recipe scope, pg-boss queues, and current MVP worker job backlog
+without logging secret values or processing jobs. It fails when MVP worker
+queues contain active, queued, retrying, or failed jobs because production
+smoke readiness requires those queues to be clear before a fresh run.
 
 The health check logs deployment revision metadata when the host exposes it.
 For Railway, check the log line named `Worker deployment revision.` and compare
@@ -61,6 +76,8 @@ it directly.
 
 ## Required Environment Variables
 
+Production worker env checklist
+
 Configure these on the worker host as server-only values:
 
 ```text
@@ -88,18 +105,6 @@ SENTRY_DSN
 it as configuration. Do not add service role, database, Apple, OpenAI, Stripe,
 or encryption values to `NEXT_PUBLIC_*` variables.
 
-Production worker env checklist:
-
-- `DATABASE_URL` points at the intended Supabase Postgres database.
-- `NEXT_PUBLIC_SUPABASE_URL` points at the same Supabase project used by Vercel.
-- `SUPABASE_SERVICE_ROLE_KEY` is present only on server/worker hosts.
-- `APPLE_TEAM_ID`, `APPLE_KEY_ID`, and `APPLE_PRIVATE_KEY` are present together.
-- `OPENAI_API_KEY` is present if classification can call OpenAI.
-- `ENCRYPTION_KEY` matches the Vercel server value used to encrypt/decrypt
-  Apple Music user tokens.
-- `PAYMENTS_DEV_BYPASS_ENABLED` is absent or false in production.
-- No raw Apple Music user token is configured as an environment variable.
-
 ## Deployment Steps
 
 1. Create a Railway project.
@@ -108,54 +113,38 @@ Production worker env checklist:
 4. Confirm Railway detected `railway.json`.
 5. Add the required environment variables above.
 6. Run `npm run worker:check` in the Railway shell or one-off command runner.
-7. Start the worker service.
-8. Confirm logs contain `Worker started and ready for library sync, full Sort, and playlist creation jobs.`
-9. Confirm logs contain `Worker deployment revision.` with the expected commit
+7. Run `npm run platform:check` in the Railway shell or one-off command runner.
+8. Start the worker service.
+9. Confirm logs contain `Worker started and ready for library sync, full organization, and playlist creation jobs.`
+10. Confirm logs contain `Worker deployment revision.` with the expected commit
    SHA or branch.
-10. Trigger one safe sync job from the web app after Apple Music auth works.
-11. Confirm `job_events` receives worker progress without logging tokens.
-
-## Health Check Steps
-
-Run these before processing real user jobs:
-
-1. Confirm the worker host has the expected environment variables from the
-   checklist above.
-2. Run:
-
-   ```bash
-   npm run worker:check
-   ```
-
-3. Confirm the command exits `0`.
-4. Confirm logs include `Worker deployment revision.`.
-5. Compare the logged `commitSha` or branch with the Vercel deployment.
-6. Confirm the command does not log `DATABASE_URL`, service role, Apple private
-   key, OpenAI key, encryption key, Stripe secret, or Apple Music user tokens.
-7. Start or restart the persistent worker:
-
-   ```bash
-   npm run worker
-   ```
-
-8. Confirm logs include:
-
-   ```text
-   Worker started and ready for library sync, full Sort, and playlist creation jobs.
-   ```
-
-9. Queue one safe library sync from the app.
-10. Confirm `job_events` records queued, started, and completed/failed stages
-    with event types, counts, duration, and failure category if any.
-11. Confirm no Apple Music write-back job runs until review/export confirmation.
+11. Trigger one safe sync job from the web app after Apple Music auth works.
+12. Confirm `job_events` receives worker progress without logging tokens.
 
 ## Verification Status
 
-As of 2026-05-23:
+As of 2026-06-08:
 
 - Supabase Postgres is reachable through Supabase MCP.
 - Public MVP tables exist with RLS enabled.
-- Railway runs `npm run worker` as the persistent MVP worker.
+- Local `npm run worker:check` passes against the configured hosted Supabase
+  database after loading Next-style runtime env files.
+- Local `npm run platform:check` passes against the configured hosted Supabase
+  database.
+- Hosted pg-boss has all MVP queue names registered:
+  - `library-sync`
+  - `full-sort`
+  - `playlist-create`
+  - `playlist-generation-export`
+- Hosted pg-boss has no active, queued, retrying, or failed jobs for those four
+  queues at the time of this verification.
+- Railway must still be redeployed with the current platform-first worker code
+  before production smoke can prove `full-sort` and
+  `playlist-generation-export` processing.
+
+Historical 2026-05-23 status:
+
+- Railway ran `npm run worker` as the persistent MVP worker.
 - Supabase MCP confirms the deployed worker initialized the `pgboss` schema and
   internal tables.
 - Supabase reports RLS disabled on `pgboss` internal tables. Review schema
@@ -164,13 +153,7 @@ As of 2026-05-23:
 - `npm run worker:check` exists for non-destructive database connectivity
   checks when a usable `DATABASE_URL` is available locally or in the host shell.
 - `npm run worker:check` now reports sanitized deployment revision metadata
-  before checking pg-boss connectivity.
-- The worker registers three pg-boss queues: library sync, full Sort generation,
-  and reviewed Apple Music playlist creation.
   before testing database connectivity.
-- Standalone worker commands load Next-style env files before validating worker
-  configuration, so local `.env.local` values are available to the health check
-  when they are populated.
 
 ## Stop Conditions
 
@@ -180,6 +163,22 @@ Stop instead of deploying when:
 - The worker host cannot run a persistent Node process.
 - `npm run worker:check` fails.
 - Logs expose Apple Music user tokens or server secrets.
-- The worker would create Apple Music playlists without confirmed sort runs.
-- Worker revision does not match the intended web deployment and the mismatch
-  is not explicitly approved.
+- The worker would create Apple Music playlists without a confirmed Sort export
+  or reviewed playlist generation export.
+
+## Queues
+
+The MVP worker must register these queues:
+
+```text
+library-sync
+full-sort
+playlist-create
+playlist-generation-export
+```
+
+`full-sort` generates reviewed full-library organization output after the user starts
+full organization through billing-deferred access or approved dev bypass.
+`playlist-create` writes reviewed full-organization batches.
+`playlist-generation-export` writes one reviewed persistent playlist generation
+from `/app/playlists`.

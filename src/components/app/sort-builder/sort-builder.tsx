@@ -44,7 +44,7 @@ export function SortBuilder({
       ? initialRecipes.map(playlistRecipeToBuilderRecipe)
       : [createDefaultBuilderRecipe(0)];
   const [sortId, setSortId] = useState(initialSort?.id ?? null);
-  const [sortName, setSortName] = useState(initialSort?.name ?? "My Apple Music cleanup");
+  const [sortName, setSortName] = useState(initialSort?.name ?? "My Apple Music organization");
   const [recipes, setRecipes] = useState<BuilderRecipe[]>(initialBuilderRecipes);
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(recipes[0]?.id ?? null);
   const [deletedRecipeIds, setDeletedRecipeIds] = useState<string[]>([]);
@@ -342,10 +342,11 @@ export function SortBuilder({
             {headerLabel}
           </p>
           <h2 className="mt-2 font-display text-3xl font-semibold tracking-[0em] text-white md:text-4xl">
-            Build playlist plans
+            Organize your library
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            Create one Sort with multiple playlist plans. Each plan becomes a playlist after sorting.
+            Create playlists on the left, define each recipe on the right, then generate proposed
+            tracks from your Apple Music library.
           </p>
         </div>
         <StatusPill label="Apple Music source" tone="success" />
@@ -376,7 +377,7 @@ export function SortBuilder({
               disabled
               className="mt-2 w-full min-w-0 rounded-2xl border border-white/10 bg-[#171113] px-4 py-3 text-sm text-white outline-none"
             >
-              <option value="create_new">Create new playlists only</option>
+              <option value="create_new">Create app playlists only</option>
               <option value="do_not_modify">Do not modify existing playlists</option>
               <option value="avoid_duplicates">Avoid duplicates where possible</option>
             </select>
@@ -457,6 +458,12 @@ export function SortBuilderTopBar({ autosaveStatus }: { autosaveStatus: Autosave
             className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.05] px-4 text-sm font-semibold text-platform-secondary transition hover:-translate-y-0.5 hover:bg-white/[0.09] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
           >
             Drafts
+          </Link>
+          <Link
+            href="/app/playlists"
+            className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.05] px-4 text-sm font-semibold text-platform-secondary transition hover:-translate-y-0.5 hover:bg-white/[0.09] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
+          >
+            Playlist Hub
           </Link>
         </nav>
         <div className="min-w-0 lg:flex lg:justify-end">

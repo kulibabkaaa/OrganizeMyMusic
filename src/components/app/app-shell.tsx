@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import type { PropsWithChildren } from "react";
 
 import { AppMobileNav } from "@/components/app/app-mobile-nav";
@@ -11,14 +12,14 @@ export function AppShell({
 }: PropsWithChildren<{ title: string; subtitle: string }>) {
   return (
     <div className="min-h-screen bg-platform-bg text-white">
-      <div className="pointer-events-none fixed inset-0 bg-hero-bloom opacity-80" />
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_76%_8%,rgba(255,255,255,0.12),transparent_22%),linear-gradient(115deg,rgba(0,0,0,0)_52%,rgba(255,4,54,0.10)_100%)]" />
-      <a
+      <Link
         href="#app-main"
-        className="sr-only fixed left-4 top-4 z-[60] rounded-full bg-white px-4 py-2 text-sm font-semibold text-black focus:not-sr-only focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-platform-pink"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-black"
       >
         Skip to main content
-      </a>
+      </Link>
+      <div className="pointer-events-none fixed inset-0 bg-hero-bloom opacity-70" />
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(115deg,rgba(0,0,0,0)_52%,rgba(255,4,54,0.08)_100%)]" />
       <AppSidebar />
       <AppMobileNav />
 
@@ -26,7 +27,7 @@ export function AppShell({
         id="app-main"
         tabIndex={-1}
         aria-label="Main app content"
-        className="relative mx-auto max-w-7xl px-5 py-8 outline-none sm:px-6 sm:py-10 lg:ml-72 lg:px-10"
+        className="relative mx-auto max-w-7xl px-5 py-8 outline-none lg:ml-72 lg:px-10 lg:py-10"
       >
         <div className="mb-10">
           <h1 className="font-display text-4xl font-semibold tracking-[0em] md:text-5xl">

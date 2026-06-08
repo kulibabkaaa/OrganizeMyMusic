@@ -6,6 +6,7 @@ import { ActiveSortsCard } from "@/components/app/dashboard/active-sorts-card";
 import { DashboardReadyEmpty } from "@/components/app/dashboard/dashboard-ready-empty";
 import { DashboardReturning } from "@/components/app/dashboard/dashboard-returning";
 import { LibraryStatusCard } from "@/components/app/dashboard/library-status-card";
+import { PlatformQueuesCard } from "@/components/app/dashboard/platform-queues-card";
 import { RecentSortCard } from "@/components/app/dashboard/recent-sort-card";
 import {
   getActiveSortCounts,
@@ -59,13 +60,14 @@ describe("dashboard ready states", () => {
     const markup = renderToStaticMarkup(<DashboardReadyEmpty latestSync={completedSync} />);
 
     expect(markup).toContain("Your music workspace");
-    expect(markup).toContain("Create your first Sort");
-    expect(markup).toContain("Build playlists by mood, genre, language, era, region, or custom rules.");
+    expect(markup).toContain("Organize your library first");
+    expect(markup).toContain("Organize My Library");
+    expect(markup).toContain("Create Playlist");
     expect(markup).toContain("Library Status");
     expect(markup).toContain("Active Sorts");
     expect(markup).toContain("Recent Activity");
-    expect(markup).toContain("Recent Sorts");
-    expect(markup).toContain("No Sorts yet.");
+    expect(markup).toContain("Saved Playlists");
+    expect(markup).toContain("Your app-created playlists will appear here");
     expect(markup).not.toContain("Road trip cleanup");
   });
 
@@ -77,7 +79,7 @@ describe("dashboard ready states", () => {
     expect(markup).toContain("Library Status");
     expect(markup).toContain("Active Sorts");
     expect(markup).toContain("Recent Activity");
-    expect(markup).toContain("Recent Sorts");
+    expect(markup).toContain("Recent Organization Work");
     expect(markup).toContain("Road trip cleanup");
     expect(markup).toContain("Continue editing");
     expect(markup).toContain("/app/sorts/sort_draft/builder");
@@ -101,6 +103,46 @@ describe("dashboard ready states", () => {
     expect(markup).toContain("Ready for review");
     expect(markup).toContain("Apple Music");
     expect(markup).toContain("3 Playlist Recipes");
+  });
+
+  it("renders actionable platform queues for saved playlists, review, and new music", () => {
+    const markup = renderToStaticMarkup(
+      <PlatformQueuesCard
+        playlists={[
+          {
+            id: "playlist_1",
+            userId: "user_1",
+            sourceProvider: "apple_music",
+            name: "Ukrainian Rap",
+            description: "High-energy Ukrainian rap.",
+            status: "active",
+            applePlaylistId: null,
+            createdFromSortRunId: "sort_1",
+            latestLibrarySyncId: "sync_2",
+            lastProcessedNewMusicSyncId: null,
+            lastGeneratedAt: "2026-06-08T10:00:00.000Z",
+            lastExportedAt: null,
+            createdAt: "2026-06-08T09:00:00.000Z",
+            updatedAt: "2026-06-08T10:00:00.000Z",
+            archivedAt: null
+          }
+        ]}
+        reviewQueueCount={2}
+        newMusicSummary={{
+          latestSyncId: "sync_2",
+          previousSyncId: "sync_1",
+          newTrackCount: 4,
+          canProcess: true,
+          message: "4 new songs detected since the previous sync."
+        }}
+      />
+    );
+
+    expect(markup).toContain("Saved playlists and queues");
+    expect(markup).toContain("Review Tracks");
+    expect(markup).toContain("Process New Music");
+    expect(markup).toContain("/app/playlists?focus=review");
+    expect(markup).toContain("/app/library#new-music");
   });
 });
 

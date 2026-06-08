@@ -6,7 +6,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import {
   createSupabaseLibrarySyncStore,
   getLatestLibrarySyncStatus,
-  queueLibrarySyncAfterConnection
+  queueLibrarySync
 } from "@/modules/library-syncs/queue";
 
 export async function POST() {
@@ -26,7 +26,7 @@ export async function POST() {
   }
 
   const result = await withPgBoss((queue) =>
-    queueLibrarySyncAfterConnection({
+    queueLibrarySync({
       store: createSupabaseLibrarySyncStore(supabase),
       queue,
       userId: session.user.id
@@ -50,7 +50,7 @@ export async function POST() {
   return NextResponse.json({
     syncId: result.sync.id,
     status: result.sync.status,
-    jobId: result.status === "queued" ? result.jobId : null
+    jobId: result.jobId
   });
 }
 
@@ -75,15 +75,8 @@ export async function GET() {
     userId: session.user.id
   });
 
-  return NextResponse.json(
-    {
-      sync: result?.sync ?? null,
-      events: result?.events ?? []
-    },
-    {
-      headers: {
-        "Cache-Control": "no-store"
-      }
-    }
-  );
+  return NextResponse.json({
+    sync: result?.sync ?? null,
+    events: result?.events ?? []
+  });
 }

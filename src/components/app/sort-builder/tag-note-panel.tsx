@@ -30,7 +30,7 @@ export function TagNotePanel({
           Review context only
         </p>
         <p className="mt-1 text-sm leading-6 text-platform-secondary">
-          Tag notes are saved with the playlist plan for review. They do not change sorting.
+          Tag notes are saved with the playlist recipe for review. They do not change sorting.
         </p>
       </div>
       <label className="block text-sm font-semibold text-white">

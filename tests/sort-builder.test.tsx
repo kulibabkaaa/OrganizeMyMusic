@@ -80,7 +80,7 @@ const recipes: PlaylistRecipe[] = [
 ];
 
 describe("Sort builder validation", () => {
-  it("requires a named Sort and usable playlist plans before preview", () => {
+  it("requires a named Sort and usable playlist recipes before generation", () => {
     expect(
       validateSortBuilder({
         sortName: "My Apple Music cleanup",
@@ -102,7 +102,7 @@ describe("Sort builder validation", () => {
     ).toEqual({
       canSave: false,
       canPreview: false,
-      message: "Name this Sort and add at least one playlist plan."
+      message: "Name this Sort and add at least one playlist recipe."
     });
 
     expect(
@@ -178,7 +178,7 @@ describe("Sort builder validation", () => {
       canSave: false,
       canPreview: false,
       message:
-        'Fix target size for "Too many tracks": Keep every playlist plan target size at 500 tracks or fewer.'
+        'Fix target size for "Too many tracks": Keep every playlist recipe target size at 500 tracks or fewer.'
     });
 
     expect(
@@ -204,7 +204,7 @@ describe("Sort builder validation", () => {
       canSave: false,
       canPreview: false,
       message:
-        'Fix target size for "Inverted range": Keep each playlist plan target minimum less than or equal to its maximum.'
+        'Fix target size for "Inverted range": Keep each playlist recipe target minimum less than or equal to its maximum.'
     });
   });
 
@@ -272,14 +272,14 @@ describe("Sort builder validation", () => {
 
     expect(first).toMatchObject({
       position: 0,
-      name: "New playlist plan",
+      name: "New playlist",
       duplicatePolicy: "avoid_duplicates",
       allowExplicit: true,
       includeLibraryOnly: true
     });
     expect(duplicate).toMatchObject({
       position: 1,
-      name: "New playlist plan copy"
+      name: "New playlist copy"
     });
     expect(moved.map((recipe) => recipe.position)).toEqual([0, 1]);
     expect(moved[0].id).toBe(duplicate.id);
@@ -293,7 +293,7 @@ describe("SortBuilder", () => {
         mode="new"
         initialSort={null}
         initialRecipes={[]}
-        preview={{ canPreview: false, disabledReason: "Library sync must finish before previewing this Sort." }}
+        preview={{ canPreview: false, disabledReason: "Library sync must finish before generating this Sort." }}
       />
     );
 
@@ -304,22 +304,24 @@ describe("SortBuilder", () => {
     expect(markup).toContain("Drafts");
     expect(markup).toContain('href="/app/sorts?status=draft"');
     expect(markup).toContain('id="sort-builder-top-autosave-status"');
-    expect(markup).toContain("Build playlist plans");
-    expect(markup).toContain("Create one Sort with multiple playlist plans.");
+    expect(markup).toContain("Organize your library");
+    expect(markup).toContain("Create playlists on the left");
     expect(markup).toContain("Sort name");
     expect(markup).toContain("Source library");
     expect(markup).toContain("Apple Music");
     expect(markup).toContain("Output behavior");
-    expect(markup).toContain("Playlist plans");
-    expect(markup).toContain("One Sort can contain multiple playlist plans.");
-    expect(markup).toContain("Add plan");
+    expect(markup).toContain("Playlists");
+    expect(markup).toContain("Each playlist has its own saved recipe.");
+    expect(markup).toContain("Add playlist");
     expect(markup).toContain("Ready");
     expect(markup).toContain("Named");
     expect(markup).toContain("Supported tag added");
     expect(markup).toContain("Target size valid");
-    expect(markup).toContain("Plan name");
-    expect(markup).toContain("Plan note");
+    expect(markup).toContain("Playlist name");
+    expect(markup).toContain("Recipe instructions");
     expect(markup).toContain("Advanced settings");
+    expect(markup).toContain("<details");
+    expect(markup).not.toContain("<details open");
     expect(markup).toContain("Target size");
     expect(markup).toContain("15-25");
     expect(markup).toContain("25-50");
@@ -329,12 +331,12 @@ describe("SortBuilder", () => {
     expect(markup).toContain("Duplicate handling");
     expect(markup).toContain("Allow explicit tracks");
     expect(markup).toContain("Include library songs only");
-    expect(markup).toContain("Keep at least one playlist plan in this Sort.");
+    expect(markup).toContain("Keep at least one playlist in this Sort.");
     expect(markup).not.toContain("Move up");
     expect(markup).not.toContain("Move down");
     expect(markup).not.toContain("Save draft");
-    expect(markup).toContain("Preview Sort");
-    expect(markup).toContain("You can save this draft now. Preview unlocks when the library index is ready.");
+    expect(markup).toContain("Generate Review");
+    expect(markup).toContain("You can save this draft now. Preview becomes available when the library index is ready.");
   });
 
   it("renders saved recipes and enabled preview state for reopened drafts", () => {
@@ -359,15 +361,15 @@ describe("SortBuilder", () => {
     expect(markup).toContain("Selected");
     expect(markup).toContain("Ready");
     expect(markup).not.toContain("Needs attention");
-    expect(markup).toContain("Duplicate plan");
-    expect(markup).toContain("Delete plan");
-    expect(markup).toContain("Move up");
+    expect(markup).toContain("Duplicate playlist");
+    expect(markup).toContain("Delete playlist");
     expect(markup).toContain("Move down");
+    expect(markup).not.toContain("Move up");
     expect(markup).not.toContain("Confirm delete");
-    expect(markup).not.toContain("Confirm to remove this playlist plan from the Sort.");
+    expect(markup).not.toContain("Confirm to remove this playlist from the Sort.");
     expect(markup).not.toContain("Keep at least one playlist in this Sort.");
     expect(markup).toContain("2 playlists planned");
-    expect(markup).toContain("Preview Sort");
+    expect(markup).toContain("Generate Review");
     expect(markup).toContain("Draft autosaves.");
     expect(markup).toContain("Last saved May 26, 2026, 10:00 AM UTC");
   });
@@ -378,13 +380,13 @@ describe("SortBuilder", () => {
         mode="new"
         initialSort={null}
         initialRecipes={[]}
-        preview={{ canPreview: false, disabledReason: "Library sync must finish before previewing this Sort." }}
+        preview={{ canPreview: false, disabledReason: "Library sync must finish before generating this Sort." }}
       />
     );
 
     expect(markup).toContain('id="sort-builder-footer-message"');
     expect(markup).toContain('aria-describedby="sort-builder-footer-message"');
-    expect(markup).toContain("Preview unlocks when the library index is ready.");
+    expect(markup).toContain("Preview becomes available when the library index is ready.");
   });
 
   it("shows a visible reason while preview is disabled by saving", () => {
@@ -459,7 +461,7 @@ describe("SortBuilder", () => {
     expect(failedMarkup).toContain('aria-describedby="sort-builder-autosave-status"');
   });
 
-  it("renders a persistent top bar with Sorts navigation, Drafts, and autosave status", () => {
+  it("renders a persistent top bar with Sorts, Drafts, Playlist Hub, and autosave status", () => {
     const markup = renderToStaticMarkup(
       <SortBuilderTopBar
         autosaveStatus={{
@@ -476,6 +478,8 @@ describe("SortBuilder", () => {
     expect(markup).toContain('href="/app/sorts"');
     expect(markup).toContain("Drafts");
     expect(markup).toContain('href="/app/sorts?status=draft"');
+    expect(markup).toContain("Playlist Hub");
+    expect(markup).toContain('href="/app/playlists"');
     expect(markup).toContain('id="sort-builder-top-autosave-status"');
     expect(markup).toContain("Saved just now");
   });

@@ -34,7 +34,7 @@ export function PlaylistDetailsPanel({
             Playlist details
           </h2>
           <p className="mt-2 text-sm leading-6 text-platform-secondary">
-            Nothing is exported automatically. Existing Apple Music playlists will not be modified.
+            Nothing is exported automatically. Export creates Apple Music playlists and adds approved tracks.
           </p>
         </div>
         <StatusPill label="Review" tone="pink" />
@@ -62,7 +62,7 @@ export function PlaylistDetailsPanel({
           <dd className="font-semibold text-white">{summary.selectedPlaylistCount}</dd>
         </div>
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-          <dt className="text-platform-secondary">Tracks selected</dt>
+          <dt className="text-platform-secondary">Approved tracks</dt>
           <dd className="font-semibold text-white">{summary.selectedTrackCount}</dd>
         </div>
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
@@ -92,7 +92,7 @@ export function PlaylistDetailsPanel({
           aria-describedby={exportDisabledReasonId}
           onClick={onOpenExport}
         >
-          Export selected playlists
+          Export approved tracks
         </Button>
         {summary.selectedPlaylistCount === 0 ? (
           <p id={exportDisabledReasonId} className="text-sm leading-6 text-platform-secondary">

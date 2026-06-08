@@ -59,13 +59,14 @@ export function ExportConfirmationDialog({
             Confirm Apple Music export
           </h2>
           <p id="export-confirmation-description" className="mt-3 text-sm leading-7 text-platform-secondary">
-            Export {summary.selectedPlaylistCount} selected playlists to Apple Music?
+            Create {summary.selectedPlaylistCount} Apple Music playlists and add{" "}
+            {summary.selectedTrackCount} approved tracks?
           </p>
         </div>
 
         <p className="rounded-2xl border border-[rgba(255,77,109,0.28)] bg-[rgba(255,77,109,0.10)] p-4 text-sm leading-6 text-platform-secondary">
-          Organize Your Music will create new Apple Music playlists only. Existing playlists will not be modified.
-          {summary.selectedTrackCount} reviewed tracks are selected for export.
+          Organize Your Music will create new Apple Music playlists only and add approved tracks from this review.
+          Existing Apple Music playlists will not be replaced, reordered, or removed.
         </p>
 
         {errorMessage ? (
@@ -88,7 +89,7 @@ export function ExportConfirmationDialog({
             onClick={onConfirm}
             disabled={isSubmitting || summary.selectedPlaylistCount === 0}
           >
-            {isSubmitting ? "Queueing..." : "Export selected playlists"}
+            {isSubmitting ? "Queueing..." : "Create Apple Music playlists"}
           </Button>
         </div>
       </Card>

@@ -1,17 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { POST } from "@/app/api/app/sorts/[sortId]/checkout/route";
+import { POST as checkoutPost } from "@/app/api/app/sorts/[sortId]/checkout/route";
+import { POST as startPost } from "@/app/api/app/sorts/[sortId]/start/route";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { withPgBoss } from "@/lib/pg-boss";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import {
   createSupabasePaymentStore,
   getCheckoutMode,
+  unlockSortWithDeferredBilling,
   unlockSortWithDevBypass
 } from "@/modules/payments/checkout";
 import {
   createSupabaseFullSortStore,
-  queueFullSortAfterPayment
+  queueFullSortAfterStart
 } from "@/modules/sorts/full-sort-job";
 
 vi.mock("@/lib/auth/session", () => ({
@@ -33,13 +35,14 @@ vi.mock("@/modules/payments/checkout", async (importOriginal) => {
     ...actual,
     createSupabasePaymentStore: vi.fn(),
     getCheckoutMode: vi.fn(),
+    unlockSortWithDeferredBilling: vi.fn(),
     unlockSortWithDevBypass: vi.fn()
   };
 });
 
 vi.mock("@/modules/sorts/full-sort-job", () => ({
   createSupabaseFullSortStore: vi.fn(),
-  queueFullSortAfterPayment: vi.fn()
+  queueFullSortAfterStart: vi.fn()
 }));
 
 const authMock = vi.mocked(getAuthenticatedSession);
@@ -47,11 +50,16 @@ const withPgBossMock = vi.mocked(withPgBoss);
 const serviceRoleMock = vi.mocked(createSupabaseServiceRoleClient);
 const storeMock = vi.mocked(createSupabasePaymentStore);
 const modeMock = vi.mocked(getCheckoutMode);
+const deferredUnlockMock = vi.mocked(unlockSortWithDeferredBilling);
 const bypassMock = vi.mocked(unlockSortWithDevBypass);
 const fullSortStoreMock = vi.mocked(createSupabaseFullSortStore);
-const queueFullSortMock = vi.mocked(queueFullSortAfterPayment);
+const queueFullSortMock = vi.mocked(queueFullSortAfterStart);
+const paymentStore = {
+  store: "payment",
+  getSortForCheckout: vi.fn()
+};
 
-describe("POST /api/app/sorts/[sortId]/checkout", () => {
+describe("POST /api/app/sorts/[sortId]/start", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authMock.mockResolvedValue({
@@ -60,10 +68,23 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       supabase: null
     } as unknown as Awaited<ReturnType<typeof getAuthenticatedSession>>);
     serviceRoleMock.mockReturnValue({} as ReturnType<typeof createSupabaseServiceRoleClient>);
-    storeMock.mockReturnValue({ store: "payment" } as unknown as ReturnType<typeof createSupabasePaymentStore>);
+    paymentStore.getSortForCheckout.mockResolvedValue({
+      id: "sort_1",
+      name: "My Apple Music cleanup",
+      state: "preview_ready",
+      paymentStatus: "pending",
+      librarySyncId: "sync_1",
+      recipeCount: 3,
+      estimatedTrackCount: 90
+    });
+    storeMock.mockReturnValue(paymentStore as unknown as ReturnType<typeof createSupabasePaymentStore>);
     fullSortStoreMock.mockReturnValue({ store: "full-sort" } as unknown as ReturnType<typeof createSupabaseFullSortStore>);
     withPgBossMock.mockImplementation(async (callback) => callback({ queue: true } as never));
-    modeMock.mockReturnValue("dev_bypass");
+    modeMock.mockReturnValue("deferred");
+    deferredUnlockMock.mockResolvedValue({
+      status: "paid",
+      processingUrl: "/app/sorts/sort_1/processing"
+    });
     bypassMock.mockResolvedValue({
       status: "paid",
       processingUrl: "/app/sorts/sort_1/processing"
@@ -82,7 +103,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       supabase: null
     });
 
-    const response = await POST(new Request("http://test.local"), {
+    const response = await startPost(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
 
@@ -90,22 +111,54 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
     expect(response.status).toBe(401);
   });
 
-  it("keeps checkout blocked when payments and dev bypass are disabled", async () => {
+  it("keeps start blocked when the mode is explicitly disabled", async () => {
     modeMock.mockReturnValueOnce("disabled");
 
-    const response = await POST(new Request("http://test.local"), {
+    const response = await startPost(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
 
     await expect(response.json()).resolves.toEqual({
-      error: "Payment is not enabled for this Sort."
+      error: "Full organization start is not enabled for this Sort."
     });
     expect(response.status).toBe(409);
+    expect(deferredUnlockMock).not.toHaveBeenCalled();
     expect(bypassMock).not.toHaveBeenCalled();
   });
 
-  it("marks the Sort paid only through the explicit dev bypass and queues full sorting", async () => {
-    const response = await POST(new Request("http://test.local"), {
+  it("unlocks the Sort through deferred billing and queues full organization by default", async () => {
+    const response = await startPost(new Request("http://test.local"), {
+      params: Promise.resolve({ sortId: "sort_1" })
+    });
+
+    await expect(response.json()).resolves.toEqual({
+      status: "paid",
+      mode: "deferred",
+      processingUrl: "/app/sorts/sort_1/processing",
+      fullSort: {
+        status: "queued",
+        jobId: "job_1"
+      }
+    });
+    expect(response.status).toBe(200);
+    expect(deferredUnlockMock).toHaveBeenCalledWith({
+      store: paymentStore,
+      sortRunId: "sort_1",
+      userId: "user_1"
+    });
+    expect(bypassMock).not.toHaveBeenCalled();
+    expect(queueFullSortMock).toHaveBeenCalledWith({
+      store: { store: "full-sort" },
+      queue: { queue: true },
+      sortRunId: "sort_1",
+      userId: "user_1"
+    });
+  });
+
+  it("keeps the explicit dev bypass path available when configured", async () => {
+    modeMock.mockReturnValueOnce("dev_bypass");
+
+    const response = await startPost(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
 
@@ -119,8 +172,9 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       }
     });
     expect(response.status).toBe(200);
+    expect(deferredUnlockMock).not.toHaveBeenCalled();
     expect(bypassMock).toHaveBeenCalledWith({
-      store: { store: "payment" },
+      store: paymentStore,
       sortRunId: "sort_1",
       userId: "user_1"
     });
@@ -130,5 +184,35 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       sortRunId: "sort_1",
       userId: "user_1"
     });
+  });
+
+  it("does not unlock or queue when the Sort is missing start prerequisites", async () => {
+    paymentStore.getSortForCheckout.mockResolvedValueOnce({
+      id: "sort_1",
+      name: "Draft cleanup",
+      state: "draft",
+      paymentStatus: "pending",
+      librarySyncId: null,
+      recipeCount: 0,
+      estimatedTrackCount: null
+    });
+
+    const response = await startPost(new Request("http://test.local"), {
+      params: Promise.resolve({ sortId: "sort_1" })
+    });
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Generate a reviewable preview before starting full organization."
+    });
+    expect(response.status).toBe(409);
+    expect(deferredUnlockMock).not.toHaveBeenCalled();
+    expect(bypassMock).not.toHaveBeenCalled();
+    expect(queueFullSortMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/app/sorts/[sortId]/checkout compatibility", () => {
+  it("reuses the canonical full-organization start handler", () => {
+    expect(checkoutPost).toBe(startPost);
   });
 });

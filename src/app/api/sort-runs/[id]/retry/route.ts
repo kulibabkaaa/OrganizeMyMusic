@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedSession } from "@/lib/auth/session";
-import { withPgBoss } from "@/lib/pg-boss";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
-import { retrySortRunWriteBack } from "@/modules/recovery/retry";
-import { createSupabaseSortRunRetryStore } from "@/modules/recovery/supabase";
 
 export async function POST(
   _request: Request,
@@ -16,39 +12,14 @@ export async function POST(
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
 
-  const supabase = createSupabaseServiceRoleClient();
-
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Retry is unavailable right now." },
-      { status: 503 }
-    );
-  }
-
   const { id } = await context.params;
-  const result = await withPgBoss((queue) =>
-    retrySortRunWriteBack({
-      store: createSupabaseSortRunRetryStore(supabase),
-      queue,
-      sortRunId: id,
-      userId: session.user.id
-    })
+
+  return NextResponse.json(
+    {
+      error: "Legacy Sort write-back retry is disabled. Reopen the Sort in the platform review flow before exporting approved tracks.",
+      nextPath: `/app/sorts/${encodeURIComponent(id)}/review`,
+      nextApiPath: `/api/app/sorts/${encodeURIComponent(id)}/export`
+    },
+    { status: 409 }
   );
-
-  if (!result) {
-    return NextResponse.json(
-      { error: "Retry is unavailable right now." },
-      { status: 503 }
-    );
-  }
-
-  if (result.status === "not_found") {
-    return NextResponse.json({ error: result.message }, { status: 404 });
-  }
-
-  if (result.status !== "retried") {
-    return NextResponse.json({ error: result.message }, { status: 409 });
-  }
-
-  return NextResponse.json(result);
 }
