@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { AppleMusicLibraryCard } from "@/components/app/library/apple-music-library-card";
-import { ComingSoonProviderCard } from "@/components/app/library/coming-soon-provider-card";
 import { ConnectedLibrariesPage } from "@/components/app/library/connected-libraries-page";
 import { NewMusicRecommendationList } from "@/components/app/library/new-music-card";
 
@@ -35,7 +34,7 @@ const connectedLibrary = {
 };
 
 describe("connected libraries page", () => {
-  it("renders Apple Music access, sync status, actions, disabled providers, and access note", () => {
+  it("renders Apple Music access, sync status, actions, MVP scope, and access note", () => {
     const markup = renderToStaticMarkup(
       <ConnectedLibrariesPage
         appleMusicConnection={connectedLibrary.connection}
@@ -65,10 +64,9 @@ describe("connected libraries page", () => {
     expect(markup).toContain("Disconnect");
     expect(markup).toContain('aria-describedby="apple-music-disconnect-disabled-reason"');
     expect(markup).toContain("Disconnect is paused for MVP safety.");
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("YouTube Music");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("Unavailable");
+    expect(markup).toContain("Apple Music only for MVP");
+    expect(markup).not.toContain("Spotify");
+    expect(markup).not.toContain("YouTube Music");
     expect(markup).toContain("Process New Music");
     expect(markup).toContain("4 new songs detected since the previous sync.");
     expect(markup).toContain("Returns review-only playlist recommendations.");
@@ -109,15 +107,6 @@ describe("connected libraries page", () => {
     expect(markup).toContain("Apple Music rejected the request.");
     expect(markup).toContain("Retry sync");
     expect(markup).toContain("Refresh status");
-  });
-
-  it("renders coming-soon providers as disabled", () => {
-    const markup = renderToStaticMarkup(<ComingSoonProviderCard name="Spotify" />);
-
-    expect(markup).toContain("Spotify");
-    expect(markup).toContain("Coming later");
-    expect(markup).toContain("Unavailable");
-    expect(markup).toContain("aria-disabled");
   });
 
   it("renders new-music recommendations with a review-first playlist link", () => {
