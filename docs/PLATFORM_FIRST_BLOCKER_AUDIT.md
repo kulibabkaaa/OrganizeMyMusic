@@ -80,6 +80,9 @@ Latest local audit on 2026-06-08:
 - Sort batch export now mirrors reviewed keep/remove choices into persistent
   playlist generation tracks, so Playlist Hub review state matches the exported
   Sort selection.
+- Admin Sort-run inspection now requires an authenticated admin profile and
+  reads Sort runs, playlist counts, owner profiles, and job events from
+  Supabase instead of demo Sort data.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
