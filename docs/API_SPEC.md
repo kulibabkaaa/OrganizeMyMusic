@@ -429,7 +429,10 @@ Rules:
 - Requires authenticated user.
 - Requires two completed library syncs.
 - Uses saved app playlist recipes.
-- Returns review-only recommendations.
+- Stores matching recommendations as `ready_for_review` playlist generations.
+- Returns review-only recommendation summaries for the current request.
+- Reuses an existing `new_music` generation for the same playlist/latest-sync
+  pair instead of duplicating review queues on retry.
 - Does not write to Apple Music.
 - Does not update existing Apple Music playlists automatically.
 
