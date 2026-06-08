@@ -19,7 +19,7 @@ export function CreateSortButton() {
       };
 
       if (payload.sortRun?.id) {
-        router.push(`/sorts/${payload.sortRun.id}`);
+        router.push(`/app/sorts/${payload.sortRun.id}`);
         router.refresh();
       }
     });
@@ -31,4 +31,3 @@ export function CreateSortButton() {
     </Button>
   );
 }
-

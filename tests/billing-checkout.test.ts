@@ -17,7 +17,7 @@ describe("legacy sort checkout", () => {
       })
     ).resolves.toEqual({
       mode: "dev_bypass",
-      checkoutUrl: "/sorts/sort_123?payment=dev_bypass"
+      checkoutUrl: "/app/sorts/sort_123?payment=dev_bypass"
     });
   });
 });

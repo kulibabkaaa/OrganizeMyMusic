@@ -20,6 +20,8 @@ Latest local audit on 2026-06-08:
 - `GET /api/apple/connection` now exposes authenticated Apple Music connection
   status without returning raw or encrypted token fields.
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.
+- Legacy dashboard and checkout helpers now point users at canonical
+  `/app/sorts/*` routes while compatibility routes remain available.
 - The playlist hub and playlist detail screens were simplified to reduce
   always-visible metrics, safety panels, and history blocks.
 - Dashboard queue metrics now route directly to saved playlists, playlist review,
