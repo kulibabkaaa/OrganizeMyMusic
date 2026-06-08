@@ -176,7 +176,10 @@ Latest local audit on 2026-06-08:
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
 - `npm run platform:check` passes with required env, encryption-key strength,
   migrations, RLS, linking columns, recipe scope, worker queue registration,
-  and no queued MVP jobs.
+  and no active, queued, retrying, or failed MVP worker jobs.
+- `platform:check` now fails when MVP worker queues contain active, queued,
+  retrying, or failed jobs, so production smoke cannot start from a dirty worker
+  backlog by accident.
 - Local `npm run build` passes with Next.js `15.5.19`; Vercel preview also
   passes for the PR branch.
 

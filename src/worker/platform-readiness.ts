@@ -33,6 +33,7 @@ const requiredQueues = [
   "playlist-create",
   "playlist-generation-export"
 ] as const;
+const blockingJobStates = ["active", "created", "failed", "retry"] as const;
 
 type CheckStatus = "pass" | "fail";
 
@@ -237,13 +238,16 @@ async function run() {
       `,
       [[...requiredQueues]]
     );
+    const blockingJobs = jobRows.rows.filter((row) =>
+      blockingJobStates.includes(row.state as (typeof blockingJobStates)[number])
+    );
     checks.push(
       result(
         "worker job backlog",
-        "pass",
-        jobRows.rows.length === 0
-          ? "no queued jobs for MVP worker queues"
-          : jobRows.rows.map((row) => `${row.name}:${row.state}=${row.count}`).join(", ")
+        blockingJobs.length === 0 ? "pass" : "fail",
+        blockingJobs.length === 0
+          ? "no active, queued, retrying, or failed jobs for MVP worker queues"
+          : blockingJobs.map((row) => `${row.name}:${row.state}=${row.count}`).join(", ")
       )
     );
   } finally {

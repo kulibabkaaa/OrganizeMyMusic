@@ -38,7 +38,9 @@ npm run platform:check
 `platform:check` is read-only. It verifies required server env presence,
 `ENCRYPTION_KEY` minimum strength, hosted platform migrations, platform table
 RLS, playlist recipe scope, pg-boss queues, and current MVP worker job backlog
-without logging secret values or processing jobs.
+without logging secret values or processing jobs. It fails when MVP worker
+queues contain active, queued, retrying, or failed jobs because production
+smoke readiness requires those queues to be clear before a fresh run.
 
 The health check logs deployment revision metadata when the host exposes it.
 For Railway, check the log line named `Worker deployment revision.` and compare
@@ -134,8 +136,8 @@ As of 2026-06-08:
   - `full-sort`
   - `playlist-create`
   - `playlist-generation-export`
-- Hosted pg-boss has no queued jobs for those four queues at the time of this
-  verification.
+- Hosted pg-boss has no active, queued, retrying, or failed jobs for those four
+  queues at the time of this verification.
 - Railway must still be redeployed with the current platform-first worker code
   before production smoke can prove `full-sort` and
   `playlist-generation-export` processing.
