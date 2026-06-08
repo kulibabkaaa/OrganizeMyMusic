@@ -22,6 +22,7 @@ import {
 } from "@/modules/playlist-recipes/store";
 import {
   createSupabasePlaylistGenerationStore,
+  PlaylistGenerationTrackNotFoundError,
   type PlaylistGenerationStore
 } from "@/modules/playlists/generation-store";
 import {
@@ -56,7 +57,13 @@ vi.mock("@/modules/playlist-recipes/store", () => ({
 }));
 
 vi.mock("@/modules/playlists/generation-store", () => ({
-  createSupabasePlaylistGenerationStore: vi.fn()
+  createSupabasePlaylistGenerationStore: vi.fn(),
+  PlaylistGenerationTrackNotFoundError: class PlaylistGenerationTrackNotFoundError extends Error {
+    constructor() {
+      super("Playlist generation track not found.");
+      this.name = "PlaylistGenerationTrackNotFoundError";
+    }
+  }
 }));
 
 vi.mock("@/modules/playlists/generation-export", () => ({
@@ -623,6 +630,37 @@ describe("platform playlist API routes", () => {
     });
     expect(response.status).toBe(409);
     expect(generationStore.updateTrackDecisions).not.toHaveBeenCalled();
+  });
+
+  it("returns not found when a reviewed track does not belong to the generation", async () => {
+    vi.mocked(generationStore.updateTrackDecisions).mockRejectedValueOnce(
+      new PlaylistGenerationTrackNotFoundError()
+    );
+
+    const response = await PATCH_GENERATION_TRACKS(
+      new Request("http://test.local", {
+        method: "PATCH",
+        body: JSON.stringify({
+          decisions: [
+            {
+              trackId: "99999999-9999-4999-8999-999999999999",
+              decision: "remove"
+            }
+          ]
+        })
+      }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Playlist generation track not found."
+    });
+    expect(response.status).toBe(404);
   });
 
   it("marks a generated playlist reviewed only when review completion is explicit", async () => {

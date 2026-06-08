@@ -76,7 +76,7 @@ describe("DashboardSyncing", () => {
     );
 
     expect(markup).toContain("Apple Music connected");
-    expect(markup).toContain("Syncing your library so you can create your first Sort.");
+    expect(markup).toContain("Syncing your library so you can organize it into saved playlists.");
     expect(markup).toContain('aria-valuenow="42"');
     expect(markup).toContain("Reading metadata");
     expect(markup).toContain("8,420 tracks read");
@@ -85,10 +85,11 @@ describe("DashboardSyncing", () => {
     expect(markup).toContain("Tracks read");
     expect(markup).toContain("Songs indexed");
     expect(markup).toContain("Estimated time appears after progress starts.");
-    expect(markup).toContain("Create Sort Draft");
+    expect(markup).toContain("Organize My Library");
     expect(markup).toContain(
-      "You can name a Sort and draft Playlist Recipes now. Preview stays locked until the library index is ready."
+      "You can set up playlist recipes now. Preview stays locked until the library index is ready."
     );
+    expect(markup).not.toContain("Create Sort Draft");
   });
 
   it("shows a prominent start-sync fallback when no sync is active", () => {

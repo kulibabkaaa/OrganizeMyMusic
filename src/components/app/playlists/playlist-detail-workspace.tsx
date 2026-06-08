@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useDialogAccessibility } from "@/components/ui/dialog-accessibility";
 import { StatusPill } from "@/components/ui/status-pill";
 import type {
   PlaylistGenerationHistoryItem,
@@ -52,6 +53,7 @@ export function PlaylistDetailWorkspace({
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
   const keptCount = useMemo(
@@ -68,6 +70,7 @@ export function PlaylistDetailWorkspace({
     Boolean(generation) &&
     keptCount > 0 &&
     generation?.generation.status === "reviewed";
+  const hasGeneratedBefore = generationHistory.length > 0 || Boolean(generation);
 
   async function saveRecipe(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,14 +123,6 @@ export function PlaylistDetailWorkspace({
       return;
     }
 
-    const confirmed = window.confirm(
-      `Create an Apple Music playlist and add ${keptCount} approved tracks?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     setIsExporting(true);
     setExportError(null);
     setExportMessage(null);
@@ -164,6 +159,7 @@ export function PlaylistDetailWorkspace({
           status: "exporting"
         }
       });
+      setIsExportDialogOpen(false);
       router.refresh();
     } finally {
       setIsExporting(false);
@@ -386,7 +382,11 @@ export function PlaylistDetailWorkspace({
                 }
               }}
             >
-              {isGenerating ? "Generating..." : "Generate Playlist"}
+              {isGenerating
+                ? "Generating..."
+                : hasGeneratedBefore
+                  ? "Regenerate Playlist"
+                  : "Generate Playlist"}
             </Button>
             <Link href="/app/playlists" className="inline-flex">
               <Button variant="glass">Back</Button>
@@ -565,7 +565,7 @@ export function PlaylistDetailWorkspace({
                 disabled={!canExport || isExporting}
                 variant={!canExport ? "disabled" : "primary"}
                 className="min-w-56"
-                onClick={exportGeneration}
+                onClick={() => setIsExportDialogOpen(true)}
               >
                 {isExporting ? "Exporting..." : "Create Apple Music playlist"}
               </Button>
@@ -573,6 +573,16 @@ export function PlaylistDetailWorkspace({
           </div>
         </Card>
       </section>
+
+      <PlaylistExportConfirmationDialog
+        isOpen={isExportDialogOpen}
+        playlistName={playlist.name}
+        approvedTrackCount={keptCount}
+        isSubmitting={isExporting}
+        errorMessage={exportError}
+        onClose={() => setIsExportDialogOpen(false)}
+        onConfirm={exportGeneration}
+      />
 
       <details className="rounded-[1.5rem] border border-platform-border bg-platform-card p-6">
         <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-4">
@@ -625,6 +635,91 @@ export function PlaylistDetailWorkspace({
           </p>
         )}
       </details>
+    </div>
+  );
+}
+
+export function PlaylistExportConfirmationDialog({
+  isOpen,
+  playlistName,
+  approvedTrackCount,
+  isSubmitting = false,
+  errorMessage,
+  onClose,
+  onConfirm
+}: {
+  isOpen: boolean;
+  playlistName: string;
+  approvedTrackCount: number;
+  isSubmitting?: boolean;
+  errorMessage?: string | null;
+  onClose: () => void;
+  onConfirm: () => void | Promise<void>;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const { onDialogKeyDown } = useDialogAccessibility({
+    isOpen,
+    dialogRef,
+    onClose,
+    closeDisabled: isSubmitting
+  });
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="playlist-export-confirmation-title"
+      aria-describedby="playlist-export-confirmation-description"
+      tabIndex={-1}
+      onKeyDown={onDialogKeyDown}
+      className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 backdrop-blur-sm"
+    >
+      <Card elevated className="w-full max-w-lg space-y-5">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-platform-muted">
+            Explicit confirmation required
+          </p>
+          <h2
+            id="playlist-export-confirmation-title"
+            className="mt-2 font-display text-2xl font-semibold tracking-[0em] text-white"
+          >
+            Create Apple Music playlist?
+          </h2>
+          <p
+            id="playlist-export-confirmation-description"
+            className="mt-3 text-sm leading-7 text-platform-secondary"
+          >
+            Export {playlistName} and add {approvedTrackCount} approved{" "}
+            {approvedTrackCount === 1 ? "track" : "tracks"} from your review.
+          </p>
+        </div>
+
+        <p className="rounded-2xl border border-[rgba(255,77,109,0.28)] bg-[rgba(255,77,109,0.10)] p-4 text-sm leading-6 text-platform-secondary">
+          Organize Your Music will create an app-managed Apple Music playlist and add only
+          approved tracks. Existing Apple Music playlists will not be replaced, reordered, or
+          removed.
+        </p>
+
+        {errorMessage ? (
+          <p className="rounded-2xl border border-[rgba(255,77,109,0.28)] bg-[rgba(255,77,109,0.10)] p-4 text-sm text-platform-danger">
+            {errorMessage}
+          </p>
+        ) : null}
+
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button onClick={onConfirm} disabled={isSubmitting || approvedTrackCount === 0}>
+            {isSubmitting ? "Queueing..." : "Create Apple Music playlist"}
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

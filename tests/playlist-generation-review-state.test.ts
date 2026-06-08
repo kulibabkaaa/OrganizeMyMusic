@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
+import {
+  createSupabasePlaylistGenerationStore,
+  PlaylistGenerationTrackNotFoundError
+} from "@/modules/playlists/generation-store";
 
 const generationRow = {
   id: "44444444-4444-4444-8444-444444444444",
@@ -83,12 +86,40 @@ describe("playlist generation review state", () => {
       }
     ]);
   });
+
+  it("rejects track decisions that do not match the generation", async () => {
+    const supabase = createReviewStateSupabase({
+      missingTrackIds: new Set(["99999999-9999-4999-8999-999999999999"])
+    });
+    const store = createSupabasePlaylistGenerationStore(supabase.client);
+
+    await expect(
+      store.updateTrackDecisions({
+        userId: "user_1",
+        playlistId: generationRow.playlist_id,
+        generationId: generationRow.id,
+        decisions: [
+          {
+            trackId: "99999999-9999-4999-8999-999999999999",
+            decision: "remove"
+          }
+        ]
+      })
+    ).rejects.toBeInstanceOf(PlaylistGenerationTrackNotFoundError);
+
+    expect(supabase.generationStatusUpdates).toEqual([]);
+  });
 });
 
-function createReviewStateSupabase() {
+function createReviewStateSupabase({
+  missingTrackIds = new Set<string>()
+}: {
+  missingTrackIds?: Set<string>;
+} = {}) {
   const state = {
     trackDecisionUpdates: [] as Array<Record<string, unknown>>,
     generationStatusUpdates: [] as Array<Record<string, unknown>>,
+    missingTrackIds,
     client: null as never
   };
 
@@ -106,14 +137,18 @@ function createQuery(
   state: {
     trackDecisionUpdates: Array<Record<string, unknown>>;
     generationStatusUpdates: Array<Record<string, unknown>>;
+    missingTrackIds: Set<string>;
   }
 ) {
   const query = {
     action: "select",
     eqCount: 0,
     values: null as Record<string, unknown> | null,
+    updateTrackId: null as string | null,
     select() {
-      query.action = "select";
+      if (query.action !== "update") {
+        query.action = "select";
+      }
       return query;
     },
     update(values: Record<string, unknown>) {
@@ -121,11 +156,15 @@ function createQuery(
       query.values = values;
       return query;
     },
-    eq() {
+    eq(field: string, value: string) {
       query.eqCount += 1;
 
       if (query.action === "update" && table === "playlist_generation_tracks") {
-        return query.eqCount >= 2 ? Promise.resolve({ data: null, error: null }) : query;
+        if (field === "id") {
+          query.updateTrackId = value;
+        }
+
+        return query;
       }
 
       if (query.action === "update" && table === "playlist_generations") {
@@ -150,6 +189,17 @@ function createQuery(
       return query;
     },
     maybeSingle() {
+      if (query.action === "update" && table === "playlist_generation_tracks") {
+        const matched =
+          query.updateTrackId === generationTrackRow.id &&
+          !state.missingTrackIds.has(query.updateTrackId);
+
+        return Promise.resolve({
+          data: matched ? { id: query.updateTrackId } : null,
+          error: null
+        });
+      }
+
       return Promise.resolve({ data: generationRow, error: null });
     },
     in() {
