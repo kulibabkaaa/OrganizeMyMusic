@@ -28,19 +28,12 @@ export function PlaylistsPage({
     >
       <section className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-platform-muted">
-            Saved playlist system
-          </p>
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-[0em] text-white md:text-4xl">
-            Build playlists from your library
+          <h2 className="font-display text-3xl font-semibold tracking-[0em] text-white md:text-4xl">
+            Your playlist workspace
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
-            Define the playlist, keep the recipe simple, generate proposed tracks, review every
-            track, then export approved tracks to Apple Music.
-          </p>
-          <p className="mt-2 max-w-2xl text-xs leading-6 text-platform-muted">
-            MVP safety: Organize Your Music only manages playlists created here. Existing Apple
-            Music playlists stay untouched.
+            Create or open a playlist, tune its recipe, review proposed tracks, then export
+            approved tracks to Apple Music.
           </p>
         </div>
         <Link href="/app/playlists/new" className="inline-flex">
