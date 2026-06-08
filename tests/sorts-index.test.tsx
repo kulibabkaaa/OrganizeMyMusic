@@ -144,7 +144,7 @@ describe("Sorts index UI", () => {
       {
         filter: "processing",
         title: "No Sorts are processing.",
-        description: "Processing Sorts appear here after you start a full Sort",
+        description: "Processing Sorts appear here after you start full organization",
         action: "View all Sorts",
         href: "/app/sorts"
       },

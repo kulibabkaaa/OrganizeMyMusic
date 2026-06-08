@@ -36,7 +36,7 @@ const snapshot: PreviewSnapshot = {
       trackFingerprints: ["fp_1", "fp_2"],
       appleSongIds: ["apple_1", "apple_2"],
       qualityWarnings: [
-        "Top matches are low-confidence. Review the tags before starting the full Sort.",
+        "Top matches are low-confidence. Review the tags before starting full organization.",
         "1 duplicate candidate skipped because this playlist plan avoids repeats."
       ],
       tracks: [
@@ -114,7 +114,7 @@ describe("review playlists page", () => {
     expect(markup).toContain("Matched tags");
     expect(markup).toContain("Actions");
     expect(markup).toContain("Sorting warnings");
-    expect(markup).toContain("Top matches are low-confidence. Review the tags before starting the full Sort.");
+    expect(markup).toContain("Top matches are low-confidence. Review the tags before starting full organization.");
     expect(markup).toContain("Back to dashboard");
     expect(markup).toContain("View all Sorts");
     expect(markup).toContain("Export selected playlists");

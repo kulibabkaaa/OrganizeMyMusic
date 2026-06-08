@@ -23,7 +23,7 @@ export function SortStartPage({
       : mode === "dev_bypass"
         ? "Dev bypass approved"
         : isDisabled
-          ? "Full Sort paused"
+          ? "Full organization paused"
           : "Billing";
   const statusTone =
     mode === "deferred"
@@ -76,7 +76,7 @@ export function SortStartPage({
             id={startDisabledReasonId}
             className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-platform-secondary"
           >
-            Full Sort processing is paused in this environment.
+            Full organization processing is paused in this environment.
           </p>
         ) : null}
         {mode === "deferred" ? (
