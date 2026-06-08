@@ -27,10 +27,17 @@ After the manual smoke actions, run the read-only database evidence checker:
 SMOKE_USER_EMAIL=listener@example.com npm run smoke:evidence
 ```
 
+For final completion proof, run the same checker in strict mode:
+
+```bash
+SMOKE_EVIDENCE_STRICT=true SMOKE_USER_EMAIL=listener@example.com npm run smoke:evidence
+```
+
 This prints masked user identity plus aggregate sync, playlist, generation,
 review, export, and new-music counts. It does not print track names, artist
 names, Apple Music user tokens, raw Apple payloads, recipe text, or playlist
 names.
+Strict mode exits non-zero if any completion row is still warning-only.
 
 Record the output here before each manual smoke run:
 
@@ -43,6 +50,22 @@ Vercel status:
 Railway status:
 Result:
 Notes:
+```
+
+Latest preflight record:
+
+```text
+Date: 2026-06-08
+Operator: Codex
+Production URL: https://organize-my-music.vercel.app
+Health commit: 00cb40ea781f90670e415993b8a8550bbacd0a29
+Vercel status: success, production deployment dpl_2MkzXwCN6SqpEsCByDdpFeEmdUL6
+Railway status: success, GitHub context "hearty-recreation - OrganizeMyMusic"
+Result: pass
+Notes: Read-only preflight passed for production health, signed-out landing,
+signed-out dashboard redirect state, and GitHub deployment statuses. Vercel
+status was added manually only after production health confirmed the deployed
+main commit.
 ```
 
 ## Required Manual Evidence

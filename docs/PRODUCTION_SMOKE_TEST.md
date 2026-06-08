@@ -98,9 +98,11 @@ library data and creates real playlists only after explicit confirmation.
 40. Record any partial failures and retry behavior.
 41. Update `docs/PLATFORM_FIRST_SMOKE_EVIDENCE.md` with the full result before
     claiming the platform-first MVP goal is complete.
-42. Run `SMOKE_USER_EMAIL=listener@example.com npm run smoke:evidence` and add
-    its aggregate output to the evidence log. This command is read-only and
-    must not print track names, recipe text, raw Apple payloads, or tokens.
+42. Run
+    `SMOKE_EVIDENCE_STRICT=true SMOKE_USER_EMAIL=listener@example.com npm run smoke:evidence`
+    and add its aggregate output to the evidence log. This command is
+    read-only, must exit non-zero while completion warnings remain, and must
+    not print track names, recipe text, raw Apple payloads, or tokens.
 
 ## Historical Sort-first smoke path
 
@@ -170,6 +172,8 @@ As of 2026-06-08:
 - Local `npm run smoke:preflight` verifies the production health route,
   signed-out landing/dashboard surfaces, and successful Vercel/Railway GitHub
   deployment statuses without creating jobs or using Apple Music credentials.
+- Latest safe preflight passed on 2026-06-08 for production commit
+  `00cb40ea781f90670e415993b8a8550bbacd0a29`.
 - Hosted pg-boss has `library-sync`, `full-sort`, `playlist-create`, and
   `playlist-generation-export` queues registered, with no active, queued,
   retrying, or failed jobs for those queues at verification time.

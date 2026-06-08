@@ -22,7 +22,9 @@ describe("platform smoke evidence script", () => {
       "tsx src/worker/platform-smoke-evidence.ts"
     );
     expect(source).toContain("SMOKE_USER_EMAIL");
+    expect(source).toContain("SMOKE_EVIDENCE_STRICT");
     expect(source).toContain("maskEmail");
+    expect(source).toContain("FAIL strict evidence");
     expect(source).toContain("playlist_generations");
     expect(source).toContain("playlist_exports");
     expect(source).toContain("duplicate_new_music_queues");
@@ -39,8 +41,10 @@ describe("platform smoke evidence script", () => {
     expect(source).not.toContain("APPLE_PRIVATE_KEY");
     expect(source).not.toContain("musicUserToken");
     expect(smokeDoc).toContain("npm run smoke:evidence");
+    expect(smokeDoc).toContain("SMOKE_EVIDENCE_STRICT=true");
     expect(smokeDoc).toContain("does not print track names");
     expect(runbook).toContain("npm run smoke:evidence");
+    expect(runbook).toContain("SMOKE_EVIDENCE_STRICT=true");
     expect(runbook).toContain("read-only");
   });
 });

@@ -92,17 +92,23 @@ function result(name: string, status: CheckStatus, detail: string): CheckResult 
 
 async function run() {
   const missingEnv = requiredEnvKeys.filter((key) => !process.env[key]);
+  const strictEvidence = parseBoolean(process.env.SMOKE_EVIDENCE_STRICT);
+
   if (missingEnv.length > 0) {
-    printAndExit([
-      result("required env", "fail", `missing: ${missingEnv.join(", ")}`)
-    ]);
+    printAndExit(
+      [result("required env", "fail", `missing: ${missingEnv.join(", ")}`)],
+      strictEvidence
+    );
   }
 
   const databaseUrl = process.env.DATABASE_URL;
   const smokeUserEmail = process.env.SMOKE_USER_EMAIL?.trim().toLowerCase();
 
   if (!databaseUrl || !smokeUserEmail) {
-    printAndExit([result("required env", "fail", "missing database URL or smoke user email")]);
+    printAndExit(
+      [result("required env", "fail", "missing database URL or smoke user email")],
+      strictEvidence
+    );
   }
 
   const client = new Client({
@@ -116,9 +122,10 @@ async function run() {
     const profile = await getProfile(client, smokeUserEmail);
 
     if (!profile) {
-      printAndExit([
-        result("smoke user", "fail", `no profile found for ${maskEmail(smokeUserEmail)}`)
-      ]);
+      printAndExit(
+        [result("smoke user", "fail", `no profile found for ${maskEmail(smokeUserEmail)}`)],
+        strictEvidence
+      );
     }
 
     const [
@@ -204,10 +211,14 @@ async function run() {
       )
     ];
 
-    printAndExit(checks);
+    printAndExit(checks, strictEvidence);
   } finally {
     await client.end();
   }
+}
+
+function parseBoolean(value: string | undefined) {
+  return ["1", "true", "yes"].includes(value?.trim().toLowerCase() ?? "");
 }
 
 async function getProfile(client: Client, email: string): Promise<ProfileRow | null> {
@@ -440,12 +451,19 @@ function maskEmail(email: string): string {
   return `${localPart.slice(0, 2)}***@${domain}`;
 }
 
-function printAndExit(checks: CheckResult[]): never {
+function printAndExit(checks: CheckResult[], failOnWarn = false): never {
   for (const check of checks) {
     console.log(`${check.status.toUpperCase()} ${check.name}: ${check.detail}`);
   }
 
-  if (checks.some((check) => check.status === "fail")) {
+  const hasFailure = checks.some((check) => check.status === "fail");
+  const hasWarning = failOnWarn && checks.some((check) => check.status === "warn");
+
+  if (hasFailure || hasWarning) {
+    if (hasWarning && !hasFailure) {
+      console.log("FAIL strict evidence: unresolved warnings remain.");
+    }
+
     process.exit(1);
   }
 
