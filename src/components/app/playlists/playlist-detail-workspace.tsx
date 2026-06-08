@@ -72,6 +72,7 @@ export function PlaylistDetailWorkspace({
     Boolean(generation) &&
     keptCount > 0 &&
     (generation?.generation.status === "reviewed" || canRetryExport);
+  const canEditTrackDecisions = generation?.generation.status === "ready_for_review";
   const hasGeneratedBefore = generationHistory.length > 0 || Boolean(generation);
 
   async function saveRecipe(event: React.FormEvent<HTMLFormElement>) {
@@ -494,22 +495,29 @@ export function PlaylistDetailWorkspace({
                           {item.reason ?? "Matched recipe tags."}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <Button
-                            variant={item.decision === "keep" ? "danger" : "glass"}
-                            className="min-w-28"
-                            onClick={() =>
-                              updateDecision({
-                                playlistId: playlist.id,
-                                generationId: generation.generation.id,
-                                trackId: item.id,
-                                decision: item.decision === "keep" ? "remove" : "keep",
-                                setDecisionError,
-                                setGeneration
-                              })
-                            }
-                          >
-                            {item.decision === "keep" ? "Remove" : "Restore"}
-                          </Button>
+                          {canEditTrackDecisions ? (
+                            <Button
+                              variant={item.decision === "keep" ? "danger" : "glass"}
+                              className="min-w-28"
+                              onClick={() =>
+                                updateDecision({
+                                  playlistId: playlist.id,
+                                  generationId: generation.generation.id,
+                                  trackId: item.id,
+                                  decision: item.decision === "keep" ? "remove" : "keep",
+                                  setDecisionError,
+                                  setGeneration
+                                })
+                              }
+                            >
+                              {item.decision === "keep" ? "Remove" : "Restore"}
+                            </Button>
+                          ) : (
+                            <StatusPill
+                              label={item.decision === "keep" ? "Kept" : "Removed"}
+                              tone={item.decision === "keep" ? "success" : "muted"}
+                            />
+                          )}
                         </td>
                       </tr>
                     ))}

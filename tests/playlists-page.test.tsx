@@ -317,6 +317,9 @@ describe("playlists page", () => {
     expect(markup).toContain("Review Saved");
     expect(markup).toContain("Retry Apple Music export");
     expect(markup).not.toContain("Mark Review Complete");
+    expect(markup).not.toContain("Remove</button>");
+    expect(markup).not.toContain("Restore</button>");
+    expect(markup).toContain("Kept");
   });
 
   it("labels new-music generations as incremental suggestions", () => {

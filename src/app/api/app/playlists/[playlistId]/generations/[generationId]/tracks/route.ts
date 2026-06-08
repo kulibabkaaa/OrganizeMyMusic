@@ -5,6 +5,7 @@ import { getAuthenticatedSession } from "@/lib/auth/session";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import {
   createSupabasePlaylistGenerationStore,
+  PlaylistGenerationReviewLockedError,
   PlaylistGenerationTrackNotFoundError
 } from "@/modules/playlists/generation-store";
 import { createSupabasePlaylistStore } from "@/modules/playlists/store";
@@ -84,6 +85,10 @@ export async function PATCH(
 
     if (error instanceof PlaylistGenerationTrackNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+
+    if (error instanceof PlaylistGenerationReviewLockedError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
 
     throw error;

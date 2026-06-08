@@ -79,6 +79,13 @@ export class PlaylistGenerationTrackNotFoundError extends Error {
   }
 }
 
+export class PlaylistGenerationReviewLockedError extends Error {
+  constructor() {
+    super("Track decisions are locked after review is completed.");
+    this.name = "PlaylistGenerationReviewLockedError";
+  }
+}
+
 export type GeneratePlaylistResult =
   | {
       status: "generated";
@@ -296,6 +303,10 @@ export function createSupabasePlaylistGenerationStore(
 
       if (!generation) {
         return null;
+      }
+
+      if (generation.status !== "ready_for_review") {
+        throw new PlaylistGenerationReviewLockedError();
       }
 
       const updates = await Promise.all(

@@ -22,6 +22,7 @@ import {
 } from "@/modules/playlist-recipes/store";
 import {
   createSupabasePlaylistGenerationStore,
+  PlaylistGenerationReviewLockedError,
   PlaylistGenerationTrackNotFoundError,
   type PlaylistGenerationStore
 } from "@/modules/playlists/generation-store";
@@ -58,6 +59,12 @@ vi.mock("@/modules/playlist-recipes/store", () => ({
 
 vi.mock("@/modules/playlists/generation-store", () => ({
   createSupabasePlaylistGenerationStore: vi.fn(),
+  PlaylistGenerationReviewLockedError: class PlaylistGenerationReviewLockedError extends Error {
+    constructor() {
+      super("Track decisions are locked after review is completed.");
+      this.name = "PlaylistGenerationReviewLockedError";
+    }
+  },
   PlaylistGenerationTrackNotFoundError: class PlaylistGenerationTrackNotFoundError extends Error {
     constructor() {
       super("Playlist generation track not found.");
@@ -797,6 +804,37 @@ describe("platform playlist API routes", () => {
       error: "Playlist generation track not found."
     });
     expect(response.status).toBe(404);
+  });
+
+  it("does not update track decisions after review is completed", async () => {
+    vi.mocked(generationStore.updateTrackDecisions).mockRejectedValueOnce(
+      new PlaylistGenerationReviewLockedError()
+    );
+
+    const response = await PATCH_GENERATION_TRACKS(
+      new Request("http://test.local", {
+        method: "PATCH",
+        body: JSON.stringify({
+          decisions: [
+            {
+              trackId: generation.tracks[0].id,
+              decision: "remove"
+            }
+          ]
+        })
+      }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Track decisions are locked after review is completed."
+    });
+    expect(response.status).toBe(409);
   });
 
   it("marks a generated playlist reviewed only when review completion is explicit", async () => {

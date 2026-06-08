@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createSupabasePlaylistGenerationStore,
+  PlaylistGenerationReviewLockedError,
   PlaylistGenerationTrackNotFoundError
 } from "@/modules/playlists/generation-store";
 
@@ -130,17 +131,39 @@ describe("playlist generation review state", () => {
 
     expect(supabase.generationStatusUpdates).toEqual([]);
   });
+
+  it("locks track decisions after review is completed", async () => {
+    const supabase = createReviewStateSupabase({
+      generationStatus: "reviewed"
+    });
+    const store = createSupabasePlaylistGenerationStore(supabase.client);
+
+    await expect(
+      store.updateTrackDecisions({
+        userId: "user_1",
+        playlistId: generationRow.playlist_id,
+        generationId: generationRow.id,
+        decisions: [{ trackId: generationTrackRow.id, decision: "remove" }]
+      })
+    ).rejects.toBeInstanceOf(PlaylistGenerationReviewLockedError);
+
+    expect(supabase.trackDecisionUpdates).toEqual([]);
+    expect(supabase.generationStatusUpdates).toEqual([]);
+  });
 });
 
 function createReviewStateSupabase({
-  missingTrackIds = new Set<string>()
+  missingTrackIds = new Set<string>(),
+  generationStatus = "ready_for_review"
 }: {
   missingTrackIds?: Set<string>;
+  generationStatus?: string;
 } = {}) {
   const state = {
     trackDecisionUpdates: [] as Array<Record<string, unknown>>,
     generationStatusUpdates: [] as Array<Record<string, unknown>>,
     missingTrackIds,
+    generationStatus,
     client: null as never
   };
 
@@ -159,6 +182,7 @@ function createQuery(
     trackDecisionUpdates: Array<Record<string, unknown>>;
     generationStatusUpdates: Array<Record<string, unknown>>;
     missingTrackIds: Set<string>;
+    generationStatus: string;
   }
 ) {
   const query = {
@@ -221,7 +245,13 @@ function createQuery(
         });
       }
 
-      return Promise.resolve({ data: generationRow, error: null });
+      return Promise.resolve({
+        data: {
+          ...generationRow,
+          status: state.generationStatus
+        },
+        error: null
+      });
     },
     in() {
       return Promise.resolve({ data: [normalizedTrackRow], error: null });
