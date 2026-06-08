@@ -94,6 +94,14 @@ export type QueuePlaylistGenerationExportResult =
       selectedTrackCount: number;
       jobId: string | null;
     }
+  | {
+      status: "queue_failed";
+      playlistId: string;
+      generationId: string;
+      exportId: string;
+      selectedTrackCount: number;
+      message: string;
+    }
   | Exclude<PlaylistGenerationExportResult, { status: "exported" }>;
 
 export interface PlaylistGenerationExportStore {
@@ -153,21 +161,44 @@ export async function queuePlaylistGenerationExport(input: {
     exportId
   });
 
-  const jobId = await input.queue.send(
-    PLAYLIST_GENERATION_EXPORT_JOB_NAME,
-    {
-      userId: input.userId,
+  let jobId: string | null;
+
+  try {
+    jobId = await input.queue.send(
+      PLAYLIST_GENERATION_EXPORT_JOB_NAME,
+      {
+        userId: input.userId,
+        playlistId: validation.playlist.id,
+        generationId: validation.generation.id,
+        exportId
+      },
+      {
+        retryLimit: 3,
+        retryDelay: 30,
+        retryBackoff: true,
+        singletonKey: validation.generation.id
+      }
+    );
+  } catch (error) {
+    const failure = createPrivacySafeFailure({
+      workflowName: "Playlist generation export queue",
+      error
+    });
+    await input.store.markFailed({
+      generationId: validation.generation.id,
+      exportId,
+      errorSummary: failure.message
+    });
+
+    return {
+      status: "queue_failed",
       playlistId: validation.playlist.id,
       generationId: validation.generation.id,
-      exportId
-    },
-    {
-      retryLimit: 3,
-      retryDelay: 30,
-      retryBackoff: true,
-      singletonKey: validation.generation.id
-    }
-  );
+      exportId,
+      selectedTrackCount: validation.selectedTrackCount,
+      message: failure.message
+    };
+  }
 
   return {
     status: "queued",

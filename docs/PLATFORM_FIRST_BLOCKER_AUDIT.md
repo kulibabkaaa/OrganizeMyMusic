@@ -76,6 +76,9 @@ Latest local audit on 2026-06-08:
 - Individual playlist track toggles now save keep/remove decisions without
   prematurely marking the whole generation reviewed; only `Mark Review Complete`
   unlocks export.
+- Playlist generation export queue handoff failures now mark the generation and
+  export row failed with a privacy-safe summary instead of leaving them stuck in
+  `exporting`.
 - Archived app playlists now cannot be reopened in the playlist workspace or
   mutated through playlist, recipe, review, generation, or export paths. Active
   detail/recipe APIs return `404` for archived playlists.

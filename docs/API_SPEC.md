@@ -622,6 +622,9 @@ Rules:
 - Creates a `playlist_exports` row.
 - Marks the generation as `exporting`.
 - Queues `playlist-generation-export` for the persistent worker.
+- If the queue handoff fails after the export row is created, marks the
+  generation and export row `failed` with a privacy-safe error summary and
+  returns `409`.
 - Does not promise exact replacement, reorder, or automatic removal in Apple Music.
 
 Response:
