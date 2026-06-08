@@ -50,8 +50,8 @@ export default async function SortCheckoutPage({
 
   return (
     <AppShell
-      title="Unlock this Sort"
-      subtitle="Review the Sort-specific unlock before full processing starts."
+      title="Start full Sort"
+      subtitle="Review the full-library organization plan before processing starts."
     >
       <CheckoutPage sortId={sort.id} mode={mode} summary={summary} />
     </AppShell>

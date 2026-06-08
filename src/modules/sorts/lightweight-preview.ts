@@ -252,7 +252,7 @@ function getLightweightQualityWarnings(input: {
   }
 
   if (input.matchedTrackCount === 0) {
-    warnings.push("No tracks matched this playlist plan. Adjust tags before checkout.");
+    warnings.push("No tracks matched this playlist plan. Adjust tags before starting the full Sort.");
   } else if (input.matchedTrackCount < 5) {
     warnings.push(
       `Only ${input.matchedTrackCount} track${input.matchedTrackCount === 1 ? "" : "s"} matched this playlist plan.`
@@ -269,7 +269,7 @@ function getLightweightQualityWarnings(input: {
 
   const topScore = input.playlist?.tracks[0]?.score ?? 0;
   if (input.matchedTrackCount > 0 && topScore < 0.6) {
-    warnings.push("Top matches are low-confidence. Review the tags before checkout.");
+    warnings.push("Top matches are low-confidence. Review the tags before starting the full Sort.");
   }
 
   return warnings;

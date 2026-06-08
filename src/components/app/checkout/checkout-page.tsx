@@ -23,8 +23,8 @@ export function CheckoutPage({
       : mode === "dev_bypass"
         ? "Dev bypass approved"
         : isDisabled
-          ? "Payment paused"
-          : "Checkout";
+          ? "Full Sort paused"
+          : "Secure checkout";
   const statusTone =
     mode === "deferred"
       ? "success"
@@ -76,7 +76,7 @@ export function CheckoutPage({
             id={paymentDisabledReasonId}
             className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-platform-secondary"
           >
-            Full Sort processing is disabled in this environment.
+            Full Sort processing is paused in this environment.
           </p>
         ) : null}
         {mode === "deferred" ? (

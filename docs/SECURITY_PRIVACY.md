@@ -146,4 +146,4 @@ If payment is added:
 - Use Stripe Checkout.
 - Verify webhooks.
 - Do not trust client-side payment status.
-- Freeze preview before checkout.
+- Freeze preview before full processing starts.
