@@ -115,6 +115,10 @@ type NormalizedTrackRow = {
   content_rating: "clean" | "explicit" | null;
 };
 
+type ExistingGenerationRow = {
+  id: string;
+};
+
 export async function getNewMusicSummary(input: {
   store: NewMusicStore;
   userId: string;
@@ -479,6 +483,22 @@ export function createSupabaseNewMusicStore(supabase: SupabaseClient): NewMusicS
       await Promise.all(
         input.recommendations.map(async (recommendation) => {
           const recipe = recipeById.get(recommendation.recipeId) ?? null;
+          const existingGenerationId = await getExistingNewMusicGenerationId(supabase, {
+            userId: input.userId,
+            playlistId: recommendation.playlistId,
+            syncId: input.syncId
+          });
+
+          if (existingGenerationId) {
+            await updateNewMusicPlaylistState(supabase, {
+              userId: input.userId,
+              playlistId: recommendation.playlistId,
+              syncId: input.syncId,
+              generatedAt
+            });
+            return;
+          }
+
           const { data: generation, error: generationError } = await supabase
             .from("playlist_generations")
             .insert({
@@ -522,21 +542,12 @@ export function createSupabaseNewMusicStore(supabase: SupabaseClient): NewMusicS
             throw new Error(tracksError.message);
           }
 
-          const { error: playlistError } = await supabase
-            .from("playlists")
-            .update({
-              status: "active",
-              latest_library_sync_id: input.syncId,
-              last_generated_at: generatedAt,
-              updated_at: generatedAt
-            })
-            .eq("id", recommendation.playlistId)
-            .eq("user_id", input.userId)
-            .neq("status", "archived");
-
-          if (playlistError) {
-            throw new Error(playlistError.message);
-          }
+          await updateNewMusicPlaylistState(supabase, {
+            userId: input.userId,
+            playlistId: recommendation.playlistId,
+            syncId: input.syncId,
+            generatedAt
+          });
         })
       );
     }
@@ -573,6 +584,48 @@ async function listNormalizedTracksByIds(
     genreNames: track.genre_names,
     contentRating: track.content_rating ?? undefined
   }));
+}
+
+async function getExistingNewMusicGenerationId(
+  supabase: SupabaseClient,
+  input: { userId: string; playlistId: string; syncId: string }
+) {
+  const { data, error } = await supabase
+    .from("playlist_generations")
+    .select("id")
+    .eq("user_id", input.userId)
+    .eq("playlist_id", input.playlistId)
+    .eq("library_sync_id", input.syncId)
+    .contains("recipe_snapshot", { source: "new_music" })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as ExistingGenerationRow | null)?.id ?? null;
+}
+
+async function updateNewMusicPlaylistState(
+  supabase: SupabaseClient,
+  input: { userId: string; playlistId: string; syncId: string; generatedAt: string }
+) {
+  const { error } = await supabase
+    .from("playlists")
+    .update({
+      status: "active",
+      latest_library_sync_id: input.syncId,
+      last_generated_at: input.generatedAt,
+      updated_at: input.generatedAt
+    })
+    .eq("id", input.playlistId)
+    .eq("user_id", input.userId)
+    .neq("status", "archived");
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 function mapNewMusicTrack(
