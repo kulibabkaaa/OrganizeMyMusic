@@ -142,8 +142,8 @@ As of 2026-06-08:
 - Local `npm run worker:check` passes against hosted Supabase.
 - Local `npm run platform:check` passes against hosted Supabase.
 - Hosted pg-boss has `library-sync`, `full-sort`, `playlist-create`, and
-  `playlist-generation-export` queues registered, with no queued jobs for those
-  queues at verification time.
+  `playlist-generation-export` queues registered, with no active, queued,
+  retrying, or failed jobs for those queues at verification time.
 - Platform-first production smoke verification is pending.
 - Worker deployment verification, real Apple Music authorization, library sync,
   Sort export, individual playlist export, and new-music processing still need

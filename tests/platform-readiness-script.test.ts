@@ -18,6 +18,8 @@ describe("platform readiness script", () => {
     expect(source).toContain("fix_playlists_updated_at_default");
     expect(source).toContain("playlist_recipes_scope_check");
     expect(source).toContain("playlist-generation-export");
+    expect(source).toContain("blockingJobStates");
+    expect(source).toContain("no active, queued, retrying, or failed jobs");
     expect(source).toContain("encryption key strength");
     expect(source).toContain("getEncryptionKeyValidationError");
     expect(source).toContain("relrowsecurity");
