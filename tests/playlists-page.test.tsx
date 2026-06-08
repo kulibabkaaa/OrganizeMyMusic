@@ -2,7 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { NewPlaylistForm } from "@/components/app/playlists/new-playlist-form";
+import { getSubmitLabel, NewPlaylistForm } from "@/components/app/playlists/new-playlist-form";
 import { PlaylistDetailWorkspace } from "@/components/app/playlists/playlist-detail-workspace";
 import { PlaylistsPage } from "@/components/app/playlists/playlists-page";
 import type { PlaylistGenerationView } from "@/modules/playlists/generation-store";
@@ -171,6 +171,13 @@ describe("playlists page", () => {
     expect(markup).toContain("Genres");
     expect(markup).toContain("Moods");
     expect(markup).toContain("Allow explicit tracks");
+  });
+
+  it("uses recovery-aware submit labels after playlist creation succeeds", () => {
+    expect(getSubmitLabel({ isSubmitting: false, hasCreatedPlaylist: false })).toBe("Create Playlist");
+    expect(getSubmitLabel({ isSubmitting: true, hasCreatedPlaylist: false })).toBe("Creating...");
+    expect(getSubmitLabel({ isSubmitting: false, hasCreatedPlaylist: true })).toBe("Save Recipe");
+    expect(getSubmitLabel({ isSubmitting: true, hasCreatedPlaylist: true })).toBe("Saving recipe...");
   });
 
   it("renders playlist detail with recipe and track review controls", () => {

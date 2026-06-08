@@ -40,6 +40,9 @@ Latest local audit on 2026-06-08:
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before
   generation/regeneration.
+- Individual playlist creation now recovers when recipe save fails after the
+  playlist row is created: retries reuse the existing app playlist instead of
+  creating duplicates, and the user can open the playlist to finish setup.
 - Playlist detail now exposes app-only playlist archive with copy that Apple
   Music playlists and tracks are not changed.
 - New-music recommendations are review-only and link back to the playlist
