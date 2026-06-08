@@ -43,6 +43,7 @@ describe("platform playlists", () => {
         apple_playlist_id: null,
         created_from_sort_run_id: "sort_1",
         latest_library_sync_id: "sync_1",
+        last_processed_new_music_sync_id: "sync_1",
         last_generated_at: null,
         last_exported_at: null,
         created_at: "2026-06-08T10:00:00.000Z",
@@ -54,7 +55,8 @@ describe("platform playlists", () => {
       userId: "user_1",
       name: "Deep Work",
       status: "draft",
-      createdFromSortRunId: "sort_1"
+      createdFromSortRunId: "sort_1",
+      lastProcessedNewMusicSyncId: "sync_1"
     });
   });
 });

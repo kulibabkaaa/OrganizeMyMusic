@@ -143,6 +143,7 @@ export interface PersistentPlaylist {
   applePlaylistId: string | null;
   createdFromSortRunId: string | null;
   latestLibrarySyncId: string | null;
+  lastProcessedNewMusicSyncId: string | null;
   lastGeneratedAt: string | null;
   lastExportedAt: string | null;
   createdAt: string;

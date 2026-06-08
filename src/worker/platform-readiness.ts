@@ -16,7 +16,11 @@ const requiredEnvKeys = [
   "ENCRYPTION_KEY"
 ] as const;
 
-const requiredMigrations = ["platform_playlists", "fix_playlists_updated_at_default"] as const;
+const requiredMigrations = [
+  "platform_playlists",
+  "fix_playlists_updated_at_default",
+  "playlist_new_music_processing"
+] as const;
 const requiredPlatformTables = [
   "playlists",
   "playlist_generations",
@@ -133,7 +137,7 @@ async function run() {
       from information_schema.columns
       where table_schema = 'public'
         and (
-          (table_name = 'playlists' and column_name = 'updated_at')
+          (table_name = 'playlists' and column_name in ('updated_at', 'last_processed_new_music_sync_id'))
           or (table_name = 'playlist_recipes' and column_name = 'playlist_id')
           or (table_name = 'sort_playlists' and column_name = 'playlist_id')
         )
@@ -149,6 +153,9 @@ async function run() {
       updatedAt?.column_default?.includes("now()")
         ? null
         : "playlists.updated_at must default to now()",
+      columns.has("playlists.last_processed_new_music_sync_id")
+        ? null
+        : "playlists.last_processed_new_music_sync_id missing",
       columns.has("playlist_recipes.playlist_id") ? null : "playlist_recipes.playlist_id missing",
       columns.has("sort_playlists.playlist_id") ? null : "sort_playlists.playlist_id missing"
     ].filter(Boolean);

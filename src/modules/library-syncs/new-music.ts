@@ -36,6 +36,11 @@ export interface NewMusicStore {
   listClassificationsByTrackIds?(input: {
     normalizedTrackIds: string[];
   }): Promise<NewMusicTrackClassification[]>;
+  markNewMusicProcessed?(input: {
+    userId: string;
+    playlistIds: string[];
+    syncId: string;
+  }): Promise<void>;
 }
 
 export interface NewMusicPlaylistRecipe {
@@ -146,15 +151,53 @@ export async function getNewMusicSummary(input: {
   const previousTrackIdSet = new Set(previousTrackIds);
   const newTrackCount = latestTrackIds.filter((trackId) => !previousTrackIdSet.has(trackId)).length;
 
+  if (newTrackCount === 0) {
+    return {
+      latestSyncId: latestSync.id,
+      previousSyncId: previousSync.id,
+      newTrackCount,
+      canProcess: false,
+      message: "No new songs detected since the previous sync."
+    };
+  }
+
+  if (input.store.listPlaylistRecipesForNewMusic) {
+    const playlistRecipes = await input.store.listPlaylistRecipesForNewMusic({
+      userId: input.userId
+    });
+    const pendingPlaylistCount = filterPendingNewMusicPlaylistRecipes(
+      playlistRecipes,
+      latestSync.id
+    ).length;
+
+    if (playlistRecipes.length === 0) {
+      return {
+        latestSyncId: latestSync.id,
+        previousSyncId: previousSync.id,
+        newTrackCount,
+        canProcess: false,
+        message: "Create saved playlists with recipes before processing new music."
+      };
+    }
+
+    if (pendingPlaylistCount === 0) {
+      return {
+        latestSyncId: latestSync.id,
+        previousSyncId: previousSync.id,
+        newTrackCount,
+        canProcess: false,
+        message:
+          "New songs from the latest sync have already been processed for your saved playlists."
+      };
+    }
+  }
+
   return {
     latestSyncId: latestSync.id,
     previousSyncId: previousSync.id,
     newTrackCount,
-    canProcess: newTrackCount > 0,
-    message:
-      newTrackCount > 0
-        ? `${newTrackCount} new song${newTrackCount === 1 ? "" : "s"} detected since the previous sync.`
-        : "No new songs detected since the previous sync."
+    canProcess: true,
+    message: `${newTrackCount} new song${newTrackCount === 1 ? "" : "s"} detected since the previous sync.`
   };
 }
 
@@ -186,7 +229,7 @@ export async function processNewMusic(input: {
     };
   }
 
-  const [latestTrackIds, previousTrackIds, playlistRecipes] = await Promise.all([
+  const [latestTrackIds, previousTrackIds, allPlaylistRecipes] = await Promise.all([
     input.store.listOwnedTrackIdsForSync({
       userId: input.userId,
       syncId: summary.latestSyncId
@@ -200,11 +243,30 @@ export async function processNewMusic(input: {
     })
   ]);
 
-  if (playlistRecipes.length === 0) {
+  if (allPlaylistRecipes.length === 0) {
     return {
       status: "no_playlists",
       summary,
       message: "Create saved playlists with recipes before processing new music.",
+      recommendations: []
+    };
+  }
+
+  const playlistRecipes = filterPendingNewMusicPlaylistRecipes(
+    allPlaylistRecipes,
+    summary.latestSyncId
+  );
+
+  if (playlistRecipes.length === 0) {
+    return {
+      status: "not_ready",
+      summary: {
+        ...summary,
+        canProcess: false,
+        message:
+          "New songs from the latest sync have already been processed for your saved playlists."
+      },
+      message: "New songs from the latest sync have already been processed for your saved playlists.",
       recommendations: []
     };
   }
@@ -222,6 +284,13 @@ export async function processNewMusic(input: {
   });
 
   if (recommendations.length === 0) {
+    await markProcessedIfConfigured({
+      store: input.store,
+      userId: input.userId,
+      playlistIds: playlistRecipes.map((item) => item.playlist.id),
+      syncId: summary.latestSyncId
+    });
+
     return {
       status: "no_matches",
       summary,
@@ -229,6 +298,13 @@ export async function processNewMusic(input: {
       recommendations: []
     };
   }
+
+  await markProcessedIfConfigured({
+    store: input.store,
+    userId: input.userId,
+    playlistIds: playlistRecipes.map((item) => item.playlist.id),
+    syncId: summary.latestSyncId
+  });
 
   return {
     status: "processed",
@@ -357,6 +433,26 @@ export function createSupabaseNewMusicStore(supabase: SupabaseClient): NewMusicS
 
     async listClassificationsByTrackIds(input) {
       return createSupabasePreviewSnapshotStore(supabase).listClassificationsForPreview(input);
+    },
+
+    async markNewMusicProcessed(input) {
+      if (input.playlistIds.length === 0) {
+        return;
+      }
+
+      const { error } = await supabase
+        .from("playlists")
+        .update({
+          last_processed_new_music_sync_id: input.syncId,
+          updated_at: new Date().toISOString()
+        })
+        .eq("user_id", input.userId)
+        .neq("status", "archived")
+        .in("id", input.playlistIds);
+
+      if (error) {
+        throw new Error(error.message);
+      }
     }
   };
 }
@@ -416,4 +512,30 @@ function mapNewMusicTrack(
     score: track.score,
     reason: track.reason
   };
+}
+
+function filterPendingNewMusicPlaylistRecipes(
+  playlistRecipes: NewMusicPlaylistRecipe[],
+  latestSyncId: string
+) {
+  return playlistRecipes.filter(
+    (item) => item.playlist.lastProcessedNewMusicSyncId !== latestSyncId
+  );
+}
+
+async function markProcessedIfConfigured(input: {
+  store: NewMusicStore;
+  userId: string;
+  playlistIds: string[];
+  syncId: string;
+}) {
+  if (!input.store.markNewMusicProcessed) {
+    return;
+  }
+
+  await input.store.markNewMusicProcessed({
+    userId: input.userId,
+    playlistIds: input.playlistIds,
+    syncId: input.syncId
+  });
 }

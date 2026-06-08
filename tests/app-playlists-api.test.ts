@@ -84,6 +84,7 @@ const playlist: PersistentPlaylist = {
   applePlaylistId: null,
   createdFromSortRunId: null,
   latestLibrarySyncId: null,
+  lastProcessedNewMusicSyncId: null,
   lastGeneratedAt: null,
   lastExportedAt: null,
   createdAt: "2026-06-08T10:00:00.000Z",

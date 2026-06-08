@@ -27,6 +27,7 @@ const playlists: PersistentPlaylist[] = [
     applePlaylistId: "apple_playlist_1",
     createdFromSortRunId: "sort_1",
     latestLibrarySyncId: "sync_1",
+    lastProcessedNewMusicSyncId: null,
     lastGeneratedAt: "2026-06-01T10:00:00.000Z",
     lastExportedAt: "2026-06-02T10:00:00.000Z",
     createdAt: "2026-05-30T10:00:00.000Z",

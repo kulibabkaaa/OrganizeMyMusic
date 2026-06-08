@@ -263,6 +263,8 @@ Acceptance:
 Current MVP implementation:
 
 - `/api/app/new-music/process` compares the latest completed sync with the previous completed sync.
+- Saved playlists record `last_processed_new_music_sync_id`, so processing the
+  same latest sync does not keep re-suggesting the same new songs forever.
 - The library page `Process New Music` action returns review-only recommendations against saved playlist recipes and links each recommendation back to its playlist workspace for recipe adjustment, regeneration, review, and explicit export.
 - No Apple Music playlist is updated automatically.
 
