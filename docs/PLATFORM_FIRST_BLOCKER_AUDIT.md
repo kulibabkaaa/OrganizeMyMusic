@@ -18,6 +18,8 @@ Latest local audit on 2026-06-08:
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.
 - The playlist hub and playlist detail screens were simplified to reduce
   always-visible metrics, safety panels, and history blocks.
+- Dashboard queue metrics now route directly to saved playlists, playlist review,
+  and the user-triggered new-music workflow.
 - Playlist hub cards surface the latest generation review/export state for each
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before

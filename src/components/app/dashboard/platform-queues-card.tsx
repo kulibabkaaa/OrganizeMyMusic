@@ -44,16 +44,22 @@ export function PlatformQueuesCard({
           label="Saved playlists"
           value={playlists.length.toString()}
           detail={playlists.length === 1 ? "1 app-created playlist" : "app-created playlists"}
+          actionLabel="Open Playlists"
+          href="/app/playlists"
         />
         <QueueMetric
           label="Review queue"
           value={reviewQueueCount.toString()}
           detail="generations waiting for track review"
+          actionLabel={reviewQueueCount > 0 ? "Review Tracks" : "Open Playlists"}
+          href="/app/playlists"
         />
         <QueueMetric
           label="New music queue"
           value={(newMusicSummary?.newTrackCount ?? 0).toString()}
           detail={newMusicSummary?.message ?? "Complete a sync to detect new songs."}
+          actionLabel={newMusicSummary?.canProcess ? "Process New Music" : "Open Library"}
+          href="/app/library"
         />
       </div>
     </Card>
@@ -63,17 +69,30 @@ export function PlatformQueuesCard({
 function QueueMetric({
   label,
   value,
-  detail
+  detail,
+  actionLabel,
+  href
 }: {
   label: string;
   value: string;
   detail: string;
+  actionLabel: string;
+  href: React.ComponentProps<typeof Link>["href"];
 }) {
   return (
-    <article className="rounded-[1.25rem] border border-white/10 bg-black/16 p-4">
-      <p className="text-xs uppercase tracking-[0.16em] text-platform-muted">{label}</p>
-      <p className="mt-2 font-display text-4xl font-semibold tracking-[0em] text-white">{value}</p>
-      <p className="mt-2 text-sm leading-6 text-platform-secondary">{detail}</p>
+    <article className="flex min-h-48 flex-col rounded-[1.25rem] border border-white/10 bg-black/16 p-4">
+      <div className="flex-1">
+        <p className="text-xs uppercase tracking-[0.16em] text-platform-muted">{label}</p>
+        <p className="mt-2 font-display text-4xl font-semibold tracking-[0em] text-white">
+          {value}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-platform-secondary">{detail}</p>
+      </div>
+      <Link href={href} className="mt-4 inline-flex">
+        <Button variant="glass" className="min-h-11 min-w-36">
+          {actionLabel}
+        </Button>
+      </Link>
     </article>
   );
 }
