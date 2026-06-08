@@ -33,8 +33,8 @@ export function LatestSortRunCard({
 
       <p className="mt-3 max-w-2xl text-sm leading-7 text-white/62">
         {latestSortRun
-          ? "Open the latest preview to inspect playlists, confirmation state, and quality triage."
-          : "Save playlist requests after a completed sync to generate a preview."}
+          ? "Open the latest preview to inspect playlists, review state, and quality triage."
+          : "Create playlist plans after a completed sync to generate a preview."}
       </p>
 
       {error ? <p className="mt-3 text-sm leading-6 text-amber-100">{error}</p> : null}

@@ -58,6 +58,7 @@ describe("normal user-facing copy", () => {
             trackAssignmentCount: 20
           }}
         />
+        <LatestSortRunCard latestSortRun={null} />
         <PlatformQueuesCard
           playlists={playlists}
           reviewQueueCount={1}
@@ -79,6 +80,7 @@ describe("normal user-facing copy", () => {
     expect(markup).toContain("Preview ready");
     expect(markup).toContain("Exported");
     expect(markup).toContain("Saved playlists and queues");
+    expect(markup).toContain("Create playlist plans after a completed sync");
     expect(markup).toContain("Create Playlist");
     expect(markup).toContain("Process New Music");
     expect(markup).toContain("/app/sorts/11111111-1111-4111-8111-111111111111");
