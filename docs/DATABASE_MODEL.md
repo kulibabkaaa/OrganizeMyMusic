@@ -204,6 +204,7 @@ Important fields:
 - `apple_playlist_id`
 - `created_from_sort_run_id`
 - `latest_library_sync_id`
+- `last_processed_new_music_sync_id`
 - `last_generated_at`
 - `last_exported_at`
 - `archived_at`
@@ -213,6 +214,8 @@ Rules:
 - MVP supports only `apple_music`.
 - Only app-created playlists should be managed in MVP.
 - `apple_playlist_id` is set after export.
+- `last_processed_new_music_sync_id` records the latest completed sync that was
+  checked for user-triggered new-music recommendations for this playlist.
 - Archive instead of hard-delete in user-facing flows.
 
 ## `playlist_recipes`

@@ -44,6 +44,7 @@ export const playlistUpdateSchema = z.object({
   status: z.enum(playlistStatuses).optional(),
   applePlaylistId: optionalNullableText(200),
   latestLibrarySyncId: z.string().uuid().optional().nullable(),
+  lastProcessedNewMusicSyncId: z.string().uuid().optional().nullable(),
   lastGeneratedAt: optionalIsoDate,
   lastExportedAt: optionalIsoDate
 });

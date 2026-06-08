@@ -18,6 +18,7 @@ type PlaylistRow = {
   apple_playlist_id: string | null;
   created_from_sort_run_id: string | null;
   latest_library_sync_id: string | null;
+  last_processed_new_music_sync_id: string | null;
   last_generated_at: string | null;
   last_exported_at: string | null;
   created_at: string;
@@ -111,6 +112,9 @@ export function createSupabasePlaylistStore(supabase: SupabaseClient): PlaylistS
       if ("status" in values) patch.status = values.status;
       if ("applePlaylistId" in values) patch.apple_playlist_id = values.applePlaylistId;
       if ("latestLibrarySyncId" in values) patch.latest_library_sync_id = values.latestLibrarySyncId;
+      if ("lastProcessedNewMusicSyncId" in values) {
+        patch.last_processed_new_music_sync_id = values.lastProcessedNewMusicSyncId;
+      }
       if ("lastGeneratedAt" in values) patch.last_generated_at = values.lastGeneratedAt;
       if ("lastExportedAt" in values) patch.last_exported_at = values.lastExportedAt;
 
@@ -146,7 +150,7 @@ export function createSupabasePlaylistStore(supabase: SupabaseClient): PlaylistS
 }
 
 export const playlistSelect =
-  "id,user_id,source_provider,name,description,status,apple_playlist_id,created_from_sort_run_id,latest_library_sync_id,last_generated_at,last_exported_at,created_at,updated_at,archived_at";
+  "id,user_id,source_provider,name,description,status,apple_playlist_id,created_from_sort_run_id,latest_library_sync_id,last_processed_new_music_sync_id,last_generated_at,last_exported_at,created_at,updated_at,archived_at";
 
 export function mapPlaylistRow(row: PlaylistRow): PersistentPlaylist {
   return {
@@ -159,6 +163,7 @@ export function mapPlaylistRow(row: PlaylistRow): PersistentPlaylist {
     applePlaylistId: row.apple_playlist_id,
     createdFromSortRunId: row.created_from_sort_run_id,
     latestLibrarySyncId: row.latest_library_sync_id,
+    lastProcessedNewMusicSyncId: row.last_processed_new_music_sync_id,
     lastGeneratedAt: row.last_generated_at,
     lastExportedAt: row.last_exported_at,
     createdAt: row.created_at,

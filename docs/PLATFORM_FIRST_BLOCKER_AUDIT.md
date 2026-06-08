@@ -47,6 +47,9 @@ Latest local audit on 2026-06-08:
   Music playlists and tracks are not changed.
 - New-music recommendations are review-only and link back to the playlist
   workspace for recipe adjustment, regeneration, review, and explicit export.
+- Saved playlists now store `last_processed_new_music_sync_id` for
+  user-triggered new-music checks, and the hosted Supabase migration
+  `playlist_new_music_processing` is applied.
 - Full Sort persistence now has regression coverage for creating persistent app
   playlists, storing reviewable generations, and linking Sort-created recipes to
   those playlists for later Playlist Hub editing.
@@ -189,19 +192,17 @@ Not needed for MVP migration foundation.
 
 ### 5. New-track processing definition
 
-Risk: "new tracks since last sync" needs a precise source of truth.
+Status: resolved for MVP foundation on 2026-06-08.
 
-Decision needed before PFM-008:
+The app compares `track_ownership` between the latest and previous completed
+syncs to count newly added songs, then stores
+`playlists.last_processed_new_music_sync_id` after user-triggered processing so
+the same latest sync is not repeatedly treated as pending for a saved playlist.
 
-- Use latest completed `library_syncs.created_at`.
-- Or compare `track_ownership` across syncs.
-- Or store a per-playlist `last_processed_sync_id`.
+Remaining follow-up:
 
-Recommended:
-
-```text
-Per-playlist last_processed_sync_id, plus dashboard-level latest completed sync.
-```
+- Persist new-music suggestion history if recommendations need to survive page
+  refreshes before the user opens the playlist workspace.
 
 ### 6. AI quality and cost
 

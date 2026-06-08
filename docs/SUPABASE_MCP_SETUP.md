@@ -141,6 +141,11 @@ Confirmed access:
   - `20260522182345 restrict_authenticated_table_grants`
   - `20260522182441 add_missing_foreign_key_indexes`
   - `20260522184123 unique_apple_music_connections_user`
+  - `20260526185451 playlist_recipes`
+  - `20260526185522 sort_drafts`
+  - `20260608022121 platform_playlists`
+  - `20260608022149 fix_playlists_updated_at_default`
+  - `20260608053341 playlist_new_music_processing`
 - Security advisor reports no lints.
 - Performance advisor only reports unused indexes because the database is empty.
 

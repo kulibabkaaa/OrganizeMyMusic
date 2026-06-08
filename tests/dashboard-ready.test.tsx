@@ -119,6 +119,7 @@ describe("dashboard ready states", () => {
             applePlaylistId: null,
             createdFromSortRunId: "sort_1",
             latestLibrarySyncId: "sync_2",
+            lastProcessedNewMusicSyncId: null,
             lastGeneratedAt: "2026-06-08T10:00:00.000Z",
             lastExportedAt: null,
             createdAt: "2026-06-08T09:00:00.000Z",

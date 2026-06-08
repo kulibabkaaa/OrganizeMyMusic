@@ -76,7 +76,30 @@ describe("new music summary", () => {
     });
   });
 
+  it("keeps processing disabled when saved playlists already processed the latest sync", async () => {
+    const store = createStore({
+      listPlaylistRecipesForNewMusic: vi.fn().mockResolvedValue([
+        {
+          playlist: {
+            ...playlist,
+            lastProcessedNewMusicSyncId: "sync_latest"
+          },
+          recipe
+        }
+      ])
+    });
+
+    await expect(getNewMusicSummary({ store, userId: "user_1" })).resolves.toMatchObject({
+      latestSyncId: "sync_latest",
+      previousSyncId: "sync_previous",
+      newTrackCount: 1,
+      canProcess: false,
+      message: "New songs from the latest sync have already been processed for your saved playlists."
+    });
+  });
+
   it("processes new tracks into review-only playlist recommendations", async () => {
+    const markNewMusicProcessed = vi.fn().mockResolvedValue(undefined);
     const store = createStore({
       listPlaylistRecipesForNewMusic: vi.fn().mockResolvedValue([
         {
@@ -84,6 +107,7 @@ describe("new music summary", () => {
           recipe
         }
       ]),
+      markNewMusicProcessed,
       listTracksByIds: vi.fn().mockResolvedValue([track]),
       listClassificationsByTrackIds: vi.fn().mockResolvedValue([
         {
@@ -118,6 +142,12 @@ describe("new music summary", () => {
           ]
         }
       ]
+    });
+
+    expect(markNewMusicProcessed).toHaveBeenCalledWith({
+      userId: "user_1",
+      playlistIds: [playlist.id],
+      syncId: "sync_latest"
     });
   });
 
@@ -170,6 +200,7 @@ const playlist: PersistentPlaylist = {
   applePlaylistId: null,
   createdFromSortRunId: null,
   latestLibrarySyncId: null,
+  lastProcessedNewMusicSyncId: null,
   lastGeneratedAt: null,
   lastExportedAt: null,
   createdAt: "2026-06-01T10:00:00.000Z",
