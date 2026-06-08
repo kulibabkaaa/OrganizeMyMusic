@@ -29,7 +29,7 @@ export async function POST(
 
   if (mode === "disabled") {
     return NextResponse.json(
-      { error: "Payment is not enabled for this Sort." },
+      { error: "Full organization start is not enabled for this Sort." },
       { status: 409 }
     );
   }
@@ -38,7 +38,7 @@ export async function POST(
 
   if (!supabase) {
     return NextResponse.json(
-      { error: "Payment storage is not configured." },
+      { error: "Full organization storage is not configured." },
       { status: 503 }
     );
   }

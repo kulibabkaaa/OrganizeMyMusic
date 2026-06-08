@@ -105,7 +105,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
     });
 
     await expect(response.json()).resolves.toEqual({
-      error: "Payment is not enabled for this Sort."
+      error: "Full organization start is not enabled for this Sort."
     });
     expect(response.status).toBe(409);
     expect(deferredUnlockMock).not.toHaveBeenCalled();
