@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST as exportPost } from "@/app/api/app/sorts/[sortId]/export/route";
+import { POST as legacyCreatePlaylistsPost } from "@/app/api/sort-runs/[id]/create-playlists/route";
 import { POST as legacyConfirmPost } from "@/app/api/sort-runs/[id]/confirm/route";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { withPgBoss } from "@/lib/pg-boss";
@@ -201,5 +202,25 @@ describe("POST /api/sort-runs/[id]/confirm", () => {
     });
     expect(response.status).toBe(409);
     expect(exportMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/sort-runs/[id]/create-playlists", () => {
+  it("does not queue write-back from the legacy create-playlists endpoint", async () => {
+    vi.clearAllMocks();
+
+    const response = await legacyCreatePlaylistsPost(
+      new Request("http://test.local", { method: "POST" }),
+      {
+        params: Promise.resolve({ id: "sort_1" })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Playlist creation requires the MVP-020 confirmation flow."
+    });
+    expect(response.status).toBe(409);
+    expect(exportMock).not.toHaveBeenCalled();
+    expect(withPgBossMock).not.toHaveBeenCalled();
   });
 });
