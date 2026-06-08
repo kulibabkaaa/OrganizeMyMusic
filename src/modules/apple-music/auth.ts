@@ -39,6 +39,19 @@ export interface SupabaseAppleMusicConnectionWriter {
   };
 }
 
+export interface SupabaseAppleMusicConnectionReader {
+  from(table: "apple_music_connections"): {
+    select(columns: "id,user_id,storefront,status,last_validated_at,updated_at"): {
+      eq(column: "user_id", value: string): {
+        maybeSingle(): PromiseLike<{
+          data: AppleMusicConnectionRow | null;
+          error: QueryError | null;
+        }>;
+      };
+    };
+  };
+}
+
 export type AppleMusicConnectionPersistenceResult =
   | {
       status: "connected";
@@ -53,6 +66,24 @@ export type AppleMusicConnectionPersistenceResult =
   | {
       status: "error";
       message: string;
+    };
+
+export type AppleMusicConnectionStatus =
+  | {
+      status: "connected" | "expired" | "revoked" | "error";
+      connectionId: string;
+      userId: string;
+      storefront: string;
+      lastValidatedAt: string | null;
+      updatedAt: string;
+    }
+  | {
+      status: "disconnected";
+      connectionId: null;
+      userId: string;
+      storefront: null;
+      lastValidatedAt: null;
+      updatedAt: null;
     };
 
 export async function persistAppleMusicUserToken(input: {
@@ -109,4 +140,39 @@ export function decryptAppleMusicUserToken(
   return options?.encryptionKey
     ? decryptWithKey(encryptedUserToken, options.encryptionKey)
     : decrypt(encryptedUserToken);
+}
+
+export async function getAppleMusicConnectionStatus(input: {
+  supabase: SupabaseAppleMusicConnectionReader;
+  userId: string;
+}): Promise<AppleMusicConnectionStatus> {
+  const { data, error } = await input.supabase
+    .from("apple_music_connections")
+    .select("id,user_id,storefront,status,last_validated_at,updated_at")
+    .eq("user_id", input.userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message ?? "Unable to load Apple Music connection.");
+  }
+
+  if (!data) {
+    return {
+      status: "disconnected",
+      connectionId: null,
+      userId: input.userId,
+      storefront: null,
+      lastValidatedAt: null,
+      updatedAt: null
+    };
+  }
+
+  return {
+    status: data.status,
+    connectionId: data.id,
+    userId: data.user_id,
+    storefront: data.storefront,
+    lastValidatedAt: data.last_validated_at,
+    updatedAt: data.updated_at
+  };
 }
