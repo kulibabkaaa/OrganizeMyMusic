@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { PlaylistPreviewCard } from "@/components/app/preview/playlist-preview-card";
-import { PreviewPaywallPage } from "@/components/app/preview/preview-paywall-page";
+import { PreviewStartPage } from "@/components/app/preview/preview-start-page";
 import { UnlockSortCard } from "@/components/app/preview/unlock-sort-card";
 import type { LightweightPreviewSnapshot } from "@/modules/sorts/lightweight-preview";
 
@@ -56,7 +56,7 @@ const snapshot: LightweightPreviewSnapshot = {
   ]
 };
 
-describe("preview paywall components", () => {
+describe("preview start components", () => {
   it("renders a Playlist preview card with estimates, tags, samples, and locked rows", () => {
     const markup = renderToStaticMarkup(<PlaylistPreviewCard playlist={snapshot.playlists[0]} />);
 
@@ -94,9 +94,9 @@ describe("preview paywall components", () => {
     expect(markup).not.toContain("Export");
   });
 
-  it("renders the full preview/paywall page without Apple Music write-back actions", () => {
+  it("renders the full preview start page without Apple Music write-back actions", () => {
     const markup = renderToStaticMarkup(
-      <PreviewPaywallPage sortName="My Apple Music cleanup" snapshot={snapshot} />
+      <PreviewStartPage sortName="My Apple Music cleanup" snapshot={snapshot} />
     );
 
     expect(markup).toContain("Preview your library organization");
