@@ -264,64 +264,24 @@ Rules:
 
 ### `POST /api/sort-runs`
 
-Creates a draft sort run and stores parsed playlist requests.
+Legacy playlist-request Sort creation is disabled.
 
-Request:
+Rules:
 
-```json
-{
-  "librarySyncId": "uuid",
-  "playlistRequests": [
-    "Ukrainian rap",
-    "Gym rap",
-    "Sad Slavic songs"
-  ]
-}
-```
+- Requires authenticated user.
+- Does not create Sort rows.
+- Does not generate preview snapshots.
+- Returns `409` with platform migration targets.
 
 Response:
 
 ```json
 {
-  "sortRunId": "uuid",
-  "state": "preview_ready",
-  "playlistRequests": [
-    {
-      "id": "uuid",
-      "userPrompt": "Ukrainian rap",
-      "parsedRules": {
-        "title": "Ukrainian Rap",
-        "languages": ["ukrainian"],
-        "genres": ["Hip-Hop/Rap"],
-        "subgenres": ["rap"],
-        "moods": [],
-        "energyMin": null,
-        "energyMax": null,
-        "excludeExplicit": false,
-        "source": "heuristic"
-      }
-    }
-  ],
-  "previewSnapshot": {
-    "sortRunId": "uuid",
-    "librarySyncId": "uuid",
-    "generatedAt": "2026-01-01T00:00:00.000Z",
-    "playlists": []
-  }
+  "error": "Legacy playlist-request Sort creation is disabled. Create a platform Sort draft and add structured playlist recipes instead.",
+  "nextPath": "/app/sorts/new",
+  "nextApiPath": "/api/app/sorts"
 }
 ```
-
-Rules:
-
-- Requires authenticated user.
-- Requires at least three playlist request strings.
-- Requires a completed user-owned library sync.
-- Stores original prompts in `playlist_requests.user_prompt`.
-- Stores deterministic parsed rules in `playlist_requests.parsed_rules`.
-- Generates and stores a stable preview snapshot.
-- Stores generated playlists in `sort_playlists`.
-- Stores playlist-track assignments, score, and reason in `sort_playlist_tracks`.
-- Does not write to Apple Music in this step.
 
 ### `POST /api/sort-runs/:sortRunId/checkout`
 
