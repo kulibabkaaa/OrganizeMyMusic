@@ -90,6 +90,9 @@ Latest local audit on 2026-06-08:
 - The obsolete internal `retrySortRunWriteBack` service and Supabase retry
   store were removed, so there is no reusable recovery helper that can requeue
   legacy Sort write-back outside the disabled route.
+- The unused legacy `confirmSortRun` service was removed; the persistent worker
+  now imports only a neutral playlist-creation queue contract, while Sort export
+  remains routed through the platform review/export service.
 - Legacy Sort read responses now preserve read compatibility while returning
   platform `nextPath` and `nextApiPath` targets for stale clients.
 - `docs/API_SPEC.md` now matches the implemented platform route contract:

@@ -1,14 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  PLAYLIST_CREATION_JOB_NAME,
+  type PlaylistCreationJobData
+} from "@/modules/sorts/playlist-creation-queue";
 import type { PreviewSortRun } from "@/modules/sorts/preview-snapshot";
 import type { SortRunState } from "@/types/domain";
-
-export const PLAYLIST_CREATION_JOB_NAME = "playlist-create";
-
-export interface PlaylistCreationJobData {
-  sortRunId: string;
-  userId: string;
-}
 
 export interface PlaylistExportQueue {
   createQueue?(name: typeof PLAYLIST_CREATION_JOB_NAME): Promise<void>;

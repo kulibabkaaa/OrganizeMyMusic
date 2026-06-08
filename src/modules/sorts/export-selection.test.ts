@@ -3,10 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createSupabaseSortRunExportStore,
   exportReviewedPlaylists,
-  PLAYLIST_CREATION_JOB_NAME,
   type PlaylistExportQueue,
   type SortRunExportStore
 } from "@/modules/sorts/export-selection";
+import { PLAYLIST_CREATION_JOB_NAME } from "@/modules/sorts/playlist-creation-queue";
 import type { PreviewSortRun } from "@/modules/sorts/preview-snapshot";
 
 const previewSortRun: PreviewSortRun = {
