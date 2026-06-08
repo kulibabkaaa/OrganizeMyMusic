@@ -35,4 +35,24 @@ describe("sanitizeLogObject", () => {
       ]
     });
   });
+
+  it("redacts token-like values under non-sensitive keys and errors", () => {
+    const error = new Error("Apple Music raw-music-user-token rejected a request.");
+    const sanitized = sanitizeLogObject({
+      message: "Authorization failed for raw-music-user-token.",
+      safeLabel: "Apple Music connected",
+      error
+    });
+
+    expect(JSON.stringify(sanitized)).not.toContain("raw-music-user-token");
+    expect(sanitized).toEqual({
+      message: "[Redacted]",
+      safeLabel: "Apple Music connected",
+      error: {
+        name: "Error",
+        message: "[Redacted]",
+        stack: "[Redacted]"
+      }
+    });
+  });
 });
