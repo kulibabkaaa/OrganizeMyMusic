@@ -12,7 +12,7 @@ import {
 } from "@/modules/payments/checkout";
 import {
   createSupabaseFullSortStore,
-  queueFullSortAfterPayment
+  queueFullSortAfterStart
 } from "@/modules/sorts/full-sort-job";
 
 vi.mock("@/lib/auth/session", () => ({
@@ -41,7 +41,7 @@ vi.mock("@/modules/payments/checkout", async (importOriginal) => {
 
 vi.mock("@/modules/sorts/full-sort-job", () => ({
   createSupabaseFullSortStore: vi.fn(),
-  queueFullSortAfterPayment: vi.fn()
+  queueFullSortAfterStart: vi.fn()
 }));
 
 const authMock = vi.mocked(getAuthenticatedSession);
@@ -52,7 +52,7 @@ const modeMock = vi.mocked(getCheckoutMode);
 const deferredUnlockMock = vi.mocked(unlockSortWithDeferredBilling);
 const bypassMock = vi.mocked(unlockSortWithDevBypass);
 const fullSortStoreMock = vi.mocked(createSupabaseFullSortStore);
-const queueFullSortMock = vi.mocked(queueFullSortAfterPayment);
+const queueFullSortMock = vi.mocked(queueFullSortAfterStart);
 
 describe("POST /api/app/sorts/[sortId]/checkout", () => {
   beforeEach(() => {

@@ -28,7 +28,7 @@ export interface FullSortJobData {
   userId: string;
 }
 
-export interface PaidSortRunForFullSort {
+export interface StartableSortRunForFullSort {
   id: string;
   userId: string;
   librarySyncId: string | null;
@@ -52,10 +52,10 @@ export interface FullSortQueue {
 }
 
 export interface FullSortStore {
-  getPaidSortRunForFullSort(input: {
+  getStartableSortRunForFullSort(input: {
     sortRunId: string;
     userId: string;
-  }): Promise<PaidSortRunForFullSort | null>;
+  }): Promise<StartableSortRunForFullSort | null>;
   listRecipesForSort(input: { userId: string; sortRunId: string }): Promise<PlaylistRecipe[]>;
   listTracksForFullSort(input: {
     librarySyncId: string;
@@ -65,7 +65,7 @@ export interface FullSortStore {
     normalizedTrackIds: string[];
   }): Promise<PreviewTrackClassification[]>;
   saveFullSortResult(input: {
-    sortRun: PaidSortRunForFullSort;
+    sortRun: StartableSortRunForFullSort;
     snapshot: PreviewSnapshot;
   }): Promise<void>;
   createJobEvent(input: {
@@ -82,7 +82,7 @@ export interface FullSortStore {
   }): Promise<void>;
 }
 
-export type QueueFullSortAfterPaymentResult =
+export type QueueFullSortAfterStartResult =
   | {
       status: "queued";
       sortRunId: string;
@@ -136,13 +136,13 @@ export interface StoredFullSortTrack {
   reason: string;
 }
 
-export async function queueFullSortAfterPayment(input: {
+export async function queueFullSortAfterStart(input: {
   store: FullSortStore;
   queue: FullSortQueue;
   sortRunId: string;
   userId: string;
-}): Promise<QueueFullSortAfterPaymentResult> {
-  const sortRun = await input.store.getPaidSortRunForFullSort({
+}): Promise<QueueFullSortAfterStartResult> {
+  const sortRun = await input.store.getStartableSortRunForFullSort({
     sortRunId: input.sortRunId,
     userId: input.userId
   });
@@ -200,7 +200,7 @@ export async function handleFullSortJob(input: {
   data: FullSortJobData;
   now?: () => string;
 }): Promise<FullSortJobResult> {
-  const sortRun = await input.store.getPaidSortRunForFullSort(input.data);
+  const sortRun = await input.store.getStartableSortRunForFullSort(input.data);
 
   if (!sortRun) {
     throw new Error("Organization is not ready to start.");
@@ -389,7 +389,7 @@ export function createSupabaseFullSortStore(supabase: SupabaseClient): FullSortS
   const recipeStore = createSupabasePlaylistRecipeStore(supabase);
 
   return {
-    async getPaidSortRunForFullSort(input) {
+    async getStartableSortRunForFullSort(input) {
       const { data, error } = await supabase
         .from("sort_runs")
         .select("id,user_id,library_sync_id,state,payment_status")

@@ -12,7 +12,7 @@ import {
 } from "@/modules/payments/checkout";
 import {
   createSupabaseFullSortStore,
-  queueFullSortAfterPayment
+  queueFullSortAfterStart
 } from "@/modules/sorts/full-sort-job";
 
 export async function POST(
@@ -70,7 +70,7 @@ export async function POST(
 
       return {
         payment,
-        fullSort: await queueFullSortAfterPayment({
+        fullSort: await queueFullSortAfterStart({
           store: createSupabaseFullSortStore(supabase),
           queue,
           sortRunId: sortId,
