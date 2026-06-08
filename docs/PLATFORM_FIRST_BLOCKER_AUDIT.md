@@ -103,6 +103,9 @@ Latest local audit on 2026-06-08:
 - The unused legacy `confirmSortRun` service was removed; the persistent worker
   now imports only a neutral playlist-creation queue contract, while Sort export
   remains routed through the platform review/export service.
+- The unused legacy `createSortCheckoutSession` helper and its old `?payment=`
+  redirect contract were removed; full organization starts through the
+  canonical platform start endpoint.
 - Legacy Sort read responses now preserve read compatibility while returning
   platform `nextPath` and `nextApiPath` targets for stale clients.
 - `docs/API_SPEC.md` now matches the implemented platform route contract:
