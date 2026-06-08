@@ -4,7 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AppleMusicLibraryCard } from "@/components/app/library/apple-music-library-card";
 import { ConnectedLibrariesPage } from "@/components/app/library/connected-libraries-page";
-import { NewMusicRecommendationList } from "@/components/app/library/new-music-card";
+import {
+  NewMusicCard,
+  NewMusicRecommendationList
+} from "@/components/app/library/new-music-card";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/app/settings/libraries",
@@ -141,5 +144,22 @@ describe("connected libraries page", () => {
     expect(markup).toContain("Open playlist");
     expect(markup).toContain("/app/playlists/playlist_1");
     expect(markup).toContain("Kyiv Night - Artist");
+  });
+
+  it("shows state-aware disabled copy for new music processing", () => {
+    const markup = renderToStaticMarkup(
+      <NewMusicCard
+        summary={{
+          latestSyncId: null,
+          previousSyncId: null,
+          newTrackCount: 0,
+          canProcess: false,
+          message: "Complete a library sync before processing new music."
+        }}
+      />
+    );
+
+    expect(markup).toContain("Complete a library sync before processing new music.");
+    expect(markup).not.toContain("Run another library sync to detect songs that were added later.");
   });
 });

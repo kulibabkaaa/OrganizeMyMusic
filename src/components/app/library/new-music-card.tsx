@@ -81,7 +81,7 @@ export function NewMusicCard({ summary }: { summary: NewMusicSummary | null }) {
           <p id={disabledReasonId} className="mt-2 text-sm leading-6 text-platform-secondary">
             {canProcess
               ? "Creates review-only playlist queues. Nothing is exported automatically."
-              : "Run another library sync to detect songs that were added later."}
+              : summary?.message ?? "Connect and sync Apple Music before processing new music."}
           </p>
         </div>
       </div>

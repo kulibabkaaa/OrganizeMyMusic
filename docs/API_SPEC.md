@@ -265,6 +265,11 @@ Rules:
 - Requires explicit user action.
 - Persists playlists approved for export and removed tracks.
 - Queues `playlist-create` for the persistent worker.
+- Can requeue a failed platform Sort export from the review screen.
+- Reuses stored Apple Music playlist IDs for Sort playlists that already
+  created playlist shells before a partial failure.
+- Reuses existing app export rows for the same Sort playlist on retry instead
+  of inserting duplicate export attempts.
 - Does not promise exact replacement, reorder, or automatic removal in Apple Music.
 
 ### `POST /api/sort-runs`
@@ -606,3 +611,5 @@ Rules:
 - Returns `409` with platform review/export targets.
 - Stale clients must reopen `/app/sorts/:sortId/review` and export approved
   tracks through `/api/app/sorts/:sortId/export`.
+- Failed platform Sort exports are retried through
+  `/api/app/sorts/:sortId/export`, not this legacy route.

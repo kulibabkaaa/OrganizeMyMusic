@@ -2,12 +2,15 @@ import { redirect } from "next/navigation";
 
 import {
   PlaylistsPage,
-  parsePlaylistsPageFocus,
-  type PlaylistCardGenerationSummary
+  parsePlaylistsPageFocus
 } from "@/components/app/playlists/playlists-page";
 import { ensureProfileForUser } from "@/lib/auth/profile";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
+import {
+  listLatestPlaylistGenerationSummaries,
+  type PlaylistCardGenerationSummary
+} from "@/modules/playlists/latest-generation-summaries";
 import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
 import { createSupabasePlaylistStore } from "@/modules/playlists/store";
 import type { PersistentPlaylist } from "@/types/domain";
@@ -39,28 +42,11 @@ export default async function AppPlaylistsPage({
       playlists = await createSupabasePlaylistStore(serviceSupabase).listPlaylists({
         userId: session.user.id
       });
-      const generationStore = createSupabasePlaylistGenerationStore(serviceSupabase);
-      const summaries = await Promise.all(
-        playlists.map(async (playlist) => {
-          const [latest] = await generationStore.listGenerationHistory({
-            userId: session.user.id,
-            playlistId: playlist.id,
-            limit: 1
-          });
-
-          return [
-            playlist.id,
-            latest
-              ? {
-                  status: latest.generation.status,
-                  trackCount: latest.trackCount,
-                  generatedAt: latest.generation.generatedAt
-                }
-              : undefined
-          ] as const;
-        })
-      );
-      generationSummariesByPlaylistId = Object.fromEntries(summaries);
+      generationSummariesByPlaylistId = await listLatestPlaylistGenerationSummaries({
+        store: createSupabasePlaylistGenerationStore(serviceSupabase),
+        userId: session.user.id,
+        playlists
+      });
     } catch {
       playlists = [];
       generationSummariesByPlaylistId = {};

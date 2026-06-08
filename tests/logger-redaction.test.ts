@@ -55,4 +55,27 @@ describe("sanitizeLogObject", () => {
       }
     });
   });
+
+  it("redacts canonical server secret names", () => {
+    const sanitized = sanitizeLogObject({
+      SUPABASE_SERVICE_ROLE_KEY: "service-role-value",
+      OPENAI_API_KEY: "openai-value",
+      APPLE_PRIVATE_KEY: "apple-private-key-value",
+      ENCRYPTION_KEY: "encryption-value",
+      safeLabel: "platform readiness"
+    });
+    const serialized = JSON.stringify(sanitized);
+
+    expect(serialized).not.toContain("service-role-value");
+    expect(serialized).not.toContain("openai-value");
+    expect(serialized).not.toContain("apple-private-key-value");
+    expect(serialized).not.toContain("encryption-value");
+    expect(sanitized).toEqual({
+      SUPABASE_SERVICE_ROLE_KEY: "[Redacted]",
+      OPENAI_API_KEY: "[Redacted]",
+      APPLE_PRIVATE_KEY: "[Redacted]",
+      ENCRYPTION_KEY: "[Redacted]",
+      safeLabel: "platform readiness"
+    });
+  });
 });

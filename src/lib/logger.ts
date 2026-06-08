@@ -1,6 +1,15 @@
 import pino from "pino";
 
 const sensitiveKeyPattern = /authorization|cookie|password|private.?key|secret|token/i;
+const canonicalSecretKeys = new Set([
+  "APPLE_PRIVATE_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "ENCRYPTION_KEY",
+  "OPENAI_API_KEY",
+  "DATABASE_URL"
+]);
 const sensitiveValuePattern =
   /bearer\s+[a-z0-9._~+/=-]+|raw-[\w-]*token[\w-]*|music[-_ ]?user[-_ ]?token|developer[-_ ]?token|sk_(?:live|test|proj)_[\w-]+|sk-(?:live|test|proj)-[\w-]+|-----BEGIN [A-Z ]*PRIVATE KEY-----/i;
 const redactedValue = "[Redacted]";
@@ -51,7 +60,9 @@ function sanitizeValue(value: unknown): unknown {
   return Object.fromEntries(
     Object.entries(value).map(([key, nestedValue]) => [
       key,
-      sensitiveKeyPattern.test(key) ? redactedValue : sanitizeValue(nestedValue)
+      canonicalSecretKeys.has(key) || sensitiveKeyPattern.test(key)
+        ? redactedValue
+        : sanitizeValue(nestedValue)
     ])
   );
 }

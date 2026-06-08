@@ -180,6 +180,53 @@ describe("POST /api/app/sorts/[sortId]/export", () => {
       librarySyncId: "sync_1"
     });
   });
+
+  it("uses stored review snapshots when retrying failed Sort exports", async () => {
+    const storedSnapshot = {
+      sortRunId: "sort_1",
+      librarySyncId: "sync_1",
+      generatedAt: "2026-05-27T12:00:00.000Z",
+      playlists: []
+    };
+    const getSortRunForPreview = vi.fn().mockResolvedValue({
+      id: "sort_1",
+      userId: "user_1",
+      librarySyncId: "sync_1",
+      state: "failed",
+      paymentStatus: "paid",
+      previewSnapshot: null,
+      requests: []
+    });
+    previewStoreMock.mockReturnValueOnce({
+      getSortRunForPreview
+    } as never);
+    fullSortSnapshotMock.mockResolvedValueOnce(storedSnapshot);
+
+    await exportPost(
+      new Request("http://test.local", {
+        method: "POST",
+        body: JSON.stringify({
+          selectedPlaylistIds: ["playlist_1"],
+          removedTrackFingerprintsByPlaylistId: {},
+          renamedPlaylistTitlesById: {}
+        })
+      }),
+      {
+        params: Promise.resolve({ sortId: "sort_1" })
+      }
+    );
+
+    const getSortRunForExport = exportStoreMock.mock.calls[0]?.[1];
+
+    expect(getSortRunForExport).toEqual(expect.any(Function));
+    await expect(
+      getSortRunForExport({ sortRunId: "sort_1", userId: "user_1" })
+    ).resolves.toMatchObject({
+      state: "failed",
+      paymentStatus: "paid",
+      previewSnapshot: storedSnapshot
+    });
+  });
 });
 
 describe("POST /api/sort-runs/[id]/confirm", () => {

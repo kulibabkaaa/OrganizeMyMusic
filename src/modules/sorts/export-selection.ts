@@ -118,7 +118,11 @@ export async function exportReviewedPlaylists(input: {
     };
   }
 
-  if (sortRun.state !== "preview_ready" && sortRun.state !== "paid") {
+  if (
+    sortRun.state !== "preview_ready" &&
+    sortRun.state !== "paid" &&
+    sortRun.state !== "failed"
+  ) {
     return {
       status: "invalid_state",
       message: "Generated playlists must be ready for review before export."
@@ -239,6 +243,10 @@ type SortPlaylistRow = {
 };
 
 type PlaylistGenerationIdRow = {
+  id: string;
+};
+
+type PlaylistExportIdRow = {
   id: string;
 };
 
@@ -404,13 +412,37 @@ export function createSupabaseSortRunExportStore(
           }
         }
 
-        const { error: exportError } = await supabase.from("playlist_exports").insert({
-          user_id: input.sortRun.userId,
-          playlist_id: row.playlist_id,
-          sort_run_id: input.sortRun.id,
+        const { data: exportRows, error: exportLoadError } = await supabase
+          .from("playlist_exports")
+          .select("id")
+          .eq("playlist_id", row.playlist_id)
+          .eq("sort_run_id", input.sortRun.id);
+
+        if (exportLoadError) {
+          throw new Error(exportLoadError.message);
+        }
+
+        const existingExportIds = ((exportRows ?? []) as PlaylistExportIdRow[]).map(
+          (exportRow) => exportRow.id
+        );
+        const exportPayload = {
           status: "queued",
-          selected_track_count: selected.includedNormalizedTrackIds.length
-        });
+          selected_track_count: selected.includedNormalizedTrackIds.length,
+          error_summary: null,
+          updated_at: now
+        };
+        const { error: exportError } =
+          existingExportIds.length > 0
+            ? await supabase
+                .from("playlist_exports")
+                .update(exportPayload)
+                .in("id", existingExportIds)
+            : await supabase.from("playlist_exports").insert({
+                user_id: input.sortRun.userId,
+                playlist_id: row.playlist_id,
+                sort_run_id: input.sortRun.id,
+                ...exportPayload
+              });
 
         if (exportError) {
           throw new Error(exportError.message);

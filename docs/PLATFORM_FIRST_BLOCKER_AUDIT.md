@@ -137,6 +137,26 @@ Latest local audit on 2026-06-08:
   generation's stored Apple playlist instead of creating duplicate playlists.
 - Failed individual playlist exports now remain user-retryable from the playlist
   detail workspace after review, rather than forcing a new generation.
+- Failed full-organization Sort exports can now be requeued from the platform
+  review/export endpoint, and stored Sort playlist Apple Music IDs are reused on
+  retry so the app does not create duplicate playlist shells after partial
+  failures.
+- Sort playlist generation/export rows are now marked exported only after track
+  insertion succeeds, so failed Apple Music track writes no longer leave
+  persistent playlist hub state falsely marked as exported.
+- Failed Sort export cleanup now marks non-exported related playlist generation
+  and export rows failed, so playlist hub cards do not remain stuck in
+  `exporting` after worker failure.
+- Retried Sort exports now update existing app export rows for the same
+  Sort playlist instead of inserting duplicate export attempts.
+- Dashboard review queue counts now use the same latest-generation summary
+  logic as `/app/playlists?focus=review`, so the dashboard link and playlist
+  hub focus view stay coherent.
+- New-music disabled helper copy now surfaces the backend state message, such
+  as first-sync, no-new-tracks, no-recipes, or already-processed states.
+- Logger redaction now explicitly covers canonical server secret keys including
+  `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `APPLE_PRIVATE_KEY`, and
+  `ENCRYPTION_KEY`.
 - Playlist API regressions now cover cross-user attempts to read, mutate, edit
   recipes, review tracks, generate, and export another user's playlist.
 - Archived app playlists now cannot be reopened in the playlist workspace or
@@ -212,6 +232,11 @@ These can be built without external credentials or new product decisions:
 ### 1. Apple Music exact update behavior
 
 Risk: Apple Music API clearly supports creating a library playlist and adding tracks to the end of a library playlist. Exact removal, replacement, and reordering need verification before the app promises perfect in-place updates.
+The MVP also does not promise exact duplicate-track prevention if the same add
+operation is manually retried after Apple Music accepted tracks but returned a
+failure. Retried app exports reuse app-created playlist IDs and avoid duplicate
+playlist shells, but exact track-level reconciliation still requires Apple
+Music behavior verification.
 
 Known docs:
 
