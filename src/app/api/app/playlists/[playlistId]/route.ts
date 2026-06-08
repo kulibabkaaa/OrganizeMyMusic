@@ -129,6 +129,7 @@ function hasServerManagedPlaylistFields(body: unknown) {
   return [
     "applePlaylistId",
     "latestLibrarySyncId",
+    "lastProcessedNewMusicSyncId",
     "lastGeneratedAt",
     "lastExportedAt"
   ].some((field) => Object.prototype.hasOwnProperty.call(body, field));

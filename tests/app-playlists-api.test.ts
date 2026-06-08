@@ -289,12 +289,18 @@ describe("platform playlist API routes", () => {
     });
   });
 
-  it("rejects client attempts to set Apple Music playlist linkage", async () => {
+  it.each([
+    ["applePlaylistId", "p.existing-user-playlist"],
+    ["latestLibrarySyncId", "33333333-3333-4333-8333-333333333333"],
+    ["lastProcessedNewMusicSyncId", "33333333-3333-4333-8333-333333333333"],
+    ["lastGeneratedAt", "2026-06-08T12:00:00.000Z"],
+    ["lastExportedAt", "2026-06-08T12:00:00.000Z"]
+  ])("rejects client attempts to set server-managed playlist field %s", async (field, value) => {
     const response = await PATCH_PLAYLIST(
       new Request("http://test.local/api/app/playlists/22222222-2222-4222-8222-222222222222", {
         method: "PATCH",
         body: JSON.stringify({
-          applePlaylistId: "p.existing-user-playlist"
+          [field]: value
         })
       }),
       { params: Promise.resolve({ playlistId: playlist.id }) }
