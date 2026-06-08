@@ -6,13 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusPill } from "@/components/ui/status-pill";
-import type { PersistentPlaylist, PlaylistGenerationStatus, PlaylistStatus } from "@/types/domain";
-
-export interface PlaylistCardGenerationSummary {
-  status: PlaylistGenerationStatus;
-  trackCount: number | null;
-  generatedAt: string | null;
-}
+import type { PlaylistCardGenerationSummary } from "@/modules/playlists/latest-generation-summaries";
+import type { PersistentPlaylist, PlaylistStatus } from "@/types/domain";
 
 export type PlaylistsPageFocus = "all" | "review";
 

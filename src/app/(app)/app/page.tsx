@@ -12,6 +12,11 @@ import {
   getLatestLibrarySyncStatus,
   type AppleMusicConnectionSummary
 } from "@/modules/library-syncs/queue";
+import {
+  countLatestReviewQueue,
+  listLatestPlaylistGenerationSummaries
+} from "@/modules/playlists/latest-generation-summaries";
+import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
 import { createSupabasePlaylistStore } from "@/modules/playlists/store";
 import {
   createSupabaseRecentSortRunStore,
@@ -47,7 +52,7 @@ export default async function AppDashboardPage() {
         store: syncStore,
         userId: session.user.id
       });
-      [recentSorts, playlists, reviewQueueCount, newMusicSummary] = await Promise.all([
+      const [recentSortRows, playlistRows, summary] = await Promise.all([
         createSupabaseRecentSortRunStore(serviceSupabase).listRecentSortRuns({
           userId: session.user.id,
           limit: 4
@@ -55,12 +60,21 @@ export default async function AppDashboardPage() {
         createSupabasePlaylistStore(serviceSupabase).listPlaylists({
           userId: session.user.id
         }),
-        getReviewQueueCount(serviceSupabase, session.user.id),
         getNewMusicSummary({
           store: createSupabaseNewMusicStore(serviceSupabase),
           userId: session.user.id
         })
       ]);
+      const generationSummariesByPlaylistId = await listLatestPlaylistGenerationSummaries({
+        store: createSupabasePlaylistGenerationStore(serviceSupabase),
+        userId: session.user.id,
+        playlists: playlistRows
+      });
+
+      recentSorts = recentSortRows;
+      playlists = playlistRows;
+      newMusicSummary = summary;
+      reviewQueueCount = countLatestReviewQueue(generationSummariesByPlaylistId);
     } catch {
       // Keep the dashboard usable when one backend panel is temporarily unavailable.
     }
@@ -97,21 +111,4 @@ export default async function AppDashboardPage() {
       signOutAction={signOut}
     />
   );
-}
-
-async function getReviewQueueCount(
-  supabase: NonNullable<ReturnType<typeof createSupabaseServiceRoleClient>>,
-  userId: string
-) {
-  const { count, error } = await supabase
-    .from("playlist_generations")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "ready_for_review");
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return count ?? 0;
 }

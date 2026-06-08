@@ -49,7 +49,11 @@ export async function POST(
   const getSortRunForExport: typeof previewStore.getSortRunForPreview = async (input) => {
     const sortRun = await previewStore.getSortRunForPreview(input);
 
-    if (!sortRun || sortRun.previewSnapshot || sortRun.state !== "paid") {
+    if (
+      !sortRun ||
+      sortRun.previewSnapshot ||
+      (sortRun.state !== "paid" && sortRun.state !== "failed")
+    ) {
       return sortRun;
     }
 

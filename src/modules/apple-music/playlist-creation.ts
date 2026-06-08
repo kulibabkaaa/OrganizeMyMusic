@@ -43,6 +43,11 @@ export interface PlaylistCreationStore {
     sortPlaylistId: string;
     applePlaylistId: string;
   }): Promise<void>;
+  markPlaylistTracksExported(input: {
+    sortRunId: string;
+    sortPlaylistId: string;
+    applePlaylistId: string;
+  }): Promise<void>;
   createJobEvent(input: {
     sortRunId: string;
     stage: string;
@@ -225,6 +230,20 @@ export async function handlePlaylistCreationJob(input: {
         }
       }
 
+      if (!applePlaylistId) {
+        failedCount += 1;
+        await input.store.createJobEvent({
+          sortRunId: sortRun.id,
+          stage: "playlist_creation",
+          level: "error",
+          message: `Apple Music playlist ID is unavailable for "${playlist.title}".`,
+          details: {
+            sortPlaylistId: playlist.id
+          }
+        });
+        continue;
+      }
+
       const addableTracks = playlist.tracks
         .filter((track) => track.appleSongId)
         .sort((left, right) => left.position - right.position)
@@ -248,6 +267,11 @@ export async function handlePlaylistCreationJob(input: {
       }
 
       if (addableTracks.length === 0) {
+        await input.store.markPlaylistTracksExported({
+          sortRunId: sortRun.id,
+          sortPlaylistId: playlist.id,
+          applePlaylistId
+        });
         continue;
       }
 
@@ -257,13 +281,18 @@ export async function handlePlaylistCreationJob(input: {
         for (const batch of batches) {
           await (input.addTracksToPlaylist ?? addTracksToAppleMusicPlaylist)(
             credentials,
-            applePlaylistId ?? "",
+            applePlaylistId,
             batch
           );
           trackBatchCount += 1;
         }
 
         playlistTrackCount += addableTracks.length;
+        await input.store.markPlaylistTracksExported({
+          sortRunId: sortRun.id,
+          sortPlaylistId: playlist.id,
+          applePlaylistId
+        });
         await input.store.createJobEvent({
           sortRunId: sortRun.id,
           stage: "playlist_creation",
@@ -513,7 +542,6 @@ export function createSupabasePlaylistCreationStore(
         .from("playlists")
         .update({
           apple_playlist_id: input.applePlaylistId,
-          last_exported_at: now,
           updated_at: now
         })
         .eq("id", playlistId);
@@ -525,7 +553,6 @@ export function createSupabasePlaylistCreationStore(
       const { error: generationError } = await supabase
         .from("playlist_generations")
         .update({
-          status: "exported",
           updated_at: now
         })
         .eq("playlist_id", playlistId)
@@ -539,7 +566,6 @@ export function createSupabasePlaylistCreationStore(
         .from("playlist_exports")
         .update({
           apple_playlist_id: input.applePlaylistId,
-          status: "exported",
           updated_at: now
         })
         .eq("playlist_id", playlistId)
@@ -547,6 +573,59 @@ export function createSupabasePlaylistCreationStore(
 
       if (exportError) {
         throw new Error(exportError.message);
+      }
+    },
+
+    async markPlaylistTracksExported(input) {
+      const { data: playlistRow, error: playlistLoadError } = await supabase
+        .from("sort_playlists")
+        .select("playlist_id")
+        .eq("id", input.sortPlaylistId)
+        .eq("sort_run_id", input.sortRunId)
+        .maybeSingle();
+
+      if (playlistLoadError) {
+        throw new Error(playlistLoadError.message);
+      }
+
+      const playlistId = (playlistRow as { playlist_id: string | null } | null)?.playlist_id;
+
+      if (!playlistId) {
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const [playlistResult, generationResult, exportResult] = await Promise.all([
+        supabase
+          .from("playlists")
+          .update({
+            apple_playlist_id: input.applePlaylistId,
+            last_exported_at: now,
+            updated_at: now
+          })
+          .eq("id", playlistId),
+        supabase
+          .from("playlist_generations")
+          .update({
+            status: "exported",
+            updated_at: now
+          })
+          .eq("playlist_id", playlistId)
+          .eq("sort_run_id", input.sortRunId),
+        supabase
+          .from("playlist_exports")
+          .update({
+            apple_playlist_id: input.applePlaylistId,
+            status: "exported",
+            updated_at: now
+          })
+          .eq("playlist_id", playlistId)
+          .eq("sort_run_id", input.sortRunId)
+      ]);
+      const error = playlistResult.error ?? generationResult.error ?? exportResult.error;
+
+      if (error) {
+        throw new Error(error.message);
       }
     },
 
@@ -565,14 +644,36 @@ export function createSupabasePlaylistCreationStore(
     },
 
     async markSortRunFailed(input) {
-      const { error } = await supabase
-        .from("sort_runs")
-        .update({
-          state: "failed",
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", input.sortRunId)
-        .eq("user_id", input.userId);
+      const now = new Date().toISOString();
+      const [sortRunResult, generationResult, exportResult] = await Promise.all([
+        supabase
+          .from("sort_runs")
+          .update({
+            state: "failed",
+            updated_at: now
+          })
+          .eq("id", input.sortRunId)
+          .eq("user_id", input.userId),
+        supabase
+          .from("playlist_generations")
+          .update({
+            status: "failed",
+            error_summary: input.errorSummary,
+            updated_at: now
+          })
+          .eq("sort_run_id", input.sortRunId)
+          .neq("status", "exported"),
+        supabase
+          .from("playlist_exports")
+          .update({
+            status: "failed",
+            error_summary: input.errorSummary,
+            updated_at: now
+          })
+          .eq("sort_run_id", input.sortRunId)
+          .neq("status", "exported")
+      ]);
+      const error = sortRunResult.error ?? generationResult.error ?? exportResult.error;
 
       if (error) {
         throw new Error(error.message);
