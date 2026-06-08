@@ -305,6 +305,8 @@ Response includes:
   "sortRunId": "uuid",
   "state": "preview_ready",
   "paymentStatus": "pending",
+  "nextPath": "/app/sorts/uuid",
+  "nextApiPath": "/api/app/sorts/uuid",
   "previewSnapshot": {
     "playlists": []
   },
