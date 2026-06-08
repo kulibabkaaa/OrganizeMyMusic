@@ -88,13 +88,48 @@ describe("playlist generation export", () => {
     );
   });
 
-  it("does not create an export row or queue a job before reviewable state", async () => {
+  it("queues failed playlist generations for explicit export retry", async () => {
     vi.clearAllMocks();
     vi.mocked(store.getGeneration).mockResolvedValueOnce({
       id: "generation_1",
       user_id: "user_1",
       playlist_id: "playlist_1",
       status: "failed" as const
+    });
+    const queue = {
+      createQueue: vi.fn(),
+      send: vi.fn(async () => "job_retry_1")
+    };
+
+    const result = await queuePlaylistGenerationExport({
+      store,
+      queue,
+      userId: "user_1",
+      playlistId: "playlist_1",
+      generationId: "generation_1"
+    });
+
+    expect(result).toEqual({
+      status: "queued",
+      playlistId: "playlist_1",
+      generationId: "generation_1",
+      exportId: "export_1",
+      selectedTrackCount: 1,
+      jobId: "job_retry_1"
+    });
+    expect(store.markExporting).toHaveBeenCalledWith({
+      generationId: "generation_1",
+      exportId: "export_1"
+    });
+  });
+
+  it("does not create an export row or queue a job before reviewable state", async () => {
+    vi.clearAllMocks();
+    vi.mocked(store.getGeneration).mockResolvedValueOnce({
+      id: "generation_1",
+      user_id: "user_1",
+      playlist_id: "playlist_1",
+      status: "exported" as const
     });
     const queue = {
       createQueue: vi.fn(),
