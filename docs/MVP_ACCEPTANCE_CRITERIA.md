@@ -109,7 +109,7 @@ The MVP is done only when a real user can complete the full flow:
 - Apple Music connect is not real.
 - Tracks are not fetched from Apple Music.
 - AI produces output but nothing is written back to Apple Music.
-- Playlists are written without confirmation.
+- Playlists can be written without review and explicit export confirmation.
 - User token is stored unencrypted.
 - RLS policies are missing.
 - Deployment cannot run the background worker.
