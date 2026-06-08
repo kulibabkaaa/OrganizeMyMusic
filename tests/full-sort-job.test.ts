@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   FULL_SORT_JOB_NAME,
+  createSupabaseFullSortStore,
   handleFullSortJob,
   queueFullSortAfterPayment
 } from "@/modules/sorts/full-sort-job";
@@ -181,6 +182,140 @@ describe("full sort job", () => {
         message: "Full Sort generated 1 playlists with 1 tracks."
       })
     );
+  });
+
+  it("links Sort-created recipes to persistent playlists for later playlist editing", async () => {
+    const tableCalls: Array<{ table: string; operation: string; payload?: unknown }> = [];
+    const playlistRows = [{ id: "playlist_1" }];
+    const sortPlaylistRows = [{ id: "sort_playlist_1" }];
+    const generationRows = [{ id: "generation_1" }];
+    const recipeUpdateFilters: Array<[string, string]> = [];
+
+    const createQuery = (table: string) => {
+      const query = {
+        delete: vi.fn(() => {
+          tableCalls.push({ table, operation: "delete" });
+          return {
+            eq: vi.fn(async () => ({ error: null }))
+          };
+        }),
+        insert: vi.fn((payload: unknown) => {
+          tableCalls.push({ table, operation: "insert", payload });
+
+          if (table === "sort_playlist_tracks" || table === "playlist_generation_tracks") {
+            return Promise.resolve({ error: null });
+          }
+
+          return {
+            select: vi.fn(async () => ({
+              data:
+                table === "playlists"
+                  ? playlistRows
+                  : table === "sort_playlists"
+                    ? sortPlaylistRows
+                    : generationRows,
+              error: null
+            }))
+          };
+        }),
+        update: vi.fn((payload: unknown) => {
+          tableCalls.push({ table, operation: "update", payload });
+          const updateQuery = {
+            eq: vi.fn((column: string, value: string) => {
+              recipeUpdateFilters.push([column, value]);
+              return updateQuery;
+            }),
+            then: (resolve: (value: { error: null }) => void) => resolve({ error: null })
+          };
+
+          return updateQuery;
+        })
+      };
+
+      return query;
+    };
+    const supabase = {
+      from: vi.fn((table: string) => createQuery(table))
+    };
+    const store = createSupabaseFullSortStore(supabase as never);
+
+    await expect(
+      store.saveFullSortResult({
+        sortRun: {
+          id: "sort_1",
+          userId: "user_1",
+          librarySyncId: "sync_1",
+          state: "paid",
+          paymentStatus: "paid",
+          generatedPlaylistCount: 0
+        },
+        snapshot: {
+          sortRunId: "sort_1",
+          librarySyncId: "sync_1",
+          generatedAt: "2026-05-26T12:00:00.000Z",
+          playlists: [
+            {
+              id: recipe.id,
+              dimension: "request",
+              title: "Ukrainian rap",
+              description: "Keep it hard and energetic.",
+              confidenceLabel: "medium",
+              trackCount: 1,
+              trackFingerprints: ["fp_1"],
+              appleSongIds: ["apple_1"],
+              tracks: [
+                {
+                  fingerprint: "fp_1",
+                  normalizedTrackId: "track_1",
+                  appleSongId: "apple_1",
+                  position: 0,
+                  score: 0.9,
+                  reason: "Language matches ukrainian"
+                }
+              ]
+            }
+          ]
+        }
+      })
+    ).resolves.toBeUndefined();
+
+    expect(tableCalls).toContainEqual({
+      table: "playlists",
+      operation: "insert",
+      payload: [
+        expect.objectContaining({
+          user_id: "user_1",
+          name: "Ukrainian rap",
+          created_from_sort_run_id: "sort_1",
+          latest_library_sync_id: "sync_1",
+          last_generated_at: "2026-05-26T12:00:00.000Z"
+        })
+      ]
+    });
+    expect(tableCalls).toContainEqual({
+      table: "playlist_generations",
+      operation: "insert",
+      payload: [
+        expect.objectContaining({
+          user_id: "user_1",
+          playlist_id: "playlist_1",
+          recipe_id: recipe.id,
+          sort_run_id: "sort_1",
+          status: "ready_for_review"
+        })
+      ]
+    });
+    expect(tableCalls).toContainEqual({
+      table: "playlist_recipes",
+      operation: "update",
+      payload: {
+        playlist_id: "playlist_1"
+      }
+    });
+    expect(recipeUpdateFilters).toEqual([
+      ["id", recipe.id],
+      ["sort_run_id", "sort_1"]
+    ]);
   });
 
   it("records failed full Sort jobs without raw track names or tokens", async () => {

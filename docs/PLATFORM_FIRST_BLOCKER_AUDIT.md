@@ -26,6 +26,9 @@ Latest local audit on 2026-06-08:
   Music playlists and tracks are not changed.
 - New-music recommendations are review-only and link back to the playlist
   workspace for recipe adjustment, regeneration, review, and explicit export.
+- Full Sort persistence now has regression coverage for creating persistent app
+  playlists, storing reviewable generations, and linking Sort-created recipes to
+  those playlists for later Playlist Hub editing.
 - Sort Builder advanced recipe controls are collapsed by default and open when
   needed for tag notes or detailed tuning.
 - Logger redaction now recursively sanitizes token-like, secret-like, private
@@ -213,6 +216,8 @@ Follow-up observed on 2026-06-08:
 - Local `npm run build` can still compile and prerender successfully, then fail
   in trace collection with a missing generated `.nft.json` file for
   `app/_not-found`.
+- A later local build on 2026-06-08 compiled successfully, then failed while
+  collecting page data because `.next/server/pages-manifest.json` was missing.
 - Treat Vercel preview checks as the authoritative production build result until
   the local Next trace issue is isolated separately.
 
