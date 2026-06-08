@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AppSortStatusPage from "@/app/(app)/app/sorts/[sortId]/page";
+import LegacySortRunPage from "@/app/(app)/sorts/[id]/page";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { getSortPreview } from "@/modules/sorts/service";
 
@@ -76,5 +77,21 @@ describe("/app/sorts/[sortId] status route", () => {
         params: Promise.resolve({ sortId: "sort_1" })
       })
     ).rejects.toThrow("NEXT_REDIRECT:/app/sorts/sort_1/preview");
+  });
+});
+
+describe("/sorts/[id] compatibility route", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("redirects old Sort links into the canonical app workflow", async () => {
+    await expect(
+      LegacySortRunPage({
+        params: Promise.resolve({ id: "sort_1" })
+      })
+    ).rejects.toThrow("NEXT_REDIRECT:/app/sorts/sort_1");
+
+    expect(navigation.redirect).toHaveBeenCalledWith("/app/sorts/sort_1");
   });
 });

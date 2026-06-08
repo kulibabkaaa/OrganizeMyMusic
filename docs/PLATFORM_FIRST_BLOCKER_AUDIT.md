@@ -14,6 +14,8 @@ Latest local audit on 2026-06-08:
 - `GET /api/app/playlists/:playlistId` returns the playlist, recipe, latest
   generation, and generation history for playlist hub clients.
 - Legacy Sort preview navigation points into `/app/sorts/*`.
+- Legacy `/sorts/:id` page links now redirect into `/app/sorts/:id` instead of
+  rendering the old standalone preview UI.
 - Legacy payment-first Sort copy has been softened for deferred billing.
 - Full Sort checkout now defaults to billing-deferred unlock so a real MVP user
   can start full-library organization without enabling Stripe or dev bypass.
