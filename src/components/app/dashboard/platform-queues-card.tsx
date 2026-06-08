@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
+import { ProcessNewMusicDashboardAction } from "@/components/app/dashboard/process-new-music-dashboard-action";
 import type { NewMusicSummary } from "@/modules/library-syncs/new-music";
 import type { PersistentPlaylist } from "@/types/domain";
 
@@ -58,7 +59,10 @@ export function PlatformQueuesCard({
           label="New music queue"
           value={(newMusicSummary?.newTrackCount ?? 0).toString()}
           detail={newMusicSummary?.message ?? "Complete a sync to detect new songs."}
-          actionLabel={newMusicSummary?.canProcess ? "Process New Music" : "Open Library"}
+          action={
+            newMusicSummary?.canProcess ? <ProcessNewMusicDashboardAction /> : undefined
+          }
+          actionLabel="Open Library"
           href="/app/library#new-music"
         />
       </div>
@@ -70,12 +74,14 @@ function QueueMetric({
   label,
   value,
   detail,
+  action,
   actionLabel,
   href
 }: {
   label: string;
   value: string;
   detail: string;
+  action?: React.ReactNode;
   actionLabel: string;
   href: React.ComponentProps<typeof Link>["href"];
 }) {
@@ -88,11 +94,13 @@ function QueueMetric({
         </p>
         <p className="mt-2 text-sm leading-6 text-platform-secondary">{detail}</p>
       </div>
-      <Link href={href} className="mt-4 inline-flex">
-        <Button variant="glass" className="min-h-11 min-w-36">
-          {actionLabel}
-        </Button>
-      </Link>
+      {action ?? (
+        <Link href={href} className="mt-4 inline-flex">
+          <Button variant="glass" className="min-h-11 min-w-36">
+            {actionLabel}
+          </Button>
+        </Link>
+      )}
     </article>
   );
 }

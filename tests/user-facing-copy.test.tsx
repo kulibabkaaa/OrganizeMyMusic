@@ -1,11 +1,18 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { LatestSortRunCard } from "@/components/app/latest-sort-run-card";
 import { PipelineOverview } from "@/components/app/pipeline-overview";
 import { PlatformQueuesCard } from "@/components/app/dashboard/platform-queues-card";
 import type { PersistentPlaylist } from "@/types/domain";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn()
+  })
+}));
 
 const forbiddenUserCopy = [
   "Sort pipeline",
@@ -83,9 +90,10 @@ describe("normal user-facing copy", () => {
     expect(markup).toContain("Create playlist plans after a completed sync");
     expect(markup).toContain("Create Playlist");
     expect(markup).toContain("Process New Music");
+    expect(markup).toContain("Creates review-only playlist queues. Nothing is exported automatically.");
     expect(markup).toContain("/app/sorts/11111111-1111-4111-8111-111111111111");
     expect(markup).toContain("/app/playlists?focus=review");
-    expect(markup).toContain("/app/library#new-music");
+    expect(markup).not.toContain("/app/library#new-music");
     expect(markup).not.toContain('href="/sorts/');
   });
 });

@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { ActiveSortsCard } from "@/components/app/dashboard/active-sorts-card";
 import { DashboardReadyEmpty } from "@/components/app/dashboard/dashboard-ready-empty";
@@ -13,6 +13,13 @@ import {
   summarizeRecentSortRun,
   type RecentSortRunSummary
 } from "@/modules/sorts/list-sort-runs";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn()
+  })
+}));
 
 const completedSync = {
   id: "sync_1",
@@ -141,7 +148,27 @@ describe("dashboard ready states", () => {
     expect(markup).toContain("Saved playlists and queues");
     expect(markup).toContain("Review Tracks");
     expect(markup).toContain("Process New Music");
+    expect(markup).toContain("Creates review-only playlist queues. Nothing is exported automatically.");
     expect(markup).toContain("/app/playlists?focus=review");
+    expect(markup).not.toContain("/app/library#new-music");
+  });
+
+  it("links to the library when new music cannot be processed from the dashboard", () => {
+    const markup = renderToStaticMarkup(
+      <PlatformQueuesCard
+        playlists={[]}
+        reviewQueueCount={0}
+        newMusicSummary={{
+          latestSyncId: "sync_2",
+          previousSyncId: "sync_1",
+          newTrackCount: 0,
+          canProcess: false,
+          message: "No new songs detected since the previous sync."
+        }}
+      />
+    );
+
+    expect(markup).toContain("Open Library");
     expect(markup).toContain("/app/library#new-music");
   });
 });
