@@ -167,11 +167,12 @@ describe("playlists page", () => {
 
     expect(markup).toContain("Create playlist");
     expect(markup).toContain("Playlist name");
-    expect(markup).toContain("Recipe instructions");
     expect(markup).toContain("Matching rules");
-    expect(markup).toContain("Genres");
-    expect(markup).toContain("Moods");
-    expect(markup).toContain("Allow explicit tracks");
+    expect(markup).toContain("Add matching rules");
+    expect(markup).toContain("You can also finish them inside the playlist workspace.");
+    expect(markup).not.toContain("Recipe instructions");
+    expect(markup).not.toContain("Genres");
+    expect(markup).not.toContain("Allow explicit tracks");
   });
 
   it("uses recovery-aware submit labels after playlist creation succeeds", () => {
