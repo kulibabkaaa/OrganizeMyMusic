@@ -4,6 +4,7 @@ import { POST as exportPost } from "@/app/api/app/sorts/[sortId]/export/route";
 import { POST as legacyCheckoutPost } from "@/app/api/sort-runs/[id]/checkout/route";
 import { POST as legacyCreatePlaylistsPost } from "@/app/api/sort-runs/[id]/create-playlists/route";
 import { POST as legacyConfirmPost } from "@/app/api/sort-runs/[id]/confirm/route";
+import { POST as legacyRetryPost } from "@/app/api/sort-runs/[id]/retry/route";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { withPgBoss } from "@/lib/pg-boss";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
@@ -242,6 +243,33 @@ describe("POST /api/sort-runs/[id]/create-playlists", () => {
 
     await expect(response.json()).resolves.toEqual({
       error: "Legacy playlist creation is disabled. Use the platform review export flow to create Apple Music playlists and add approved tracks.",
+      nextPath: "/app/sorts/sort_1/review",
+      nextApiPath: "/api/app/sorts/sort_1/export"
+    });
+    expect(response.status).toBe(409);
+    expect(exportMock).not.toHaveBeenCalled();
+    expect(withPgBossMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/sort-runs/[id]/retry", () => {
+  it("does not requeue write-back from the legacy retry endpoint", async () => {
+    vi.clearAllMocks();
+    authMock.mockResolvedValue({
+      status: "authenticated",
+      user: { id: "user_1" },
+      supabase: null
+    } as unknown as Awaited<ReturnType<typeof getAuthenticatedSession>>);
+
+    const response = await legacyRetryPost(
+      new Request("http://test.local", { method: "POST" }),
+      {
+        params: Promise.resolve({ id: "sort_1" })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Legacy Sort write-back retry is disabled. Reopen the Sort in the platform review flow before exporting approved tracks.",
       nextPath: "/app/sorts/sort_1/review",
       nextApiPath: "/api/app/sorts/sort_1/export"
     });

@@ -616,13 +616,12 @@ classification runs inside the library sync worker.
 
 ### `POST /api/sort-runs/:sortRunId/retry`
 
-Retries failed Apple Music write-back for a confirmed sort run. The route only
-accepts failed sort runs, sets the run back to `creating_playlists`, and queues
-the playlist creation worker.
+Legacy Sort write-back retry is disabled.
 
 Rules:
 
-- Retry must be idempotent.
-- Do not create duplicate Apple Music playlists if some already exist.
-- Existing `sort_playlists.apple_playlist_id` values are reused on retry.
-- Apple Music writes remain worker-only and require prior explicit confirmation.
+- Requires authenticated user.
+- Does not queue playlist creation.
+- Returns `409` with platform review/export targets.
+- Stale clients must reopen `/app/sorts/:sortId/review` and export approved
+  tracks through `/api/app/sorts/:sortId/export`.
