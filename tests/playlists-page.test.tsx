@@ -7,7 +7,10 @@ import {
   PlaylistDetailWorkspace,
   PlaylistExportConfirmationDialog
 } from "@/components/app/playlists/playlist-detail-workspace";
-import { PlaylistsPage } from "@/components/app/playlists/playlists-page";
+import {
+  parsePlaylistsPageFocus,
+  PlaylistsPage
+} from "@/components/app/playlists/playlists-page";
 import type { PlaylistGenerationView } from "@/modules/playlists/generation-store";
 import type { PersistentPlaylist } from "@/types/domain";
 
@@ -153,6 +156,42 @@ describe("playlists page", () => {
     expect(markup).toContain("14 tracks");
     expect(markup).toContain("/app/playlists/playlist_1");
     expect(markup).not.toContain("No saved playlists yet");
+  });
+
+  it("focuses playlist hub on review-needed playlists", () => {
+    const exportedPlaylist: PersistentPlaylist = {
+      ...playlist,
+      id: "playlist_2",
+      name: "Already Exported",
+      description: "Already reviewed and exported."
+    };
+    const markup = renderToStaticMarkup(
+      <PlaylistsPage
+        playlists={[playlist, exportedPlaylist]}
+        generationSummariesByPlaylistId={{
+          ...playlistGenerationSummaries,
+          playlist_2: {
+            status: "exported",
+            trackCount: 12,
+            generatedAt: "2026-06-02T10:00:00.000Z"
+          }
+        }}
+        focus="review"
+      />
+    );
+
+    expect(markup).toContain("Review queue");
+    expect(markup).toContain("Showing saved playlists with proposed tracks waiting for review.");
+    expect(markup).toContain("Ukrainian Rap");
+    expect(markup).not.toContain("Already Exported");
+    expect(markup).toContain("/app/playlists");
+  });
+
+  it("parses playlist hub focus search params", () => {
+    expect(parsePlaylistsPageFocus("review")).toBe("review");
+    expect(parsePlaylistsPageFocus(["review"])).toBe("review");
+    expect(parsePlaylistsPageFocus("all")).toBe("all");
+    expect(parsePlaylistsPageFocus(undefined)).toBe("all");
   });
 
   it("renders playlist cards without a generation as recipe work", () => {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import {
   PlaylistsPage,
+  parsePlaylistsPageFocus,
   type PlaylistCardGenerationSummary
 } from "@/components/app/playlists/playlists-page";
 import { ensureProfileForUser } from "@/lib/auth/profile";
@@ -13,7 +14,11 @@ import type { PersistentPlaylist } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
-export default async function AppPlaylistsPage() {
+export default async function AppPlaylistsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ focus?: string | string[] }>;
+}) {
   const session = await getAuthenticatedSession();
 
   if (session.status !== "authenticated") {
@@ -62,10 +67,13 @@ export default async function AppPlaylistsPage() {
     }
   }
 
+  const { focus } = await searchParams;
+
   return (
     <PlaylistsPage
       playlists={playlists}
       generationSummariesByPlaylistId={generationSummariesByPlaylistId}
+      focus={parsePlaylistsPageFocus(focus)}
     />
   );
 }

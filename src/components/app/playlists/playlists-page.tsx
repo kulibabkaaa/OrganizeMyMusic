@@ -14,13 +14,23 @@ export interface PlaylistCardGenerationSummary {
   generatedAt: string | null;
 }
 
+export type PlaylistsPageFocus = "all" | "review";
+
 export function PlaylistsPage({
   playlists,
-  generationSummariesByPlaylistId = {}
+  generationSummariesByPlaylistId = {},
+  focus = "all"
 }: {
   playlists: PersistentPlaylist[];
   generationSummariesByPlaylistId?: Record<string, PlaylistCardGenerationSummary | undefined>;
+  focus?: PlaylistsPageFocus;
 }) {
+  const visiblePlaylists = filterPlaylistsByFocus(
+    playlists,
+    generationSummariesByPlaylistId,
+    focus
+  );
+
   return (
     <AppShell
       title="Playlists"
@@ -42,10 +52,28 @@ export function PlaylistsPage({
       </section>
 
       <section className="mt-6">
-        {playlists.length === 0 ? (
+        {focus === "review" ? (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-white/10 bg-black/16 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-white">Review queue</p>
+              <p className="mt-1 text-sm leading-6 text-platform-secondary">
+                Showing saved playlists with proposed tracks waiting for review.
+              </p>
+            </div>
+            <Link href="/app/playlists" className="inline-flex">
+              <Button variant="glass" className="min-w-32">Show All</Button>
+            </Link>
+          </div>
+        ) : null}
+
+        {visiblePlaylists.length === 0 ? (
           <EmptyState
-            title="No saved playlists yet"
-            description="Create a playlist idea, add a recipe, generate proposed tracks, then review the result before export."
+            title={focus === "review" ? "No playlists need review" : "No saved playlists yet"}
+            description={
+              focus === "review"
+                ? "Generated playlists that need track review will appear here."
+                : "Create a playlist idea, add a recipe, generate proposed tracks, then review the result before export."
+            }
             action={
               <Link href="/app/playlists/new" className="inline-flex">
                 <Button variant="glass">Create Playlist</Button>
@@ -54,7 +82,7 @@ export function PlaylistsPage({
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {playlists.map((playlist) => (
+            {visiblePlaylists.map((playlist) => (
               <PlaylistCard
                 key={playlist.id}
                 playlist={playlist}
@@ -65,6 +93,25 @@ export function PlaylistsPage({
         )}
       </section>
     </AppShell>
+  );
+}
+
+export function parsePlaylistsPageFocus(value: string | string[] | undefined): PlaylistsPageFocus {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  return rawValue === "review" ? "review" : "all";
+}
+
+function filterPlaylistsByFocus(
+  playlists: PersistentPlaylist[],
+  generationSummariesByPlaylistId: Record<string, PlaylistCardGenerationSummary | undefined>,
+  focus: PlaylistsPageFocus
+) {
+  if (focus !== "review") {
+    return playlists;
+  }
+
+  return playlists.filter(
+    (playlist) => generationSummariesByPlaylistId[playlist.id]?.status === "ready_for_review"
   );
 }
 

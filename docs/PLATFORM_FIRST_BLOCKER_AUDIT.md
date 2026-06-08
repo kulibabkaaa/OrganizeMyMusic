@@ -38,6 +38,10 @@ Latest local audit on 2026-06-08:
   always-visible metrics, safety panels, and history blocks.
 - Dashboard queue metrics now route directly to saved playlists, playlist review,
   and the user-triggered new-music workflow.
+- Dashboard review queues now deep-link to `/app/playlists?focus=review`, and
+  the playlist hub filters to playlists with proposed tracks waiting for review.
+- Dashboard new-music queues now deep-link to the `Process New Music` card on
+  the library page.
 - Playlist hub cards surface the latest generation review/export state for each
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before

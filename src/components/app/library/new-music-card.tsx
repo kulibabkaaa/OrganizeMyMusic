@@ -54,7 +54,7 @@ export function NewMusicCard({ summary }: { summary: NewMusicSummary | null }) {
   }
 
   return (
-    <Card as="section" className="mt-6">
+    <Card as="section" id="new-music" className="mt-6 scroll-mt-8">
       <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <StatusPill label="User triggered" tone={canProcess ? "success" : "muted"} />
