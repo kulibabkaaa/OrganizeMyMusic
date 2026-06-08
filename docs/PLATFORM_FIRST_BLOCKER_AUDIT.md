@@ -16,6 +16,8 @@ Latest local audit on 2026-06-08:
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.
 - The playlist hub and playlist detail screens were simplified to reduce
   always-visible metrics, safety panels, and history blocks.
+- Playlist detail now includes inline playlist-owned recipe editing before
+  generation/regeneration.
 - Sort Builder advanced recipe controls are collapsed by default and open when
   needed for tag notes or detailed tuning.
 - Logger redaction now recursively sanitizes token-like, secret-like, private

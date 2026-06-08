@@ -209,6 +209,8 @@ Acceptance:
 
 Current MVP implementation:
 
+- Playlist detail lets users edit and save the playlist-owned recipe inline
+  before regenerating.
 - Playlist detail shows the latest generation for track-level review.
 - Playlist detail keeps export controls inside the review panel and collapses
   generation history by default to reduce MVP screen density.
