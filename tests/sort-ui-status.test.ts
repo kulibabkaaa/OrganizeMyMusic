@@ -24,10 +24,10 @@ describe("getSortUiStatus", () => {
       getSortUiStatus(sortInput({ state: "preview_ready", hasPreviewSnapshot: true }))
     ).toBe("preview_ready");
     expect(getSortUiStatus(sortInput({ state: "awaiting_payment" }))).toBe(
-      "awaiting_payment"
+      "ready_to_start"
     );
     expect(getSortUiStatus(sortInput({ state: "paid", paymentStatus: "paid" }))).toBe(
-      "paid"
+      "organizing"
     );
     expect(
       getSortUiStatus(sortInput({ state: "creating_playlists", paymentStatus: "paid" }))
@@ -100,10 +100,10 @@ describe("getSortPrimaryRoute", () => {
     expect(getSortPrimaryRoute("sort_1", "preview_ready")).toBe(
       "/app/sorts/sort_1/preview"
     );
-    expect(getSortPrimaryRoute("sort_1", "awaiting_payment")).toBe(
+    expect(getSortPrimaryRoute("sort_1", "ready_to_start")).toBe(
       "/app/sorts/sort_1/preview"
     );
-    expect(getSortPrimaryRoute("sort_1", "paid")).toBe("/app/sorts/sort_1/processing");
+    expect(getSortPrimaryRoute("sort_1", "organizing")).toBe("/app/sorts/sort_1/processing");
     expect(getSortPrimaryRoute("sort_1", "processing")).toBe(
       "/app/sorts/sort_1/processing"
     );

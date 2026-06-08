@@ -137,6 +137,8 @@ Latest local audit on 2026-06-08:
 - Full-organization start API errors now use organization wording instead of
   `Payment is not enabled`, so stale disabled-mode responses do not expose a
   payment-first product model.
+- Sort list/dashboard UI lifecycle states now map backend payment-era states
+  into platform wording: `ready_to_start` and `organizing`.
 - The active preview start component and tests were renamed away from old
   paywall naming; historical roadmap docs may still mention paywall-era file
   names, but runtime source now uses start/full-organization language.

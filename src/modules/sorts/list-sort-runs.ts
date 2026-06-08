@@ -89,7 +89,7 @@ export function getActiveSortCounts(sorts: RecentSortRunSummary[]): ActiveSortCo
   return {
     draft: sorts.filter((sort) => sort.uiStatus === "draft").length,
     processing: sorts.filter((sort) =>
-      ["preview_generating", "paid", "processing", "exporting"].includes(sort.uiStatus)
+      ["preview_generating", "organizing", "processing", "exporting"].includes(sort.uiStatus)
     ).length,
     readyForReview: sorts.filter((sort) => sort.uiStatus === "ready_for_review").length
   };
@@ -105,7 +105,7 @@ export function filterSortsForIndex(
 
   if (filter === "processing") {
     return sorts.filter((sort) =>
-      ["preview_generating", "paid", "processing", "exporting"].includes(sort.uiStatus)
+      ["preview_generating", "organizing", "processing", "exporting"].includes(sort.uiStatus)
     );
   }
 
@@ -128,12 +128,12 @@ export function getSortNextActionLabel(status: SortUiStatus) {
     case "draft":
       return "Continue editing";
     case "preview_generating":
-    case "paid":
+    case "organizing":
     case "processing":
     case "exporting":
       return "View progress";
     case "preview_ready":
-    case "awaiting_payment":
+    case "ready_to_start":
       return "View preview";
     case "ready_for_review":
       return "Review playlists";
