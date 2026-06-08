@@ -16,6 +16,8 @@ Latest local audit on 2026-06-08:
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.
 - The playlist hub and playlist detail screens were simplified to reduce
   always-visible metrics, safety panels, and history blocks.
+- Playlist hub cards surface the latest generation review/export state for each
+  saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before
   generation/regeneration.
 - Sort Builder advanced recipe controls are collapsed by default and open when
@@ -27,7 +29,9 @@ Latest local audit on 2026-06-08:
   is created.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
-- `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` pass locally.
+- `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
+- Local `npm run build` compiles and prerenders, but may fail during Next trace
+  collection on this machine; Vercel preview remains the production build gate.
 
 Remaining completion verification is external: real Apple Music authorization,
 worker deployment, and Apple Music write-back smoke testing require configured
@@ -197,6 +201,14 @@ Resolution:
 - Pinned `eslint-config-next` to `15.5.19`.
 - Refreshed `node_modules` with `npm ci`.
 - Verified `npm run build` passes with Node `v24.14.0`.
+
+Follow-up observed on 2026-06-08:
+
+- Local `npm run build` can still compile and prerender successfully, then fail
+  in trace collection with a missing generated `.nft.json` file for
+  `app/_not-found`.
+- Treat Vercel preview checks as the authoritative production build result until
+  the local Next trace issue is isolated separately.
 
 Remaining follow-up:
 
