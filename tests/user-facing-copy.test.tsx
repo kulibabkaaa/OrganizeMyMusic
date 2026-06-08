@@ -82,8 +82,8 @@ describe("normal user-facing copy", () => {
     expect(markup).toContain("Create Playlist");
     expect(markup).toContain("Process New Music");
     expect(markup).toContain("/app/sorts/11111111-1111-4111-8111-111111111111");
-    expect(markup).toContain("/app/playlists");
-    expect(markup).toContain("/app/library");
+    expect(markup).toContain("/app/playlists?focus=review");
+    expect(markup).toContain("/app/library#new-music");
     expect(markup).not.toContain('href="/sorts/');
   });
 });

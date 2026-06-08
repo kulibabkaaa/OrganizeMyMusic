@@ -52,14 +52,14 @@ export function PlatformQueuesCard({
           value={reviewQueueCount.toString()}
           detail="generations waiting for track review"
           actionLabel={reviewQueueCount > 0 ? "Review Tracks" : "Open Playlists"}
-          href="/app/playlists"
+          href={reviewQueueCount > 0 ? "/app/playlists?focus=review" : "/app/playlists"}
         />
         <QueueMetric
           label="New music queue"
           value={(newMusicSummary?.newTrackCount ?? 0).toString()}
           detail={newMusicSummary?.message ?? "Complete a sync to detect new songs."}
           actionLabel={newMusicSummary?.canProcess ? "Process New Music" : "Open Library"}
-          href="/app/library"
+          href="/app/library#new-music"
         />
       </div>
     </Card>

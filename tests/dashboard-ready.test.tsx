@@ -141,8 +141,8 @@ describe("dashboard ready states", () => {
     expect(markup).toContain("Saved playlists and queues");
     expect(markup).toContain("Review Tracks");
     expect(markup).toContain("Process New Music");
-    expect(markup).toContain("/app/playlists");
-    expect(markup).toContain("/app/library");
+    expect(markup).toContain("/app/playlists?focus=review");
+    expect(markup).toContain("/app/library#new-music");
   });
 });
 
