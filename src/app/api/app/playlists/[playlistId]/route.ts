@@ -53,10 +53,19 @@ export async function PATCH(
 
   try {
     const { playlist, playlistStore, session } = contextResult;
+    const body = await request.json().catch(() => null);
+
+    if (hasServerManagedPlaylistFields(body)) {
+      return NextResponse.json(
+        { error: "Apple Music export fields are managed by the server." },
+        { status: 400 }
+      );
+    }
+
     const updatedPlaylist = await playlistStore.updatePlaylist({
       userId: session.user.id,
       playlistId: playlist.id,
-      values: await request.json().catch(() => null)
+      values: body
     });
 
     if (!updatedPlaylist) {
@@ -106,4 +115,17 @@ async function getPlaylistItemRouteContext(context: {
     generationStore: createSupabasePlaylistGenerationStore(supabase),
     recipeStore: createSupabasePlaylistRecipeStore(supabase)
   };
+}
+
+function hasServerManagedPlaylistFields(body: unknown) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return false;
+  }
+
+  return [
+    "applePlaylistId",
+    "latestLibrarySyncId",
+    "lastGeneratedAt",
+    "lastExportedAt"
+  ].some((field) => Object.prototype.hasOwnProperty.call(body, field));
 }

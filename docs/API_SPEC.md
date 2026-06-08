@@ -495,6 +495,9 @@ Rules:
 
 - Archive user-facing playlists instead of destructive delete.
 - Must not change Apple Music before explicit export/update.
+- Rejects client updates to server-managed export fields such as
+  `applePlaylistId`, `latestLibrarySyncId`, `lastGeneratedAt`, and
+  `lastExportedAt`.
 
 ### `GET /api/app/playlists/:playlistId/recipe`
 

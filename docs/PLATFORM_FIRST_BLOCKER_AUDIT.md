@@ -38,6 +38,9 @@ Latest local audit on 2026-06-08:
 - Export safety tests now cover both disabled legacy write endpoints and
   invalid playlist-generation export states before any export row or queue job
   is created.
+- Playlist PATCH now rejects client attempts to set server-managed Apple Music
+  export fields, so MVP exports cannot be redirected to arbitrary Apple Music
+  playlists through the public API.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
