@@ -79,6 +79,30 @@ describe("/app/sorts/[sortId] status route", () => {
       })
     ).rejects.toThrow("NEXT_REDIRECT:/app/sorts/sort_1/preview");
   });
+
+  it("routes generated full organizations to review instead of processing", async () => {
+    previewMock.mockResolvedValueOnce({
+      status: "ready",
+      sortRun: {
+        id: "sort_1",
+        userId: "user_1",
+        librarySyncId: "sync_1",
+        state: "paid",
+        paymentStatus: "paid",
+        previewSnapshot: null,
+        generatedPlaylistCount: 3,
+        applePlaylistIdCount: 0,
+        requests: [],
+        events: []
+      }
+    });
+
+    await expect(
+      AppSortStatusPage({
+        params: Promise.resolve({ sortId: "sort_1" })
+      })
+    ).rejects.toThrow("NEXT_REDIRECT:/app/sorts/sort_1/review");
+  });
 });
 
 describe("/sorts/[id] compatibility route", () => {
