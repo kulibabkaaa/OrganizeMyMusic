@@ -24,6 +24,8 @@ Latest local audit on 2026-06-08:
   generation/regeneration.
 - Playlist detail now exposes app-only playlist archive with copy that Apple
   Music playlists and tracks are not changed.
+- New-music recommendations are review-only and link back to the playlist
+  workspace for recipe adjustment, regeneration, review, and explicit export.
 - Sort Builder advanced recipe controls are collapsed by default and open when
   needed for tag notes or detailed tuning.
 - Logger redaction now recursively sanitizes token-like, secret-like, private
