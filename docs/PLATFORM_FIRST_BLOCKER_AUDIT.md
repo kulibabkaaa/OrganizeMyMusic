@@ -19,6 +19,8 @@ Latest local audit on 2026-06-08:
 - Legacy payment-first Sort copy has been softened for deferred billing.
 - Preview and full-organization start copy now avoids checkout-first language while
   billing is deferred.
+- Full-sort queue/store contracts now use start/organization wording instead of
+  payment-first names while preserving existing stored state compatibility.
 - `/app/sorts/:sortId/start` is now the canonical full-organization start
   route; legacy `/app/sorts/:sortId/checkout` redirects there for compatibility.
 - Unused legacy Sort preview/action components were removed, so stale client

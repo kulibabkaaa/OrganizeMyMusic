@@ -4,7 +4,7 @@ import {
   FULL_SORT_JOB_NAME,
   createSupabaseFullSortStore,
   handleFullSortJob,
-  queueFullSortAfterPayment
+  queueFullSortAfterStart
 } from "@/modules/sorts/full-sort-job";
 import type { FullSortStore } from "@/modules/sorts/full-sort-job";
 import type { PlaylistRecipe, TrackClassification } from "@/types/domain";
@@ -44,7 +44,7 @@ const classification: TrackClassification = {
 
 function createStore(overrides: Partial<FullSortStore> = {}): FullSortStore {
   return {
-    getPaidSortRunForFullSort: vi.fn().mockResolvedValue({
+    getStartableSortRunForFullSort: vi.fn().mockResolvedValue({
       id: "sort_1",
       userId: "user_1",
       librarySyncId: "sync_1",
@@ -79,7 +79,7 @@ function createStore(overrides: Partial<FullSortStore> = {}): FullSortStore {
 }
 
 describe("full sort job", () => {
-  it("queues full organization only after payment is confirmed", async () => {
+  it("queues full organization after the Sort is unlocked for start", async () => {
     const store = createStore();
     const queue = {
       createQueue: vi.fn().mockResolvedValue(undefined),
@@ -87,7 +87,7 @@ describe("full sort job", () => {
     };
 
     await expect(
-      queueFullSortAfterPayment({
+      queueFullSortAfterStart({
         store,
         queue,
         sortRunId: "sort_1",
@@ -116,9 +116,9 @@ describe("full sort job", () => {
     );
   });
 
-  it("does not queue when the Sort is not paid", async () => {
+  it("does not queue when the Sort is not startable", async () => {
     const store = createStore({
-      getPaidSortRunForFullSort: vi.fn().mockResolvedValue(null)
+      getStartableSortRunForFullSort: vi.fn().mockResolvedValue(null)
     });
     const queue = {
       createQueue: vi.fn().mockResolvedValue(undefined),
@@ -126,7 +126,7 @@ describe("full sort job", () => {
     };
 
     await expect(
-      queueFullSortAfterPayment({
+      queueFullSortAfterStart({
         store,
         queue,
         sortRunId: "sort_1",
