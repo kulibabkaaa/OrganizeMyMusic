@@ -363,8 +363,8 @@ describe("SortBuilder", () => {
     expect(markup).not.toContain("Needs attention");
     expect(markup).toContain("Duplicate playlist");
     expect(markup).toContain("Delete playlist");
-    expect(markup).toContain("Move up");
     expect(markup).toContain("Move down");
+    expect(markup).not.toContain("Move up");
     expect(markup).not.toContain("Confirm delete");
     expect(markup).not.toContain("Confirm to remove this playlist from the Sort.");
     expect(markup).not.toContain("Keep at least one playlist in this Sort.");
