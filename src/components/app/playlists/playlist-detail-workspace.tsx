@@ -50,6 +50,8 @@ export function PlaylistDetailWorkspace({
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
   const keptCount = useMemo(
     () => generation?.tracks.filter((track) => track.decision === "keep").length ?? 0,
     [generation]
@@ -159,6 +161,40 @@ export function PlaylistDetailWorkspace({
       router.refresh();
     } finally {
       setIsExporting(false);
+    }
+  }
+
+  async function archivePlaylist() {
+    const confirmed = window.confirm(
+      "Archive this app playlist? Apple Music playlists and library tracks will not be changed."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsArchiving(true);
+    setArchiveError(null);
+
+    try {
+      const response = await fetch(`/api/app/playlists/${encodeURIComponent(playlist.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "archived" })
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { playlist?: PersistentPlaylist; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.playlist) {
+        setArchiveError(payload?.error ?? "Playlist could not be archived.");
+        return;
+      }
+
+      router.push("/app/playlists");
+      router.refresh();
+    } finally {
+      setIsArchiving(false);
     }
   }
 
@@ -306,6 +342,26 @@ export function PlaylistDetailWorkspace({
             <Link href="/app/playlists" className="inline-flex">
               <Button variant="glass">Back</Button>
             </Link>
+          </div>
+          <div className="mt-5 border-t border-white/10 pt-5">
+            <p className="text-sm leading-6 text-platform-secondary">
+              Archive only removes this saved playlist from the app workspace. Apple Music is not
+              edited, deleted, reordered, or replaced.
+            </p>
+            {archiveError ? (
+              <p className="mt-3 rounded-[1rem] border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] px-4 py-3 text-sm text-platform-danger">
+                {archiveError}
+              </p>
+            ) : null}
+            <Button
+              type="button"
+              variant="danger"
+              disabled={isArchiving}
+              className="mt-3 min-w-36"
+              onClick={archivePlaylist}
+            >
+              {isArchiving ? "Archiving..." : "Archive Playlist"}
+            </Button>
           </div>
         </Card>
 

@@ -25,7 +25,8 @@ import {
   createSupabasePlaylistGenerationExportStore,
   queuePlaylistGenerationExport
 } from "@/modules/playlists/generation-export";
-import { createSupabasePlaylistStore } from "@/modules/playlists/store";
+import { createSupabasePlaylistStore, type PlaylistStore } from "@/modules/playlists/store";
+import type { PersistentPlaylist } from "@/types/domain";
 
 vi.mock("@/lib/auth/profile", () => ({
   ensureProfileForUser: vi.fn()
@@ -70,7 +71,7 @@ const generationStoreFactoryMock = vi.mocked(createSupabasePlaylistGenerationSto
 const generationExportStoreFactoryMock = vi.mocked(createSupabasePlaylistGenerationExportStore);
 const queuePlaylistGenerationExportMock = vi.mocked(queuePlaylistGenerationExport);
 
-const playlist = {
+const playlist: PersistentPlaylist = {
   id: "22222222-2222-4222-8222-222222222222",
   userId: "user_1",
   sourceProvider: "apple_music" as const,
@@ -144,15 +145,18 @@ const generation = {
   ]
 };
 
-const playlistStore = {
+const playlistStore: PlaylistStore = {
   async listPlaylists() {
     return [playlist];
   },
   async getPlaylist() {
     return playlist;
   },
-  createPlaylist: vi.fn(async () => playlist),
-  updatePlaylist: vi.fn(async () => ({ ...playlist, status: "active" as const })),
+  createPlaylist: vi.fn<PlaylistStore["createPlaylist"]>(async () => playlist),
+  updatePlaylist: vi.fn<PlaylistStore["updatePlaylist"]>(async () => ({
+    ...playlist,
+    status: "active"
+  })),
   archivePlaylist: vi.fn()
 };
 
@@ -279,6 +283,38 @@ describe("platform playlist API routes", () => {
       playlistId: playlist.id,
       values: { status: "active" }
     });
+  });
+
+  it("archives a user-owned persistent playlist without Apple Music writes", async () => {
+    vi.mocked(playlistStore.updatePlaylist).mockResolvedValueOnce({
+      ...playlist,
+      status: "archived",
+      archivedAt: "2026-06-08T12:00:00.000Z"
+    });
+
+    const response = await PATCH_PLAYLIST(
+      new Request("http://test.local/api/app/playlists/22222222-2222-4222-8222-222222222222", {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "archived"
+        })
+      }),
+      { params: Promise.resolve({ playlistId: playlist.id }) }
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      playlist: {
+        id: playlist.id,
+        status: "archived"
+      }
+    });
+    expect(response.status).toBe(200);
+    expect(playlistStore.updatePlaylist).toHaveBeenCalledWith({
+      userId: "user_1",
+      playlistId: playlist.id,
+      values: { status: "archived" }
+    });
+    expect(queuePlaylistGenerationExportMock).not.toHaveBeenCalled();
   });
 
   it("returns playlist detail with its current recipe", async () => {

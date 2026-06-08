@@ -213,6 +213,8 @@ Current MVP implementation:
   visible before opening a playlist.
 - Playlist detail lets users edit and save the playlist-owned recipe inline
   before regenerating.
+- Playlist detail lets users archive an app playlist while explicitly stating
+  that Apple Music playlists and library tracks are not changed.
 - Playlist detail shows the latest generation for track-level review.
 - Playlist detail keeps export controls inside the review panel and collapses
   generation history by default to reduce MVP screen density.
