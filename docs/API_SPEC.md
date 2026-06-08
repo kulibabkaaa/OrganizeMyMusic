@@ -314,40 +314,9 @@ Response includes:
 }
 ```
 
-### `GET /api/sort-runs/:sortRunId/preview`
-
-Returns preview snapshot.
-
-Response:
-
-```json
-{
-  "sortRunId": "uuid",
-  "state": "preview_ready",
-  "playlists": [
-    {
-      "id": "uuid",
-      "title": "Ukrainian Rap",
-      "description": "Ukrainian-language rap and hip-hop from your library.",
-      "trackCount": 32,
-      "tracks": [
-        {
-          "id": "uuid",
-          "appleSongId": "i.xxxxx",
-          "name": "Track name",
-          "artistName": "Artist",
-          "score": 0.91,
-          "reason": "Ukrainian language and rap genre classification."
-        }
-      ]
-    }
-  ]
-}
-```
-
 ### `POST /api/sort-runs/:sortRunId/confirm`
 
-Confirms playlists approved for export and queues Apple Music write-back.
+Legacy confirmation is disabled. Returns `409`.
 
 Request:
 
@@ -364,28 +333,30 @@ Response:
 
 ```json
 {
-  "sortRunId": "uuid",
-  "state": "creating_playlists",
-  "selectedPlaylistCount": 2,
-  "selectedTrackCount": 42,
-  "jobId": "pg-boss-job-id"
+  "error": "Legacy Sort confirmation is disabled. Review the Sort in the platform workflow before exporting approved tracks.",
+  "nextPath": "/app/sorts/uuid/review",
+  "nextApiPath": "/api/app/sorts/uuid/export"
 }
 ```
 
 Rules:
 
 - Must require explicit user action.
-- Must not run on page load.
-- Must not confirm runs owned by another user.
-- Persists playlists approved for export in `sort_playlists.selected`.
-- Persists removed tracks in `sort_playlist_tracks.removed_by_user`.
-- Queues `playlist-create` for the persistent worker.
+- Does not confirm playlists.
+- Does not queue playlist creation.
+- New app surfaces must route users through `/app/sorts/:sortId/review`; that
+  page calls `POST /api/app/sorts/:sortId/export` after review.
 
-## Job events
+### Unsupported legacy subroutes
 
-### `GET /api/sort-runs/:sortRunId/events`
+These legacy subroutes are not active platform routes:
 
-Returns job events for a sort run.
+- `GET /api/sort-runs/:sortRunId/preview`
+- `GET /api/sort-runs/:sortRunId/events`
+
+Use `POST /api/app/sorts/:sortId/preview` for Sort previews. Job events are
+currently internal implementation details and are not exposed through a public
+platform endpoint.
 
 ## New Music
 
