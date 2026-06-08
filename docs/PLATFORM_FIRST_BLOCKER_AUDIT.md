@@ -88,6 +88,8 @@ Latest local audit on 2026-06-08:
 - Full-organization start and preview screens now avoid checkout-first wording
   in the billing-deferred MVP path; copy uses organization, generation, review,
   `Create Apple Music playlists`, and `add approved tracks` language.
+- Preview warnings, Sort empty states, processing, and review headings now use
+  full-organization wording instead of old paywall-era full-Sort phrasing.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - Supabase MCP read-only check on 2026-06-08 confirmed project

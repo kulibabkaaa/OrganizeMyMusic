@@ -53,8 +53,8 @@ describe("SortStartPage", () => {
       />
     );
 
-    expect(markup).toContain("Full Sort paused");
-    expect(markup).toContain("Full Sort processing is paused in this environment.");
+    expect(markup).toContain("Full organization paused");
+    expect(markup).toContain("Full organization processing is paused in this environment.");
     expect(markup).toContain('id="sort-start-disabled-reason"');
     expect(markup).toContain('aria-describedby="sort-start-disabled-reason"');
     expect(markup).toContain("disabled");

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import SortCheckoutRedirectPage from "@/app/(app)/app/sorts/[sortId]/checkout/page";
 import AppSortStatusPage from "@/app/(app)/app/sorts/[sortId]/page";
 import LegacySortRunPage from "@/app/(app)/sorts/[id]/page";
 import { getAuthenticatedSession } from "@/lib/auth/session";
@@ -93,5 +94,21 @@ describe("/sorts/[id] compatibility route", () => {
     ).rejects.toThrow("NEXT_REDIRECT:/app/sorts/sort_1");
 
     expect(navigation.redirect).toHaveBeenCalledWith("/app/sorts/sort_1");
+  });
+});
+
+describe("/app/sorts/[sortId]/checkout compatibility route", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("redirects old checkout links into the canonical full-organization start route", async () => {
+    await expect(
+      SortCheckoutRedirectPage({
+        params: Promise.resolve({ sortId: "sort_1" })
+      })
+    ).rejects.toThrow("NEXT_REDIRECT:/app/sorts/sort_1/start");
+
+    expect(navigation.redirect).toHaveBeenCalledWith("/app/sorts/sort_1/start");
   });
 });

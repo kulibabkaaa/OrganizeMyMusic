@@ -64,7 +64,7 @@ export function ProcessingPage({
           </div>
 
           <Progress
-            label="Full Sort progress"
+            label="Full organization progress"
             value={progress.percent}
             helper={`${progress.recipeCount} Playlist Recipes · ${formatCount(progress.trackCountProcessed)} tracks processed`}
           />

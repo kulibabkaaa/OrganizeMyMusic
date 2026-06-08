@@ -51,7 +51,7 @@ export function ReviewPlaylistsPage({
       <section className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-platform-muted">
-            Full Sort ready
+            Full organization ready
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-[0em] text-white md:text-4xl">
             Review playlists
