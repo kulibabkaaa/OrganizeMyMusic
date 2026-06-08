@@ -172,15 +172,15 @@ playlist, add Apple library song IDs to created playlists in batches, emit
 per-playlist progress events, and mark the sort run `completed` after all
 playlist track insertion succeeds.
 
-`MVP-023` adds retry routes for failed library syncs and failed playlist
-write-back. Library sync retry creates a new queued sync so partial raw imports
-are not mixed with the retry. Playlist write-back retry requeues the confirmed
-sort run, returns it to `creating_playlists`, and relies on stored
-`sort_playlists.apple_playlist_id` values to avoid duplicate playlist creation.
+`MVP-023` adds retry for failed library syncs. Library sync retry creates a new
+queued sync so partial raw imports are not mixed with the retry. Legacy Sort
+write-back retry is disabled in the platform-first MVP; stale clients must
+reopen the Sort review screen and export approved tracks through the platform
+export endpoint.
 
 ## Idempotency
 
-Playlist creation must avoid duplicates during retry.
+Playlist creation must avoid duplicates during worker retries.
 
 Recommended approach:
 

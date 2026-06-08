@@ -85,6 +85,8 @@ Latest local audit on 2026-06-08:
 - Legacy `POST /api/sort-runs` playlist-request creation now returns `409`
   with platform Sort creation targets instead of creating old freeform
   playlist-request Sorts.
+- Legacy Sort write-back retry now returns `409` with platform review/export
+  targets instead of requeuing old playlist creation directly.
 - Playlist PATCH now rejects client attempts to set server-managed Apple Music
   export fields, so MVP exports cannot be redirected to arbitrary Apple Music
   playlists through the public API.
