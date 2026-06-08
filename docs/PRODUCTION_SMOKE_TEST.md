@@ -172,8 +172,9 @@ As of 2026-06-08:
 - Local `npm run smoke:preflight` verifies the production health route,
   signed-out landing/dashboard surfaces, and successful Vercel/Railway GitHub
   deployment statuses without creating jobs or using Apple Music credentials.
-- Latest safe preflight passed on 2026-06-08 for production commit
-  `f7041293586eadb9f98c6f6aac001caed574829c`.
+- `npm run smoke:preflight` is the authoritative safe preflight after each
+  deployment. It prints the currently deployed production commit and must pass
+  before manual Apple Music smoke begins.
 - Hosted pg-boss has `library-sync`, `full-sort`, `playlist-create`, and
   `playlist-generation-export` queues registered, with no active, queued,
   retrying, or failed jobs for those queues at verification time.

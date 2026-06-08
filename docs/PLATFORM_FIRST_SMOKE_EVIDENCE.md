@@ -59,7 +59,7 @@ Result:
 Notes:
 ```
 
-Latest recorded safe preflight:
+Recent safe preflight example:
 
 ```text
 Date: 2026-06-08
@@ -71,7 +71,9 @@ Railway status: success, GitHub context "hearty-recreation - OrganizeMyMusic"
 Result: pass
 Notes: Read-only preflight passed for production health, signed-out landing,
 signed-out dashboard redirect state, and GitHub deployment statuses. Vercel
-and Railway both reported successful deployment status for this commit.
+and Railway both reported successful deployment status for this commit. Rerun
+`npm run smoke:preflight` after each production deployment and record the
+current health commit before manual Apple Music smoke.
 ```
 
 ## Required Manual Evidence
