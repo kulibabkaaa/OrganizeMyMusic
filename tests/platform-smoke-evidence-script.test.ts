@@ -32,6 +32,9 @@ describe("platform smoke evidence script", () => {
     expect(source).toContain("standalone_playlist_recipe_count");
     expect(source).toContain("standalone_generation_count");
     expect(source).toContain("standalone_exported_count");
+    expect(source).toContain("playlist_with_recipe_count");
+    expect(source).toContain("complete_playlist_count");
+    expect(source).toContain("exists (");
     expect(source).toContain("one-off playlist flow");
     expect(source).toContain("recipe_snapshot @>");
     expect(source).toContain("where lower(email) = $1");

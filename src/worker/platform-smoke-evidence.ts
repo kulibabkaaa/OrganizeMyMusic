@@ -89,6 +89,14 @@ interface DuplicateNewMusicQueueRow {
   count: number;
 }
 
+interface SortCreatedPlaylistProofRow {
+  playlist_with_recipe_count: number;
+}
+
+interface OneOffFlowProofRow {
+  complete_playlist_count: number;
+}
+
 const requiredEnvKeys = ["DATABASE_URL", "SMOKE_USER_EMAIL"] as const;
 
 function result(name: string, status: CheckStatus, detail: string): CheckResult {
@@ -143,7 +151,9 @@ async function run() {
       generationTrackSummary,
       exportSummary,
       sortSummary,
-      duplicateNewMusicQueues
+      duplicateNewMusicQueues,
+      sortCreatedPlaylistProof,
+      oneOffFlowProof
     ] = await Promise.all([
       getConnectionSummary(client, profile.id),
       getRecentSyncs(client, profile.id),
@@ -154,7 +164,9 @@ async function run() {
       getGenerationTrackSummary(client, profile.id),
       getExportSummary(client, profile.id),
       getSortSummary(client, profile.id),
-      getDuplicateNewMusicQueueCount(client, profile.id)
+      getDuplicateNewMusicQueueCount(client, profile.id),
+      getSortCreatedPlaylistProof(client, profile.id),
+      getOneOffFlowProof(client, profile.id)
     ]);
     const latestSync = recentSyncs[0] ?? null;
     const completedSyncs = recentSyncs.filter((sync) => sync.status === "completed");
@@ -184,11 +196,10 @@ async function run() {
       ),
       result(
         "persistent playlists",
-        playlistSummary.sort_created_count >= 3 &&
-          recipeSummary.sort_created_playlist_recipe_count >= 3
+        sortCreatedPlaylistProof.playlist_with_recipe_count >= 3
           ? "pass"
           : "warn",
-        `playlists=${playlistSummary.total}, active=${playlistSummary.active_count}, sort_created=${playlistSummary.sort_created_count}, sort_created_playlist_recipes=${recipeSummary.sort_created_playlist_recipe_count}, playlist_recipes=${recipeSummary.playlist_recipe_count}`
+        `playlists=${playlistSummary.total}, active=${playlistSummary.active_count}, sort_created=${playlistSummary.sort_created_count}, sort_created_with_recipes=${sortCreatedPlaylistProof.playlist_with_recipe_count}, playlist_recipes=${recipeSummary.playlist_recipe_count}`
       ),
       result(
         "playlist generations",
@@ -207,13 +218,8 @@ async function run() {
       ),
       result(
         "one-off playlist flow",
-        playlistSummary.standalone_count > 0 &&
-          recipeSummary.standalone_playlist_recipe_count > 0 &&
-          generationSummary.standalone_generation_count > 0 &&
-          exportSummary.standalone_exported_count > 0
-          ? "pass"
-          : "warn",
-        `standalone_playlists=${playlistSummary.standalone_count}, standalone_recipes=${recipeSummary.standalone_playlist_recipe_count}, standalone_generations=${generationSummary.standalone_generation_count}, standalone_exported=${exportSummary.standalone_exported_count}`
+        oneOffFlowProof.complete_playlist_count > 0 ? "pass" : "warn",
+        `complete_one_off_playlists=${oneOffFlowProof.complete_playlist_count}, standalone_playlists=${playlistSummary.standalone_count}, standalone_recipes=${recipeSummary.standalone_playlist_recipe_count}, standalone_generations=${generationSummary.standalone_generation_count}, standalone_exported=${exportSummary.standalone_exported_count}`
       ),
       result(
         "new music processing",
@@ -460,6 +466,69 @@ async function getDuplicateNewMusicQueueCount(
       group by playlist_id, library_sync_id
       having count(*) > 1
     ) duplicate_new_music_queues
+    `,
+    [userId]
+  );
+}
+
+async function getSortCreatedPlaylistProof(
+  client: Client,
+  userId: string
+): Promise<SortCreatedPlaylistProofRow> {
+  return oneRow<SortCreatedPlaylistProofRow>(
+    client,
+    `
+    select count(*)::int as playlist_with_recipe_count
+    from playlists p
+    where p.user_id = $1
+      and p.status != 'archived'
+      and p.created_from_sort_run_id is not null
+      and exists (
+        select 1
+        from playlist_recipes pr
+        where pr.user_id = p.user_id
+          and pr.playlist_id = p.id
+      )
+    `,
+    [userId]
+  );
+}
+
+async function getOneOffFlowProof(client: Client, userId: string): Promise<OneOffFlowProofRow> {
+  return oneRow<OneOffFlowProofRow>(
+    client,
+    `
+    select count(*)::int as complete_playlist_count
+    from playlists p
+    where p.user_id = $1
+      and p.status != 'archived'
+      and p.created_from_sort_run_id is null
+      and exists (
+        select 1
+        from playlist_recipes pr
+        where pr.user_id = p.user_id
+          and pr.playlist_id = p.id
+      )
+      and exists (
+        select 1
+        from playlist_generations pg
+        where pg.user_id = p.user_id
+          and pg.playlist_id = p.id
+          and pg.sort_run_id is null
+          and not (pg.recipe_snapshot @> '{"source":"new_music"}'::jsonb)
+      )
+      and exists (
+        select 1
+        from playlist_exports pe
+        join playlist_generations pg on pg.id = pe.generation_id
+        where pe.user_id = p.user_id
+          and pe.playlist_id = p.id
+          and pe.status = 'exported'
+          and pe.apple_playlist_id is not null
+          and pe.sort_run_id is null
+          and pg.sort_run_id is null
+          and not (pg.recipe_snapshot @> '{"source":"new_music"}'::jsonb)
+      )
     `,
     [userId]
   );

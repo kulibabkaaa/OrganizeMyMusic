@@ -39,7 +39,8 @@ names, Apple Music user tokens, raw Apple payloads, recipe text, or playlist
 names.
 Strict mode exits non-zero if any completion row is still warning-only.
 It separately checks Sort-created playlists and the one-off playlist
-recipe/generation/export path.
+recipe/generation/export path. Those checks require linked rows on the same
+playlist, not only matching aggregate totals.
 
 Record the output here before each manual smoke run:
 
