@@ -6,6 +6,10 @@ import { describe, expect, it } from "vitest";
 const doc = readFileSync(join(process.cwd(), "docs/PRODUCTION_SMOKE_TEST.md"), "utf8");
 const acceptanceDoc = readFileSync(join(process.cwd(), "docs/MVP_ACCEPTANCE_CRITERIA.md"), "utf8");
 const docsReadme = readFileSync(join(process.cwd(), "docs/README.md"), "utf8");
+const evidenceDoc = readFileSync(
+  join(process.cwd(), "docs/PLATFORM_FIRST_SMOKE_EVIDENCE.md"),
+  "utf8"
+);
 
 describe("production smoke checklist doc", () => {
   it("covers the full platform flow and reset notes", () => {
@@ -35,6 +39,7 @@ describe("production smoke checklist doc", () => {
       "playlist_recipes_scope_check",
       "idx_payments_unique_zero_dollar_sort_unlock",
       "npm run smoke:preflight",
+      "PLATFORM_FIRST_SMOKE_EVIDENCE.md",
       "playlists.updated_at",
       "Rollback/reset notes",
       "/admin/reset-user"
@@ -53,6 +58,7 @@ describe("production smoke checklist doc", () => {
     expect(docsReadme).toContain("As of 2026-06-08, the platform-first migration is merged to `main`");
     expect(docsReadme).toContain("to Vercel Production");
     expect(docsReadme).toContain("Remaining completion verification");
+    expect(docsReadme).toContain("PLATFORM_FIRST_SMOKE_EVIDENCE.md");
     expect(docsReadme).toContain("Historical Sort-first smoke evidence from 2026-05-23");
     expect(docsReadme).not.toContain(
       "As of 2026-05-23, the Apple Music MVP path has completed one production smoke"
@@ -68,5 +74,28 @@ describe("production smoke checklist doc", () => {
       "Playlists can be written without review and explicit export confirmation."
     );
     expect(acceptanceDoc).not.toContain("Playlists are written without confirmation.");
+  });
+
+  it("requires real production evidence before completion can be claimed", () => {
+    for (const required of [
+      "Real user sign-in",
+      "Apple Music connect",
+      "Library sync",
+      "Organize My Library",
+      "Three persistent playlists",
+      "Generation from existing library",
+      "Review every playlist and track",
+      "Explicit Apple Music export",
+      "Apple Music write-back",
+      "Playlist hub persistence",
+      "One-off playlist flow",
+      "New-music processing",
+      "Security constraints",
+      "Docs and known limitations",
+      "Not yet verified for platform-first smoke",
+      "The platform-first MVP goal remains active"
+    ]) {
+      expect(evidenceDoc).toContain(required);
+    }
   });
 });

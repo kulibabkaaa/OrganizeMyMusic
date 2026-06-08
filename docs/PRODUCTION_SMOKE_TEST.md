@@ -30,6 +30,9 @@ library data and creates real playlists only after explicit confirmation.
 - `npm run smoke:preflight` passes from a trusted machine. This checks
   production `/api/health`, signed-out `/` and `/dashboard`, and GitHub
   deployment statuses for Vercel and Railway without touching Apple Music.
+- `docs/PLATFORM_FIRST_SMOKE_EVIDENCE.md` is ready to record the manual smoke
+  result, production commit, worker status, counts, job IDs, Apple playlist IDs,
+  and limitations.
 - Apple Music credentials are configured in Vercel and Railway.
 - `NEXT_PUBLIC_APP_URL` matches the URL being tested.
 
@@ -93,6 +96,8 @@ library data and creates real playlists only after explicit confirmation.
 39. Retry `Process New Music` and confirm the same latest sync does not create
     duplicate new-music review queues.
 40. Record any partial failures and retry behavior.
+41. Update `docs/PLATFORM_FIRST_SMOKE_EVIDENCE.md` with the full result before
+    claiming the platform-first MVP goal is complete.
 
 ## Historical Sort-first smoke path
 
@@ -120,15 +125,14 @@ Stop before confirmation when:
 
 As of 2026-06-08:
 
-- Platform-first PR #1 was merged to `main` at commit
-  `95bc5fffbe95ad5c1579b2cab60815a51d364adb`.
-- Vercel Production deployment `dpl_A7bKrk5Z5Fhq2S7J7NhjTcs2vTAx` is `READY`
-  for that commit and aliases `https://organize-my-music.vercel.app`.
-- Railway reported a successful worker deployment for the same merged main
-  commit through the GitHub commit status check.
-- Production `/api/health` returns `ok: true` with commit
-  `95bc5fffbe95ad5c1579b2cab60815a51d364adb`, branch `main`, and environment
-  `production`.
+- Platform-first PR #1 was merged to `main`.
+- Vercel Production aliases `https://organize-my-music.vercel.app`.
+- Railway reports worker deployments through the GitHub commit status check.
+- `npm run smoke:preflight` is the authoritative safe check for current
+  production health, deployed commit, signed-out route behavior, and
+  Vercel/Railway deployment status.
+- A recorded safe preflight passed for production commit
+  `25784c0fc748b73a008d6aa57d062f324224501c`.
 - Production `/` returns the platform-first landing page with signed-out CTAs
   routed to `/auth`.
 - Production `/dashboard` resolves to the canonical `/app` signed-out workspace.
@@ -175,6 +179,8 @@ As of 2026-06-08:
 - Real Apple Music authorization, library sync, Sort export, individual
   playlist export, and new-music processing still require a real signed-in user
   with Apple Music access.
+- `docs/PLATFORM_FIRST_SMOKE_EVIDENCE.md` is the required evidence log for that
+  remaining real-user smoke.
 
 Historical Sort-first smoke from 2026-05-23:
 

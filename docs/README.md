@@ -23,14 +23,15 @@ This folder contains the product, architecture, implementation, and Codex workfl
 17. `DEPLOYMENT_OPERATIONS.md` — deployment and background worker plan.
 18. `WORKER_DEPLOYMENT.md` — persistent worker deployment handoff.
 19. `PRODUCTION_SMOKE_TEST.md` — manual end-to-end Apple Music smoke runbook.
-20. `DEVELOPMENT_GUIDE.md` — local development workflow.
-21. `ENVIRONMENT_VARIABLES.md` — required environment variables.
-22. `DECISIONS.md` — architecture decision log.
-23. `POST_MVP_SCOPE.md` — features intentionally excluded from MVP.
-24. `PLATFORM_FIRST_MVP_MIGRATION.md` — migration plan from Sort-first MVP to persistent playlist platform.
-25. `PLATFORM_FIRST_BLOCKER_AUDIT.md` — blocker and decision audit before resuming long-running migration work.
-26. `PLATFORM_FIRST_GOAL_PROMPT.md` — definitive objective and completion criteria for the long-running migration goal.
-27. `../SKILLS.md` — repo-local skill routing for platform-first migration work.
+20. `PLATFORM_FIRST_SMOKE_EVIDENCE.md` — evidence log for the real production platform-first smoke.
+21. `DEVELOPMENT_GUIDE.md` — local development workflow.
+22. `ENVIRONMENT_VARIABLES.md` — required environment variables.
+23. `DECISIONS.md` — architecture decision log.
+24. `POST_MVP_SCOPE.md` — features intentionally excluded from MVP.
+25. `PLATFORM_FIRST_MVP_MIGRATION.md` — migration plan from Sort-first MVP to persistent playlist platform.
+26. `PLATFORM_FIRST_BLOCKER_AUDIT.md` — blocker and decision audit before resuming long-running migration work.
+27. `PLATFORM_FIRST_GOAL_PROMPT.md` — definitive objective and completion criteria for the long-running migration goal.
+28. `../SKILLS.md` — repo-local skill routing for platform-first migration work.
 
 ## Current project stage
 
@@ -65,6 +66,8 @@ Automated/local coverage already verifies:
   compatibility, API validation, and security behavior through the test suite.
 - The production smoke checklist in `PRODUCTION_SMOKE_TEST.md` stays aligned
   with the platform-first completion path.
+- `PLATFORM_FIRST_SMOKE_EVIDENCE.md` tracks the real manual evidence required
+  before the long-running goal can be marked complete.
 
 External smoke still needs to verify:
 

@@ -67,7 +67,7 @@ Fallback worker hosts:
 Current platform-first worker status:
 
 - Railway is the selected worker host and GitHub reports a successful Railway
-  deployment for merged main commit `95bc5fffbe95ad5c1579b2cab60815a51d364adb`.
+  deployment for merged `main` commits.
   Production smoke still needs to prove `full-sort` and
   `playlist-generation-export` processing with real Apple Music data.
 - The worker must run with `npm run worker`, outside Vercel serverless request
@@ -106,9 +106,8 @@ Current platform-first web deployment status:
 
 - Vercel project `kulibabkaaas-projects/organize-my-music` is linked locally.
 - Vercel MCP can inspect the project and deployments.
-- Platform-first PR #1 is merged to `main`, and Vercel Production deployment
-  `dpl_A7bKrk5Z5Fhq2S7J7NhjTcs2vTAx` is ready for commit
-  `95bc5fffbe95ad5c1579b2cab60815a51d364adb`.
+- Platform-first PR #1 is merged to `main`, and Vercel Production deploys the
+  current `main` branch.
 - Public Production, Preview, and Development env vars were added for
   `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`, and
   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
@@ -122,6 +121,8 @@ Current platform-first web deployment status:
 - `npm run smoke:preflight` verifies those safe production routes plus Vercel
   and Railway GitHub deployment statuses without touching Apple Music or
   creating jobs.
+- Record real Apple Music smoke proof in
+  `docs/PLATFORM_FIRST_SMOKE_EVIDENCE.md`.
 
 ## Worker deployment checklist
 
