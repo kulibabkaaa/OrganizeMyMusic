@@ -27,6 +27,9 @@ library data and creates real playlists only after explicit confirmation.
   nullable with a `now()` default, and
   `idx_payments_unique_zero_dollar_sort_unlock` exists.
 - `npm run platform:check` passes in the deployment environment.
+- `npm run smoke:preflight` passes from a trusted machine. This checks
+  production `/api/health`, signed-out `/` and `/dashboard`, and GitHub
+  deployment statuses for Vercel and Railway without touching Apple Music.
 - Apple Music credentials are configured in Vercel and Railway.
 - `NEXT_PUBLIC_APP_URL` matches the URL being tested.
 
@@ -157,6 +160,9 @@ As of 2026-06-08:
   `dpl_4kn5o2LVkDNchBJjGDYrozQULvfg`.
 - Local `npm run worker:check` passes against hosted Supabase.
 - Local `npm run platform:check` passes against hosted Supabase.
+- Local `npm run smoke:preflight` verifies the production health route,
+  signed-out landing/dashboard surfaces, and successful Vercel/Railway GitHub
+  deployment statuses without creating jobs or using Apple Music credentials.
 - Hosted pg-boss has `library-sync`, `full-sort`, `playlist-create`, and
   `playlist-generation-export` queues registered, with no active, queued,
   retrying, or failed jobs for those queues at verification time.

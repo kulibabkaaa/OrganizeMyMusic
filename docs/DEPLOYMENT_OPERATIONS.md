@@ -119,6 +119,9 @@ Current platform-first web deployment status:
 - Stripe env vars are intentionally deferred until payment is activated.
 - Landing page, `/dashboard`, and `/api/health` return `200` in Production
   before starting the Apple Music smoke path.
+- `npm run smoke:preflight` verifies those safe production routes plus Vercel
+  and Railway GitHub deployment statuses without touching Apple Music or
+  creating jobs.
 
 ## Worker deployment checklist
 
@@ -126,6 +129,7 @@ Current platform-first web deployment status:
 - Worker has `SUPABASE_SERVICE_ROLE_KEY` if needed.
 - Worker has Apple and OpenAI server secrets.
 - Worker health check passes with `npm run worker:check`.
+- Production smoke preflight passes with `npm run smoke:preflight`.
 - Worker health check logs the deployed worker revision.
 - Worker starts successfully.
 - Worker can process one test job.

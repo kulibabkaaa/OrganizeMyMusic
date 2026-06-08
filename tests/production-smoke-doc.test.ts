@@ -34,6 +34,7 @@ describe("production smoke checklist doc", () => {
       "unique_zero_dollar_sort_unlocks",
       "playlist_recipes_scope_check",
       "idx_payments_unique_zero_dollar_sort_unlock",
+      "npm run smoke:preflight",
       "playlists.updated_at",
       "Rollback/reset notes",
       "/admin/reset-user"

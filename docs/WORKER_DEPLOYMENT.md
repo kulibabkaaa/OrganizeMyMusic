@@ -35,12 +35,23 @@ Platform readiness check:
 npm run platform:check
 ```
 
+Production smoke preflight:
+
+```bash
+npm run smoke:preflight
+```
+
 `platform:check` is read-only. It verifies required server env presence,
 `ENCRYPTION_KEY` minimum strength, hosted platform migrations, platform table
 RLS, playlist recipe scope, pg-boss queues, and current MVP worker job backlog
 without logging secret values or processing jobs. It fails when MVP worker
 queues contain active, queued, retrying, or failed jobs because production
 smoke readiness requires those queues to be clear before a fresh run.
+
+`smoke:preflight` is also read-only. It checks production `/api/health`,
+signed-out `/` and `/dashboard`, and GitHub deployment statuses for Vercel and
+Railway. It does not connect Apple Music, start sync, create jobs, or write
+playlists.
 
 The health check logs deployment revision metadata when the host exposes it.
 For Railway, check the log line named `Worker deployment revision.` and compare
@@ -114,12 +125,14 @@ or encryption values to `NEXT_PUBLIC_*` variables.
 5. Add the required environment variables above.
 6. Run `npm run worker:check` in the Railway shell or one-off command runner.
 7. Run `npm run platform:check` in the Railway shell or one-off command runner.
-8. Start the worker service.
-9. Confirm logs contain `Worker started and ready for library sync, full organization, and playlist creation jobs.`
-10. Confirm logs contain `Worker deployment revision.` with the expected commit
+8. Run `npm run smoke:preflight` from a trusted machine after Vercel and Railway
+   deployment statuses are green.
+9. Start the worker service.
+10. Confirm logs contain `Worker started and ready for library sync, full organization, and playlist creation jobs.`
+11. Confirm logs contain `Worker deployment revision.` with the expected commit
    SHA or branch.
-11. Trigger one safe sync job from the web app after Apple Music auth works.
-12. Confirm `job_events` receives worker progress without logging tokens.
+12. Trigger one safe sync job from the web app after Apple Music auth works.
+13. Confirm `job_events` receives worker progress without logging tokens.
 
 ## Verification Status
 
