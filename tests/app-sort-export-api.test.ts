@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST as exportPost } from "@/app/api/app/sorts/[sortId]/export/route";
+import { POST as legacyCheckoutPost } from "@/app/api/sort-runs/[id]/checkout/route";
 import { POST as legacyCreatePlaylistsPost } from "@/app/api/sort-runs/[id]/create-playlists/route";
 import { POST as legacyConfirmPost } from "@/app/api/sort-runs/[id]/confirm/route";
 import { getAuthenticatedSession } from "@/lib/auth/session";
@@ -202,6 +203,25 @@ describe("POST /api/sort-runs/[id]/confirm", () => {
     });
     expect(response.status).toBe(409);
     expect(exportMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/sort-runs/[id]/checkout", () => {
+  it("does not unlock full sorting from the legacy checkout endpoint", async () => {
+    vi.clearAllMocks();
+
+    const response = await legacyCheckoutPost(
+      new Request("http://test.local", { method: "POST" }),
+      {
+        params: Promise.resolve({ id: "sort_1" })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Use the platform full Sort start endpoint."
+    });
+    expect(response.status).toBe(409);
+    expect(withPgBossMock).not.toHaveBeenCalled();
   });
 });
 

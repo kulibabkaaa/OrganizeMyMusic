@@ -1,21 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { createSortCheckoutSession } from "@/modules/billing/checkout";
-import { markSortRunPaid } from "@/modules/sorts/store";
-
 export async function POST(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
-  const session = await createSortCheckoutSession(id);
-
-  if (session.mode === "mock") {
-    markSortRunPaid(id);
-  }
-
+  await context.params;
   return NextResponse.json({
-    ok: true,
-    ...session
-  });
+    error: "Use the platform full Sort start endpoint."
+  }, { status: 409 });
 }

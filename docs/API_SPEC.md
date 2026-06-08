@@ -316,6 +316,16 @@ Rules:
 - Stores playlist-track assignments, score, and reason in `sort_playlist_tracks`.
 - Does not write to Apple Music in this step.
 
+### `POST /api/sort-runs/:sortRunId/checkout`
+
+Legacy endpoint. Returns `409`.
+
+Rules:
+
+- Does not unlock full Sort processing.
+- Does not mark a Sort paid.
+- New app surfaces must use `POST /api/app/sorts/:sortId/checkout`.
+
 ### `GET /api/sort-runs/:sortRunId`
 
 Returns sort run status.
