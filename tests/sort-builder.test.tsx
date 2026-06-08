@@ -320,6 +320,8 @@ describe("SortBuilder", () => {
     expect(markup).toContain("Playlist name");
     expect(markup).toContain("Recipe instructions");
     expect(markup).toContain("Advanced settings");
+    expect(markup).toContain("<details");
+    expect(markup).not.toContain("<details open");
     expect(markup).toContain("Target size");
     expect(markup).toContain("15-25");
     expect(markup).toContain("25-50");
