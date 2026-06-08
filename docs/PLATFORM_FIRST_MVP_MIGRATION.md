@@ -246,6 +246,9 @@ Current MVP implementation:
   Apple Music export can be queued.
 - Individual track toggles persist keep/remove decisions but do not mark the
   generation reviewed until the user clicks `Mark Review Complete`.
+- Individual playlist export queue handoff failures mark the generation/export
+  failed with a privacy-safe summary instead of leaving them stuck in
+  `exporting`.
 - Archived app playlists are removed from the active workspace and cannot be
   edited, generated, reviewed, or exported.
 - Individual playlist export failure summaries are privacy-safe and do not persist raw Apple Music tokens or track names.

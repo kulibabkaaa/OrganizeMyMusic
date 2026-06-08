@@ -117,6 +117,46 @@ describe("playlist generation export", () => {
     expect(queue.send).not.toHaveBeenCalled();
   });
 
+  it("marks the export failed when pg-boss enqueue fails", async () => {
+    vi.clearAllMocks();
+    const queue = {
+      createQueue: vi.fn(),
+      send: vi.fn(async () => {
+        throw new Error("pg-boss rejected raw-music-user-token for Kyiv Night.");
+      })
+    };
+
+    const result = await queuePlaylistGenerationExport({
+      store,
+      queue,
+      userId: "user_1",
+      playlistId: "playlist_1",
+      generationId: "generation_1"
+    });
+
+    expect(result).toEqual({
+      status: "queue_failed",
+      playlistId: "playlist_1",
+      generationId: "generation_1",
+      exportId: "export_1",
+      selectedTrackCount: 1,
+      message: "Playlist generation export queue failed. Failure category: authentication."
+    });
+    expect(store.markExporting).toHaveBeenCalledWith({
+      generationId: "generation_1",
+      exportId: "export_1"
+    });
+    expect(store.markFailed).toHaveBeenCalledWith({
+      generationId: "generation_1",
+      exportId: "export_1",
+      errorSummary: "Playlist generation export queue failed. Failure category: authentication."
+    });
+    expect(JSON.stringify(vi.mocked(store.markFailed).mock.calls)).not.toContain(
+      "raw-music-user-token"
+    );
+    expect(JSON.stringify(vi.mocked(store.markFailed).mock.calls)).not.toContain("Kyiv Night");
+  });
+
   it("does not queue exports for archived playlists", async () => {
     vi.clearAllMocks();
     vi.mocked(store.getPlaylist).mockResolvedValueOnce({
