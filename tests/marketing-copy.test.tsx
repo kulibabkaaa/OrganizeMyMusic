@@ -25,8 +25,10 @@ describe("marketing platform-first copy", () => {
     expect(markup).toContain("saved playlist system");
     expect(markup).toContain("Billing is deferred for the MVP.");
     expect(markup).toContain("Review every track before export.");
+    expect(markup).toContain("Organize My Library");
     expect(markup).not.toContain("Pay once");
     expect(markup).not.toContain("$19");
     expect(markup).not.toContain("before paying");
+    expect(markup).not.toContain("Start a sort");
   });
 });

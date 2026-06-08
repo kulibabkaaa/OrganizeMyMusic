@@ -40,7 +40,7 @@ export default async function AuthPage({
           </Link>
 
           <div className="mt-8">
-            <p className="text-sm uppercase tracking-[0.18em] text-white/45">Start a Sort</p>
+            <p className="text-sm uppercase tracking-[0.18em] text-white/45">Organize My Library</p>
             <h1 className="mt-2 font-display text-4xl font-semibold tracking-[0em]">
               Create your account
             </h1>
