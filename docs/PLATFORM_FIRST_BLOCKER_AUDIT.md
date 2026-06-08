@@ -45,6 +45,8 @@ Latest local audit on 2026-06-08:
 - Sorts index and empty-state CTAs now use `Organize My Library` instead of
   `Create a Sort`, keeping `Sort` as the full-library object while presenting
   the primary action in product language.
+- Latest organization empty-state copy now says `Create playlist plans` instead
+  of old `playlist requests` language.
 - Playlist hub cards surface the latest generation review/export state for each
   saved playlist.
 - Playlist detail now includes inline playlist-owned recipe editing before

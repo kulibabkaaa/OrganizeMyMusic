@@ -92,7 +92,7 @@ platform-first completion gate.
 5. Confirm the dashboard shows Apple Music connected.
 6. Library sync.
 7. Wait for sync completion.
-8. Draft Sort creation with playlist requests.
+8. Legacy Draft Sort creation with old playlist-request input.
 9. Confirm at least 500 raw library tracks are stored when the account has at
    least 500 saved songs.
 10. Confirm normalized and duplicate counts are shown.
