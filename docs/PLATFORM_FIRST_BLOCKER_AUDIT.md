@@ -87,6 +87,9 @@ Latest local audit on 2026-06-08:
   playlist-request Sorts.
 - Legacy Sort write-back retry now returns `409` with platform review/export
   targets instead of requeuing old playlist creation directly.
+- The obsolete internal `retrySortRunWriteBack` service and Supabase retry
+  store were removed, so there is no reusable recovery helper that can requeue
+  legacy Sort write-back outside the disabled route.
 - Legacy Sort read responses now preserve read compatibility while returning
   platform `nextPath` and `nextApiPath` targets for stale clients.
 - `docs/API_SPEC.md` now matches the implemented platform route contract:
