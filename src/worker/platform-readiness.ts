@@ -19,7 +19,8 @@ const requiredEnvKeys = [
 const requiredMigrations = [
   "platform_playlists",
   "fix_playlists_updated_at_default",
-  "playlist_new_music_processing"
+  "playlist_new_music_processing",
+  "unique_zero_dollar_sort_unlocks"
 ] as const;
 const requiredPlatformTables = [
   "playlists",
@@ -204,6 +205,40 @@ async function run() {
         scopeConstraint?.convalidated === true && unscopedRecipeCount === 0
           ? "scope constraint is valid and no recipes are unscoped"
           : `constraint valid: ${String(scopeConstraint?.convalidated ?? false)}, unscoped recipes: ${unscopedRecipeCount}`
+      )
+    );
+
+    const unlockIndexRows = await client.query<{ exists: boolean }>(
+      `
+      select exists (
+        select 1
+        from pg_indexes
+        where schemaname = 'public'
+          and indexname = 'idx_payments_unique_zero_dollar_sort_unlock'
+      ) as exists
+      `
+    );
+    const duplicateUnlockRows = await client.query<{ count: number }>(
+      `
+      select count(*)::int as count
+      from (
+        select sort_run_id, stripe_checkout_session_id
+        from payments
+        where stripe_checkout_session_id in ('billing_deferred', 'dev_bypass')
+        group by sort_run_id, stripe_checkout_session_id
+        having count(*) > 1
+      ) duplicate_unlocks
+      `
+    );
+    const hasUnlockIndex = unlockIndexRows.rows[0]?.exists === true;
+    const duplicateUnlockCount = duplicateUnlockRows.rows[0]?.count ?? 0;
+    checks.push(
+      result(
+        "full organization unlock idempotency",
+        hasUnlockIndex && duplicateUnlockCount === 0 ? "pass" : "fail",
+        hasUnlockIndex && duplicateUnlockCount === 0
+          ? "zero-dollar Sort unlock markers are unique"
+          : `unique index: ${String(hasUnlockIndex)}, duplicate marker groups: ${duplicateUnlockCount}`
       )
     );
 

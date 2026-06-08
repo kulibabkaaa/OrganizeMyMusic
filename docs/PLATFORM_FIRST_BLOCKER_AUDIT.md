@@ -163,6 +163,12 @@ Latest local audit on 2026-06-08:
   cannot turn incomplete drafts into failed started Sorts.
 - The full-organization start page now uses the same readiness rule to disable
   the start action and show the missing prerequisite before the user clicks.
+- Retried full-organization starts now reuse existing deferred/dev unlock
+  markers instead of inserting duplicate zero-dollar payment rows.
+- Hosted Supabase migration `unique_zero_dollar_sort_unlocks` is applied; one
+  duplicate deferred/dev unlock marker group was cleaned up and
+  `idx_payments_unique_zero_dollar_sort_unlock` now enforces one marker per
+  Sort/mode.
 - Playlist API regressions now cover cross-user attempts to read, mutate, edit
   recipes, review tracks, generate, and export another user's playlist.
 - Archived app playlists now cannot be reopened in the playlist workspace or

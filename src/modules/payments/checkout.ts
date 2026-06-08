@@ -284,7 +284,30 @@ async function markSortPaidWithZeroDollarPayment(input: {
   }
 
   if (!data) {
-    return false;
+    const { data: existingSort, error: existingSortError } = await input.supabase
+      .from("sort_runs")
+      .select("id,state,payment_status")
+      .eq("id", input.sortRunId)
+      .eq("user_id", input.userId)
+      .maybeSingle();
+
+    if (existingSortError) {
+      throw new Error(existingSortError.message);
+    }
+
+    if (!existingSort) {
+      return false;
+    }
+
+    if (existingSort.state !== "paid" || existingSort.payment_status !== "paid") {
+      return false;
+    }
+  }
+
+  const existingPayment = await hasZeroDollarUnlockPayment(input);
+
+  if (existingPayment) {
+    return true;
   }
 
   const { error: paymentError } = await input.supabase.from("payments").insert({
@@ -297,10 +320,38 @@ async function markSortPaidWithZeroDollarPayment(input: {
   });
 
   if (paymentError) {
+    if (isDuplicatePaymentMarkerError(paymentError)) {
+      return true;
+    }
+
     throw new Error(paymentError.message);
   }
 
   return true;
+}
+
+async function hasZeroDollarUnlockPayment(input: {
+  supabase: SupabaseClient;
+  sortRunId: string;
+  paymentMarker: "billing_deferred" | "dev_bypass";
+}) {
+  const { data, error } = await input.supabase
+    .from("payments")
+    .select("id")
+    .eq("sort_run_id", input.sortRunId)
+    .eq("stripe_checkout_session_id", input.paymentMarker)
+    .eq("status", "paid")
+    .limit(1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return Array.isArray(data) && data.length > 0;
+}
+
+function isDuplicatePaymentMarkerError(error: { code?: string }) {
+  return error.code === "23505";
 }
 
 function isEnabled(value: string | undefined) {

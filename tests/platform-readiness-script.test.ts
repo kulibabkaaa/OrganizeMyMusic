@@ -16,7 +16,9 @@ describe("platform readiness script", () => {
     expect(pkg.scripts["platform:check"]).toBe("tsx src/worker/platform-readiness.ts");
     expect(source).toContain("platform_playlists");
     expect(source).toContain("fix_playlists_updated_at_default");
+    expect(source).toContain("unique_zero_dollar_sort_unlocks");
     expect(source).toContain("playlist_recipes_scope_check");
+    expect(source).toContain("idx_payments_unique_zero_dollar_sort_unlock");
     expect(source).toContain("playlist-generation-export");
     expect(source).toContain("blockingJobStates");
     expect(source).toContain("no active, queued, retrying, or failed jobs");

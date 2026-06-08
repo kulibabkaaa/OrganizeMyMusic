@@ -30,7 +30,10 @@ describe("production smoke checklist doc", () => {
       "does not create",
       "platform_playlists",
       "fix_playlists_updated_at_default",
+      "playlist_new_music_processing",
+      "unique_zero_dollar_sort_unlocks",
       "playlist_recipes_scope_check",
+      "idx_payments_unique_zero_dollar_sort_unlock",
       "playlists.updated_at",
       "Rollback/reset notes",
       "/admin/reset-user"

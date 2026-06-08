@@ -37,7 +37,15 @@ const fixPlaylistsUpdatedAtMigration = readFileSync(
   join(process.cwd(), "supabase/migrations/0005_fix_playlists_updated_at_default.sql"),
   "utf8"
 );
-const migration = `${initialMigration}\n${playlistRecipesMigration}\n${sortDraftsMigration}\n${platformPlaylistsMigration}\n${fixPlaylistsUpdatedAtMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
+const playlistNewMusicProcessingMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0006_playlist_new_music_processing.sql"),
+  "utf8"
+);
+const uniqueZeroDollarUnlocksMigration = readFileSync(
+  join(process.cwd(), "supabase/migrations/0007_unique_zero_dollar_sort_unlocks.sql"),
+  "utf8"
+);
+const migration = `${initialMigration}\n${playlistRecipesMigration}\n${sortDraftsMigration}\n${platformPlaylistsMigration}\n${fixPlaylistsUpdatedAtMigration}\n${playlistNewMusicProcessingMigration}\n${uniqueZeroDollarUnlocksMigration}\n${restrictedGrantMigration}\n${foreignKeyIndexMigration}\n${uniqueAppleMusicConnectionMigration}`;
 
 const userOwnedTables = [
   "profiles",
@@ -93,6 +101,14 @@ describe("initial Supabase migration", () => {
       "alter column updated_at set default now()"
     );
     expect(fixPlaylistsUpdatedAtMigration).toContain("alter column updated_at set not null");
+    expect(playlistNewMusicProcessingMigration).toContain(
+      "last_processed_new_music_sync_id"
+    );
+    expect(uniqueZeroDollarUnlocksMigration).toContain(
+      "idx_payments_unique_zero_dollar_sort_unlock"
+    );
+    expect(uniqueZeroDollarUnlocksMigration).toContain("billing_deferred");
+    expect(uniqueZeroDollarUnlocksMigration).toContain("dev_bypass");
     expect(migration).not.toMatch(/\bdrop\s+table\b/i);
     expect(migration).not.toMatch(/\bdisable\s+row\s+level\s+security\b/i);
   });

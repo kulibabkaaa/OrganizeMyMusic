@@ -18,12 +18,14 @@ library data and creates real playlists only after explicit confirmation.
 - Vercel Production and Railway use the same current Supabase `DATABASE_URL`.
 - Railway worker is online and running `npm run worker`.
 - Supabase has the `pgboss` schema initialized.
-- Supabase migration history includes `platform_playlists` and
-  `fix_playlists_updated_at_default`.
+- Supabase migration history includes `platform_playlists`,
+  `fix_playlists_updated_at_default`, `playlist_new_music_processing`, and
+  `unique_zero_dollar_sort_unlocks`.
 - Supabase has platform tables `playlists`, `playlist_generations`,
   `playlist_generation_tracks`, and `playlist_exports` with RLS enabled.
-- `playlist_recipes_scope_check` is validated and `playlists.updated_at` is
-  not nullable with a `now()` default.
+- `playlist_recipes_scope_check` is validated, `playlists.updated_at` is not
+  nullable with a `now()` default, and
+  `idx_payments_unique_zero_dollar_sort_unlock` exists.
 - `npm run platform:check` passes in the deployment environment.
 - Apple Music credentials are configured in Vercel and Railway.
 - `NEXT_PUBLIC_APP_URL` matches the URL being tested.
@@ -144,6 +146,9 @@ As of 2026-06-08:
 - Hosted pg-boss has `library-sync`, `full-sort`, `playlist-create`, and
   `playlist-generation-export` queues registered, with no active, queued,
   retrying, or failed jobs for those queues at verification time.
+- Hosted Supabase has `unique_zero_dollar_sort_unlocks` applied; duplicate
+  deferred/dev Sort unlock markers were cleaned up and the unique index is in
+  place.
 - Platform-first production smoke verification is pending.
 - Worker deployment verification, real Apple Music authorization, library sync,
   Sort export, individual playlist export, and new-music processing still need
