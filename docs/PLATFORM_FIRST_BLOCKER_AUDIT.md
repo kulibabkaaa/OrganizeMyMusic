@@ -142,6 +142,9 @@ Latest local audit on 2026-06-08:
   payment-first product model.
 - Sort list/dashboard UI lifecycle states now map backend payment-era states
   into platform wording: `ready_to_start` and `organizing`.
+- Canonical Sort status routing now uses stored generated/exported Sort
+  playlist counts instead of hardcoded zeroes, so generated organizations route
+  to review.
 - The active preview start component and tests were renamed away from old
   paywall naming; historical roadmap docs may still mention paywall-era file
   names, but runtime source now uses start/full-organization language.

@@ -25,6 +25,8 @@ export interface PreviewSortRun {
   paymentStatus: PaymentStatus;
   previewSnapshot: PreviewSnapshot | null;
   requests: ParsedPlaylistRequest[];
+  generatedPlaylistCount?: number;
+  applePlaylistIdCount?: number;
   events?: PreviewSortRunJobEvent[];
 }
 
@@ -237,6 +239,11 @@ type SortRunJobEventRow = {
   created_at: string;
 };
 
+type SortPlaylistStatusRow = {
+  id: string;
+  apple_playlist_id: string | null;
+};
+
 export function createSupabasePreviewSnapshotStore(
   supabase: SupabaseClient
 ): PreviewSnapshotStore {
@@ -257,7 +264,7 @@ export function createSupabasePreviewSnapshotStore(
         return null;
       }
 
-      const [requestsResult, eventsResult] = await Promise.all([
+      const [requestsResult, eventsResult, playlistsResult] = await Promise.all([
         supabase
           .from("playlist_requests")
           .select("user_prompt,parsed_rules")
@@ -267,7 +274,11 @@ export function createSupabasePreviewSnapshotStore(
           .select("id,sort_run_id,stage,level,message,details,created_at")
           .eq("sort_run_id", input.sortRunId)
           .order("created_at", { ascending: false })
-          .limit(20)
+          .limit(20),
+        supabase
+          .from("sort_playlists")
+          .select("id,apple_playlist_id")
+          .eq("sort_run_id", input.sortRunId)
       ]);
 
       if (requestsResult.error || !requestsResult.data) {
@@ -278,7 +289,12 @@ export function createSupabasePreviewSnapshotStore(
         throw new Error(eventsResult.error?.message ?? "Unable to load sort run events.");
       }
 
+      if (playlistsResult.error || !playlistsResult.data) {
+        throw new Error(playlistsResult.error?.message ?? "Unable to load Sort playlists.");
+      }
+
       const row = sortRun as SortRunRow;
+      const playlists = playlistsResult.data as SortPlaylistStatusRow[];
 
       return {
         id: row.id,
@@ -291,6 +307,8 @@ export function createSupabasePreviewSnapshotStore(
           userPrompt: request.user_prompt,
           parsedRules: request.parsed_rules
         })),
+        generatedPlaylistCount: playlists.length,
+        applePlaylistIdCount: playlists.filter((playlist) => playlist.apple_playlist_id).length,
         events: (eventsResult.data as SortRunJobEventRow[]).map((event) => ({
           id: event.id,
           sortRunId: event.sort_run_id,
