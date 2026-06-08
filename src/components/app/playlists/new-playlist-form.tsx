@@ -29,6 +29,7 @@ export function NewPlaylistForm() {
   const [allowExplicit, setAllowExplicit] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createdPlaylistId, setCreatedPlaylistId] = useState<string | null>(null);
 
   return (
     <form
@@ -39,24 +40,41 @@ export function NewPlaylistForm() {
         setError(null);
 
         try {
-          const playlistResponse = await fetch("/api/app/playlists", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+          const playlistId =
+            createdPlaylistId ??
+            (await createPlaylist({
               name,
               description
-            })
-          });
-          const playlistPayload = (await playlistResponse.json().catch(() => null)) as
-            | PlaylistCreateResponse
-            | null;
+            }));
 
-          if (!playlistResponse.ok || !playlistPayload?.playlist?.id) {
-            setError(playlistPayload?.error ?? "Playlist could not be created.");
+          if (!playlistId) {
             return;
           }
 
-          const playlistId = playlistPayload.playlist.id;
+          setCreatedPlaylistId(playlistId);
+
+          if (createdPlaylistId) {
+            const playlistUpdateResponse = await fetch(
+              `/api/app/playlists/${encodeURIComponent(createdPlaylistId)}`,
+              {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name,
+                  description
+                })
+              }
+            );
+            const playlistUpdatePayload = (await playlistUpdateResponse.json().catch(() => null)) as
+              | { error?: string }
+              | null;
+
+            if (!playlistUpdateResponse.ok) {
+              setError(playlistUpdatePayload?.error ?? "Playlist could not be updated.");
+              return;
+            }
+          }
+
           const recipeResponse = await fetch(
             `/api/app/playlists/${encodeURIComponent(playlistId)}/recipe`,
             {
@@ -85,12 +103,22 @@ export function NewPlaylistForm() {
             | null;
 
           if (!recipeResponse.ok) {
-            setError(recipePayload?.error ?? "Playlist recipe could not be saved.");
+            setError(
+              recipePayload?.error ??
+                "Playlist was created, but the recipe could not be saved. Retry the recipe or open the playlist to finish it."
+            );
             return;
           }
 
           router.push(`/app/playlists/${playlistId}`);
           router.refresh();
+        } catch (error) {
+          if (error instanceof PlaylistCreateError) {
+            setError(error.message);
+            return;
+          }
+
+          throw error;
         } finally {
           setIsSubmitting(false);
         }
@@ -229,14 +257,23 @@ export function NewPlaylistForm() {
         </label>
 
         {error ? (
-          <p className="mt-5 rounded-[1rem] border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] px-4 py-3 text-sm text-platform-danger">
-            {error}
-          </p>
+          <div className="mt-5 rounded-[1rem] border border-[rgba(255,69,99,0.24)] bg-[rgba(255,69,99,0.10)] px-4 py-3">
+            <p className="text-sm text-platform-danger">{error}</p>
+            {createdPlaylistId ? (
+              <button
+                type="button"
+                onClick={() => router.push(`/app/playlists/${createdPlaylistId}`)}
+                className="mt-3 text-sm font-semibold text-white underline decoration-white/30 underline-offset-4 transition hover:decoration-white"
+              >
+                Open playlist
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Button type="submit" disabled={isSubmitting} className="min-w-40">
-            {isSubmitting ? "Creating..." : "Create Playlist"}
+            {getSubmitLabel({ isSubmitting, hasCreatedPlaylist: Boolean(createdPlaylistId) })}
           </Button>
           <Button type="button" variant="glass" onClick={() => router.push("/app/playlists")}>
             Cancel
@@ -246,6 +283,33 @@ export function NewPlaylistForm() {
     </form>
   );
 }
+
+async function createPlaylist(input: { name: string; description: string }) {
+  const playlistResponse = await fetch("/api/app/playlists", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  const playlistPayload = (await playlistResponse.json().catch(() => null)) as
+    | PlaylistCreateResponse
+    | null;
+
+  if (!playlistResponse.ok || !playlistPayload?.playlist?.id) {
+    throw new PlaylistCreateError(playlistPayload?.error ?? "Playlist could not be created.");
+  }
+
+  return playlistPayload.playlist.id;
+}
+
+export function getSubmitLabel(input: { isSubmitting: boolean; hasCreatedPlaylist: boolean }) {
+  if (input.isSubmitting) {
+    return input.hasCreatedPlaylist ? "Saving recipe..." : "Creating...";
+  }
+
+  return input.hasCreatedPlaylist ? "Save Recipe" : "Create Playlist";
+}
+
+class PlaylistCreateError extends Error {}
 
 const inputClassName =
   "mt-2 w-full rounded-[1rem] border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-platform-muted focus:border-platform-pink focus:ring-2 focus:ring-platform-pink/25";
