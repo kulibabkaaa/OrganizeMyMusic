@@ -108,6 +108,10 @@ async function getPlaylistItemRouteContext(context: {
     return NextResponse.json({ error: "Playlist not found." }, { status: 404 });
   }
 
+  if (playlist.status === "archived") {
+    return NextResponse.json({ error: "Playlist not found." }, { status: 404 });
+  }
+
   return {
     session,
     playlist,
