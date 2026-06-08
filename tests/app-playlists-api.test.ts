@@ -235,6 +235,14 @@ describe("platform playlist API routes", () => {
     });
   });
 
+  function authenticateAs(userId: string) {
+    authMock.mockResolvedValueOnce({
+      status: "authenticated",
+      user: { id: userId, email: `${userId}@example.com` },
+      supabase: null
+    } as unknown as Awaited<ReturnType<typeof getAuthenticatedSession>>);
+  }
+
   it("requires authentication before listing playlists", async () => {
     authMock.mockResolvedValueOnce({
       status: "signed_out",
@@ -419,6 +427,43 @@ describe("platform playlist API routes", () => {
     expect(playlistStore.updatePlaylist).not.toHaveBeenCalled();
   });
 
+  it("does not expose another user's playlist detail", async () => {
+    authenticateAs("user_2");
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce(null);
+
+    const response = await GET_PLAYLIST(new Request("http://test.local"), {
+      params: Promise.resolve({ playlistId: playlist.id })
+    });
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(playlistStore.getPlaylist).toHaveBeenCalledWith({
+      userId: "user_2",
+      playlistId: playlist.id
+    });
+    expect(recipeStore.listRecipesForPlaylist).not.toHaveBeenCalled();
+    expect(generationStore.getLatestGeneration).not.toHaveBeenCalled();
+  });
+
+  it("does not mutate another user's playlist", async () => {
+    authenticateAs("user_2");
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce(null);
+
+    const response = await PATCH_PLAYLIST(
+      new Request("http://test.local/api/app/playlists/22222222-2222-4222-8222-222222222222", {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: "Cross-user edit"
+        })
+      }),
+      { params: Promise.resolve({ playlistId: playlist.id }) }
+    );
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(playlistStore.updatePlaylist).not.toHaveBeenCalled();
+  });
+
   it("creates a playlist-owned recipe when none exists", async () => {
     const response = await PUT_PLAYLIST_RECIPE(
       new Request("http://test.local", {
@@ -518,6 +563,26 @@ describe("platform playlist API routes", () => {
     expect(recipeStore.listRecipesForPlaylist).not.toHaveBeenCalled();
   });
 
+  it("does not edit another user's playlist recipe", async () => {
+    authenticateAs("user_2");
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce(null);
+
+    const response = await PUT_PLAYLIST_RECIPE(
+      new Request("http://test.local", {
+        method: "PUT",
+        body: JSON.stringify({
+          playlistNote: "Cross-user recipe edit."
+        })
+      }),
+      { params: Promise.resolve({ playlistId: playlist.id }) }
+    );
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(recipeStore.createRecipe).not.toHaveBeenCalled();
+    expect(recipeStore.updateRecipe).not.toHaveBeenCalled();
+  });
+
   it("generates one playlist from its saved recipe without creating a Sort", async () => {
     const response = await GENERATE_PLAYLIST(new Request("http://test.local", { method: "POST" }), {
       params: Promise.resolve({ playlistId: playlist.id })
@@ -548,6 +613,25 @@ describe("platform playlist API routes", () => {
       error: "Archived playlists cannot be generated."
     });
     expect(response.status).toBe(409);
+  });
+
+  it("does not generate another user's playlist", async () => {
+    authenticateAs("user_2");
+    vi.mocked(generationStore.generatePlaylist).mockResolvedValueOnce({
+      status: "playlist_not_found",
+      message: "Playlist not found."
+    });
+
+    const response = await GENERATE_PLAYLIST(new Request("http://test.local", { method: "POST" }), {
+      params: Promise.resolve({ playlistId: playlist.id })
+    });
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(generationStore.generatePlaylist).toHaveBeenCalledWith({
+      userId: "user_2",
+      playlistId: playlist.id
+    });
   });
 
   it("persists review decisions for generated playlist tracks", async () => {
@@ -629,6 +713,35 @@ describe("platform playlist API routes", () => {
       error: "Archived playlists cannot be reviewed."
     });
     expect(response.status).toBe(409);
+    expect(generationStore.updateTrackDecisions).not.toHaveBeenCalled();
+  });
+
+  it("does not save track reviews for another user's playlist", async () => {
+    authenticateAs("user_2");
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce(null);
+
+    const response = await PATCH_GENERATION_TRACKS(
+      new Request("http://test.local", {
+        method: "PATCH",
+        body: JSON.stringify({
+          decisions: [
+            {
+              trackId: generation.tracks[0].id,
+              decision: "remove"
+            }
+          ]
+        })
+      }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
     expect(generationStore.updateTrackDecisions).not.toHaveBeenCalled();
   });
 
@@ -733,6 +846,34 @@ describe("platform playlist API routes", () => {
       store: generationExportStore,
       queue: {},
       userId: "user_1",
+      playlistId: playlist.id,
+      generationId: generation.generation.id
+    });
+  });
+
+  it("does not queue Apple Music export for another user's generation", async () => {
+    authenticateAs("user_2");
+    queuePlaylistGenerationExportMock.mockResolvedValueOnce({
+      status: "playlist_not_found",
+      message: "Playlist not found."
+    });
+
+    const response = await EXPORT_GENERATION(
+      new Request("http://test.local", { method: "POST" }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({ error: "Playlist not found." });
+    expect(response.status).toBe(404);
+    expect(queuePlaylistGenerationExportMock).toHaveBeenCalledWith({
+      store: generationExportStore,
+      queue: {},
+      userId: "user_2",
       playlistId: playlist.id,
       generationId: generation.generation.id
     });
