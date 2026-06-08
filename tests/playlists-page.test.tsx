@@ -245,6 +245,15 @@ describe("playlists page", () => {
     expect(markup).toContain("Create Apple Music playlist");
     expect(markup).toContain("Archive Playlist");
     expect(markup).toContain("Apple Music is not edited, deleted, reordered, or replaced.");
+    expect(markup).toContain(
+      "Export creates an Apple Music playlist and adds approved tracks."
+    );
+    expect(markup).toContain(
+      "It does not replace, reorder, or remove tracks from existing Apple Music playlists."
+    );
+    expect(markup).not.toContain("sync exactly");
+    expect(markup).not.toContain("replace your Apple Music playlist");
+    expect(markup).not.toContain("automatic removal");
     expect(markup).toContain("Generation history");
     expect(markup).toContain("2 runs");
     expect(markup).toContain("12 proposed tracks");
@@ -295,6 +304,10 @@ describe("playlists page", () => {
     expect(markup).toContain("Create Apple Music playlist?");
     expect(markup).toContain("Export Ukrainian Rap and add 18 approved tracks");
     expect(markup).toContain("Existing Apple Music playlists will not be replaced, reordered, or removed.");
+    expect(markup).toContain("add only approved tracks");
+    expect(markup).not.toContain("sync exactly");
+    expect(markup).not.toContain("replace your Apple Music playlist");
+    expect(markup).not.toContain("automatic removal");
     expect(markup).toContain("Cancel");
     expect(markup).toContain("Create Apple Music playlist");
   });
