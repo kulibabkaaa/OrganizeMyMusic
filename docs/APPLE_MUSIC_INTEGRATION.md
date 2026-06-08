@@ -11,7 +11,7 @@ The app needs to:
 3. Store the user's Apple Music token encrypted.
 4. Fetch the user's library songs.
 5. Create playlists in the user's Apple Music account after confirmation.
-6. Add selected tracks to those playlists.
+6. Add approved tracks to those playlists.
 
 ## Token types
 
