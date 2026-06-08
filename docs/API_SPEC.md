@@ -557,13 +557,16 @@ Queues explicit Apple Music export after reviewing one playlist generation.
 Rules:
 
 - Requires the generation to be marked `reviewed` after the user saves track
-  keep/remove decisions.
+  keep/remove decisions. A `failed` generation can be queued again by the same
+  explicit export action to retry a failed Apple Music write.
 - Requires at least one kept Apple Music library track.
 - Requires explicit user action.
 - Uses server-side Apple Music credentials.
 - Creates a `playlist_exports` row.
 - Marks the generation as `exporting`.
 - Queues `playlist-generation-export` for the persistent worker.
+- Failed export retries reuse any stored app-managed Apple playlist ID instead
+  of creating a duplicate playlist.
 - If the queue handoff fails after the export row is created, marks the
   generation and export row `failed` with a privacy-safe error summary and
   returns `409`.

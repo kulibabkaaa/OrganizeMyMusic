@@ -64,12 +64,14 @@ export function PlaylistDetailWorkspace({
   const isReviewComplete =
     generation?.generation.status === "reviewed" ||
     generation?.generation.status === "exporting" ||
-    generation?.generation.status === "exported";
+    generation?.generation.status === "exported" ||
+    generation?.generation.status === "failed";
   const activeGenerationKind = getGenerationKind(generation?.generation.recipeSnapshot);
+  const canRetryExport = generation?.generation.status === "failed";
   const canExport =
     Boolean(generation) &&
     keptCount > 0 &&
-    generation?.generation.status === "reviewed";
+    (generation?.generation.status === "reviewed" || canRetryExport);
   const hasGeneratedBefore = generationHistory.length > 0 || Boolean(generation);
 
   async function saveRecipe(event: React.FormEvent<HTMLFormElement>) {
@@ -528,7 +530,11 @@ export function PlaylistDetailWorkspace({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
             <div>
               <p className="text-sm font-medium text-white">
-                {isReviewComplete ? "Review saved" : "Ready after review"}
+                {canRetryExport
+                  ? "Export failed"
+                  : isReviewComplete
+                    ? "Review saved"
+                    : "Ready after review"}
               </p>
               <p className="mt-1 text-sm text-platform-secondary">
                 {keptCount} approved {keptCount === 1 ? "track" : "tracks"} will be added.
@@ -567,7 +573,11 @@ export function PlaylistDetailWorkspace({
                 className="min-w-56"
                 onClick={() => setIsExportDialogOpen(true)}
               >
-                {isExporting ? "Exporting..." : "Create Apple Music playlist"}
+                {isExporting
+                  ? "Exporting..."
+                  : canRetryExport
+                    ? "Retry Apple Music export"
+                    : "Create Apple Music playlist"}
               </Button>
             </div>
           </div>

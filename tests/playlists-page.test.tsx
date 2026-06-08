@@ -287,6 +287,38 @@ describe("playlists page", () => {
     );
   });
 
+  it("shows failed playlist exports as retryable after review", () => {
+    const markup = renderToStaticMarkup(
+      <PlaylistDetailWorkspace
+        playlist={playlist}
+        recipe={recipe}
+        latestGeneration={{
+          ...latestGeneration,
+          generation: {
+            ...latestGeneration.generation,
+            status: "failed",
+            errorSummary: "Playlist generation export failed."
+          }
+        }}
+        generationHistory={[
+          {
+            generation: {
+              ...latestGeneration.generation,
+              status: "failed",
+              errorSummary: "Playlist generation export failed."
+            },
+            trackCount: latestGeneration.tracks.length
+          }
+        ]}
+      />
+    );
+
+    expect(markup).toContain("Export failed");
+    expect(markup).toContain("Review Saved");
+    expect(markup).toContain("Retry Apple Music export");
+    expect(markup).not.toContain("Mark Review Complete");
+  });
+
   it("labels new-music generations as incremental suggestions", () => {
     const newMusicGeneration = {
       ...latestGeneration,

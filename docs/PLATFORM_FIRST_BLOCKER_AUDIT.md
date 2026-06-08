@@ -135,6 +135,8 @@ Latest local audit on 2026-06-08:
 - Individual playlist export now stores the created Apple playlist ID before
   adding tracks, and worker retries for the same export job can reuse a failed
   generation's stored Apple playlist instead of creating duplicate playlists.
+- Failed individual playlist exports now remain user-retryable from the playlist
+  detail workspace after review, rather than forcing a new generation.
 - Playlist API regressions now cover cross-user attempts to read, mutate, edit
   recipes, review tracks, generate, and export another user's playlist.
 - Archived app playlists now cannot be reopened in the playlist workspace or

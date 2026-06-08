@@ -388,7 +388,7 @@ async function validatePlaylistGenerationExport(input: {
 
   const allowedStatuses = input.allowExportingStatus
     ? ["reviewed", "exporting", "failed"]
-    : ["reviewed"];
+    : ["reviewed", "failed"];
 
   if (!allowedStatuses.includes(generation.status)) {
     return {
