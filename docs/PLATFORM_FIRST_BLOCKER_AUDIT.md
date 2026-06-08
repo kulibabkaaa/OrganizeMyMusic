@@ -65,6 +65,8 @@ Latest local audit on 2026-06-08:
   needed for tag notes or detailed tuning.
 - Logger redaction now recursively sanitizes token-like, secret-like, private
   key, cookie, and authorization fields before logs are emitted.
+- Token encryption now rejects `ENCRYPTION_KEY` values shorter than 32 bytes
+  before encrypting or decrypting Apple Music user tokens.
 - Export safety tests now cover both disabled legacy write endpoints and
   invalid playlist-generation export states before any export row or queue job
   is created.

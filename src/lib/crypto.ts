@@ -3,9 +3,16 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypt
 import { requireServerEnv } from "@/lib/env";
 
 const ALGORITHM = "aes-256-gcm";
+const MIN_ENCRYPTION_KEY_BYTES = 32;
 
 function getKey(encryptionKey: string) {
-  return createHash("sha256").update(encryptionKey).digest();
+  const normalizedKey = encryptionKey.trim();
+
+  if (Buffer.byteLength(normalizedKey, "utf8") < MIN_ENCRYPTION_KEY_BYTES) {
+    throw new Error("ENCRYPTION_KEY must be at least 32 bytes.");
+  }
+
+  return createHash("sha256").update(normalizedKey).digest();
 }
 
 export function encryptWithKey(value: string, encryptionKey: string) {
