@@ -38,6 +38,8 @@ review, export, and new-music counts. It does not print track names, artist
 names, Apple Music user tokens, raw Apple payloads, recipe text, or playlist
 names.
 Strict mode exits non-zero if any completion row is still warning-only.
+It separately checks Sort-created playlists and the one-off playlist
+recipe/generation/export path.
 
 Record the output here before each manual smoke run:
 

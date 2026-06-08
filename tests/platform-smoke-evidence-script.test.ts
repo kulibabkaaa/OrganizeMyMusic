@@ -28,6 +28,11 @@ describe("platform smoke evidence script", () => {
     expect(source).toContain("playlist_generations");
     expect(source).toContain("playlist_exports");
     expect(source).toContain("duplicate_new_music_queues");
+    expect(source).toContain("sort_created_playlist_recipe_count");
+    expect(source).toContain("standalone_playlist_recipe_count");
+    expect(source).toContain("standalone_generation_count");
+    expect(source).toContain("standalone_exported_count");
+    expect(source).toContain("one-off playlist flow");
     expect(source).toContain("recipe_snapshot @>");
     expect(source).toContain("where lower(email) = $1");
     expect(source).not.toMatch(/\.(insert|update|delete)\(/);

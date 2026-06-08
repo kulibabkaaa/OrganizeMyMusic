@@ -41,12 +41,15 @@ interface PlaylistSummaryRow {
   total: number;
   active_count: number;
   sort_created_count: number;
+  standalone_count: number;
   exported_count: number;
   processed_new_music_count: number;
 }
 
 interface RecipeSummaryRow {
   playlist_recipe_count: number;
+  sort_created_playlist_recipe_count: number;
+  standalone_playlist_recipe_count: number;
   sort_recipe_count: number;
 }
 
@@ -56,6 +59,7 @@ interface GenerationSummaryRow {
   reviewed_count: number;
   exported_count: number;
   sort_generation_count: number;
+  standalone_generation_count: number;
   new_music_generation_count: number;
 }
 
@@ -71,6 +75,7 @@ interface ExportSummaryRow {
   exported_count: number;
   failed_count: number;
   apple_playlist_count: number;
+  standalone_exported_count: number;
   selected_track_count: number;
 }
 
@@ -179,13 +184,16 @@ async function run() {
       ),
       result(
         "persistent playlists",
-        playlistSummary.total >= 3 && recipeSummary.playlist_recipe_count >= 3 ? "pass" : "warn",
-        `playlists=${playlistSummary.total}, active=${playlistSummary.active_count}, sort_created=${playlistSummary.sort_created_count}, playlist_recipes=${recipeSummary.playlist_recipe_count}`
+        playlistSummary.sort_created_count >= 3 &&
+          recipeSummary.sort_created_playlist_recipe_count >= 3
+          ? "pass"
+          : "warn",
+        `playlists=${playlistSummary.total}, active=${playlistSummary.active_count}, sort_created=${playlistSummary.sort_created_count}, sort_created_playlist_recipes=${recipeSummary.sort_created_playlist_recipe_count}, playlist_recipes=${recipeSummary.playlist_recipe_count}`
       ),
       result(
         "playlist generations",
         generationSummary.total > 0 ? "pass" : "warn",
-        `generations=${generationSummary.total}, ready=${generationSummary.ready_for_review_count}, reviewed=${generationSummary.reviewed_count}, exported=${generationSummary.exported_count}, sort=${generationSummary.sort_generation_count}, new_music=${generationSummary.new_music_generation_count}`
+        `generations=${generationSummary.total}, ready=${generationSummary.ready_for_review_count}, reviewed=${generationSummary.reviewed_count}, exported=${generationSummary.exported_count}, sort=${generationSummary.sort_generation_count}, standalone=${generationSummary.standalone_generation_count}, new_music=${generationSummary.new_music_generation_count}`
       ),
       result(
         "track review decisions",
@@ -195,7 +203,17 @@ async function run() {
       result(
         "Apple Music exports",
         exportSummary.exported_count > 0 && exportSummary.apple_playlist_count > 0 ? "pass" : "warn",
-        `exports=${exportSummary.total}, queued=${exportSummary.queued_count}, exported=${exportSummary.exported_count}, failed=${exportSummary.failed_count}, apple_playlist_ids=${exportSummary.apple_playlist_count}, selected_tracks=${exportSummary.selected_track_count}`
+        `exports=${exportSummary.total}, queued=${exportSummary.queued_count}, exported=${exportSummary.exported_count}, failed=${exportSummary.failed_count}, apple_playlist_ids=${exportSummary.apple_playlist_count}, standalone_exported=${exportSummary.standalone_exported_count}, selected_tracks=${exportSummary.selected_track_count}`
+      ),
+      result(
+        "one-off playlist flow",
+        playlistSummary.standalone_count > 0 &&
+          recipeSummary.standalone_playlist_recipe_count > 0 &&
+          generationSummary.standalone_generation_count > 0 &&
+          exportSummary.standalone_exported_count > 0
+          ? "pass"
+          : "warn",
+        `standalone_playlists=${playlistSummary.standalone_count}, standalone_recipes=${recipeSummary.standalone_playlist_recipe_count}, standalone_generations=${generationSummary.standalone_generation_count}, standalone_exported=${exportSummary.standalone_exported_count}`
       ),
       result(
         "new music processing",
@@ -308,6 +326,7 @@ async function getPlaylistSummary(
       count(*)::int as total,
       count(*) filter (where status != 'archived')::int as active_count,
       count(*) filter (where created_from_sort_run_id is not null)::int as sort_created_count,
+      count(*) filter (where created_from_sort_run_id is null and status != 'archived')::int as standalone_count,
       count(*) filter (where apple_playlist_id is not null)::int as exported_count,
       count(*) filter (where last_processed_new_music_sync_id is not null)::int as processed_new_music_count
     from playlists
@@ -322,10 +341,20 @@ async function getRecipeSummary(client: Client, userId: string): Promise<RecipeS
     client,
     `
     select
-      count(*) filter (where playlist_id is not null)::int as playlist_recipe_count,
-      count(*) filter (where sort_run_id is not null)::int as sort_recipe_count
-    from playlist_recipes
-    where user_id = $1
+      count(*) filter (where pr.playlist_id is not null)::int as playlist_recipe_count,
+      count(*) filter (
+        where pr.playlist_id is not null
+          and p.created_from_sort_run_id is not null
+      )::int as sort_created_playlist_recipe_count,
+      count(*) filter (
+        where pr.playlist_id is not null
+          and p.created_from_sort_run_id is null
+          and p.status != 'archived'
+      )::int as standalone_playlist_recipe_count,
+      count(*) filter (where pr.sort_run_id is not null)::int as sort_recipe_count
+    from playlist_recipes pr
+    left join playlists p on p.id = pr.playlist_id
+    where pr.user_id = $1
     `,
     [userId]
   );
@@ -344,6 +373,10 @@ async function getGenerationSummary(
       count(*) filter (where status in ('reviewed', 'exporting', 'exported'))::int as reviewed_count,
       count(*) filter (where status = 'exported')::int as exported_count,
       count(*) filter (where sort_run_id is not null)::int as sort_generation_count,
+      count(*) filter (
+        where sort_run_id is null
+          and not (recipe_snapshot @> '{"source":"new_music"}'::jsonb)
+      )::int as standalone_generation_count,
       count(*) filter (where recipe_snapshot @> '{"source":"new_music"}'::jsonb)::int as new_music_generation_count
     from playlist_generations
     where user_id = $1
@@ -377,13 +410,19 @@ async function getExportSummary(client: Client, userId: string): Promise<ExportS
     `
     select
       count(*)::int as total,
-      count(*) filter (where status = 'queued')::int as queued_count,
-      count(*) filter (where status = 'exported')::int as exported_count,
-      count(*) filter (where status = 'failed')::int as failed_count,
-      count(*) filter (where apple_playlist_id is not null)::int as apple_playlist_count,
-      coalesce(sum(selected_track_count), 0)::int as selected_track_count
-    from playlist_exports
-    where user_id = $1
+      count(*) filter (where pe.status = 'queued')::int as queued_count,
+      count(*) filter (where pe.status = 'exported')::int as exported_count,
+      count(*) filter (where pe.status = 'failed')::int as failed_count,
+      count(*) filter (where pe.apple_playlist_id is not null)::int as apple_playlist_count,
+      count(*) filter (
+        where pe.status = 'exported'
+          and pe.sort_run_id is null
+          and not coalesce(pg.recipe_snapshot @> '{"source":"new_music"}'::jsonb, false)
+      )::int as standalone_exported_count,
+      coalesce(sum(pe.selected_track_count), 0)::int as selected_track_count
+    from playlist_exports pe
+    left join playlist_generations pg on pg.id = pe.generation_id
+    where pe.user_id = $1
     `,
     [userId]
   );
