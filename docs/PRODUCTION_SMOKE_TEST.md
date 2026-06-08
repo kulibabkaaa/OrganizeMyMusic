@@ -74,7 +74,11 @@ library data and creates real playlists only after explicit confirmation.
 32. Run a second library sync after adding at least one song to Apple Music.
 33. Click `Process New Music` from the library page.
 34. Confirm recommendations are review-only and based on saved playlist recipes.
-35. Record any partial failures and retry behavior.
+35. Confirm matching recommendations are saved as playlist review queues and
+    visible when opening the recommended playlist.
+36. Retry `Process New Music` and confirm the same latest sync does not create
+    duplicate new-music review queues.
+37. Record any partial failures and retry behavior.
 
 ## Legacy Sort-first smoke path
 

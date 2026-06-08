@@ -91,6 +91,7 @@ The MVP is done only when a real user can complete the full flow:
 - User can regenerate that playlist from the latest synced library.
 - User can view generation history on playlist detail.
 - User can process new music after a later sync.
+- New-music recommendations are saved as reviewable playlist generations.
 - New-music recommendations are review-only and do not automatically update
   Apple Music.
 

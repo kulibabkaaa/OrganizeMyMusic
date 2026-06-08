@@ -24,6 +24,8 @@ describe("production smoke checklist doc", () => {
       "playlist-owned recipe",
       "Process New Music",
       "recommendations are review-only",
+      "saved as playlist review queues",
+      "does not create",
       "platform_playlists",
       "fix_playlists_updated_at_default",
       "playlist_recipes_scope_check",

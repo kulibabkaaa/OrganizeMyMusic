@@ -80,7 +80,7 @@ export function NewMusicCard({ summary }: { summary: NewMusicSummary | null }) {
           </Button>
           <p id={disabledReasonId} className="mt-2 text-sm leading-6 text-platform-secondary">
             {canProcess
-              ? "Returns review-only playlist recommendations. Nothing is exported automatically."
+              ? "Creates review-only playlist queues. Nothing is exported automatically."
               : "Run another library sync to detect songs that were added later."}
           </p>
         </div>
@@ -119,8 +119,8 @@ export function NewMusicRecommendationList({
                 {recommendation.trackCount === 1 ? "track" : "tracks"}
               </p>
               <p className="mt-2 text-xs leading-5 text-platform-muted">
-                Open the playlist to adjust its recipe, regenerate, review tracks, and export only
-                after confirmation.
+                Open the playlist to review these saved suggestions, adjust its recipe, and export
+                only after confirmation.
               </p>
             </div>
             <StatusPill label="Review only" tone="warning" />

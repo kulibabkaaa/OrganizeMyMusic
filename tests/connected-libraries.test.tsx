@@ -69,7 +69,7 @@ describe("connected libraries page", () => {
     expect(markup).not.toContain("YouTube Music");
     expect(markup).toContain("Process New Music");
     expect(markup).toContain("4 new songs detected since the previous sync.");
-    expect(markup).toContain("Returns review-only playlist recommendations.");
+    expect(markup).toContain("Creates review-only playlist queues.");
     expect(markup).toContain(
       "Organize Your Music reads library metadata to classify tracks. Playlist creation requires your review and explicit export action."
     );
@@ -137,7 +137,7 @@ describe("connected libraries page", () => {
 
     expect(markup).toContain("Ukrainian Rap");
     expect(markup).toContain("Review only");
-    expect(markup).toContain("Open the playlist to adjust its recipe");
+    expect(markup).toContain("Open the playlist to review these saved suggestions");
     expect(markup).toContain("Open playlist");
     expect(markup).toContain("/app/playlists/playlist_1");
     expect(markup).toContain("Kyiv Night - Artist");
