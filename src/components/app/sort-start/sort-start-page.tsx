@@ -4,35 +4,28 @@ import { SortStartAction } from "@/components/app/sort-start/sort-start-action";
 import { WorkflowEscapeActions } from "@/components/app/workflow-escape-actions";
 import { Card } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
-import type { CheckoutMode, CheckoutSummary } from "@/modules/payments/checkout";
+import type {
+  CheckoutMode,
+  CheckoutSummary,
+  SortStartReadiness
+} from "@/modules/payments/checkout";
 
 export function SortStartPage({
   sortId,
   mode,
-  summary
+  summary,
+  readiness = { status: "ready" }
 }: {
   sortId: string;
   mode: CheckoutMode;
   summary: CheckoutSummary;
+  readiness?: SortStartReadiness;
 }) {
-  const isDisabled = mode === "disabled";
+  const isStartBlocked = readiness.status === "not_ready";
+  const isDisabled = mode === "disabled" || isStartBlocked;
   const startDisabledReasonId = isDisabled ? "sort-start-disabled-reason" : undefined;
-  const statusLabel =
-    mode === "deferred"
-      ? "MVP access"
-      : mode === "dev_bypass"
-        ? "Dev bypass approved"
-        : isDisabled
-          ? "Full organization paused"
-          : "Billing";
-  const statusTone =
-    mode === "deferred"
-      ? "success"
-      : mode === "dev_bypass"
-        ? "warning"
-        : isDisabled
-          ? "muted"
-          : "pink";
+  const statusLabel = getStartStatusLabel({ isStartBlocked, mode });
+  const statusTone = getStartStatusTone({ isStartBlocked, mode });
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
@@ -76,7 +69,9 @@ export function SortStartPage({
             id={startDisabledReasonId}
             className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-platform-secondary"
           >
-            Full organization processing is paused in this environment.
+            {readiness.status === "not_ready"
+              ? readiness.message
+              : "Full organization processing is paused in this environment."}
           </p>
         ) : null}
         {mode === "deferred" ? (
@@ -105,4 +100,31 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
       <dd className="mt-2 text-sm font-semibold text-white">{value}</dd>
     </div>
   );
+}
+
+function getStartStatusLabel({
+  isStartBlocked,
+  mode
+}: {
+  isStartBlocked: boolean;
+  mode: CheckoutMode;
+}) {
+  if (isStartBlocked) return "Start blocked";
+  if (mode === "deferred") return "MVP access";
+  if (mode === "dev_bypass") return "Dev bypass approved";
+  if (mode === "disabled") return "Full organization paused";
+  return "Billing";
+}
+
+function getStartStatusTone({
+  isStartBlocked,
+  mode
+}: {
+  isStartBlocked: boolean;
+  mode: CheckoutMode;
+}): React.ComponentProps<typeof StatusPill>["tone"] {
+  if (isStartBlocked || mode === "disabled") return "muted";
+  if (mode === "deferred") return "success";
+  if (mode === "dev_bypass") return "warning";
+  return "pink";
 }

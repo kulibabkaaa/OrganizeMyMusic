@@ -59,4 +59,29 @@ describe("SortStartPage", () => {
     expect(markup).toContain('aria-describedby="sort-start-disabled-reason"');
     expect(markup).toContain("disabled");
   });
+
+  it("keeps start disabled when the Sort is not ready for full organization", () => {
+    const markup = renderToStaticMarkup(
+      <SortStartPage
+        sortId="sort_1"
+        mode="deferred"
+        summary={summarizeCheckout({
+          sortName: "Draft cleanup",
+          recipeCount: 0,
+          estimatedTrackCount: null,
+          mode: "deferred"
+        })}
+        readiness={{
+          status: "not_ready",
+          message: "Add at least one Playlist Recipe before starting full organization."
+        }}
+      />
+    );
+
+    expect(markup).toContain("Start blocked");
+    expect(markup).toContain("Add at least one Playlist Recipe before starting full organization.");
+    expect(markup).toContain('id="sort-start-disabled-reason"');
+    expect(markup).toContain('aria-describedby="sort-start-disabled-reason"');
+    expect(markup).toContain("disabled");
+  });
 });

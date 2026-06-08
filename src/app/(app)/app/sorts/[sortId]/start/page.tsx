@@ -7,6 +7,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import {
   createSupabasePaymentStore,
   getCheckoutMode,
+  getSortStartReadiness,
   summarizeCheckout
 } from "@/modules/payments/checkout";
 
@@ -47,13 +48,14 @@ export default async function SortStartRoute({
     estimatedTrackCount: sort.estimatedTrackCount,
     mode
   });
+  const readiness = getSortStartReadiness(sort);
 
   return (
     <AppShell
       title="Start full library organization"
       subtitle="Review the full-library organization plan before processing starts."
     >
-      <SortStartPage sortId={sort.id} mode={mode} summary={summary} />
+      <SortStartPage sortId={sort.id} mode={mode} summary={summary} readiness={readiness} />
     </AppShell>
   );
 }

@@ -161,6 +161,8 @@ Latest local audit on 2026-06-08:
   library sync reference, and at least one Playlist Recipe before writing the
   deferred billing unlock marker or queueing the worker, so direct API calls
   cannot turn incomplete drafts into failed started Sorts.
+- The full-organization start page now uses the same readiness rule to disable
+  the start action and show the missing prerequisite before the user clicks.
 - Playlist API regressions now cover cross-user attempts to read, mutate, edit
   recipes, review tracks, generate, and export another user's playlist.
 - Archived app playlists now cannot be reopened in the playlist workspace or
