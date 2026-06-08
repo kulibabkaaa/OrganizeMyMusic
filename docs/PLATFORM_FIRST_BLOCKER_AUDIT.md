@@ -79,6 +79,9 @@ Latest local audit on 2026-06-08:
   is created.
 - Legacy `/api/sort-runs/:id/checkout` now returns `409` and cannot mark a Sort
   paid; full organization starts through authenticated `/api/app/sorts/:sortId/checkout`.
+- Disabled legacy Sort write/start endpoints now include platform `nextPath`
+  and `nextApiPath` guidance, so stale clients get actionable migration routes
+  without re-enabling legacy Apple Music writes.
 - Playlist PATCH now rejects client attempts to set server-managed Apple Music
   export fields, so MVP exports cannot be redirected to arbitrary Apple Music
   playlists through the public API.

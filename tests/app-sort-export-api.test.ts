@@ -199,7 +199,9 @@ describe("POST /api/sort-runs/[id]/confirm", () => {
     );
 
     await expect(response.json()).resolves.toEqual({
-      error: "Use the reviewed export endpoint to create Apple Music playlists."
+      error: "Legacy Sort confirmation is disabled. Review the Sort in the platform workflow before exporting approved tracks.",
+      nextPath: "/app/sorts/sort_1/review",
+      nextApiPath: "/api/app/sorts/sort_1/export"
     });
     expect(response.status).toBe(409);
     expect(exportMock).not.toHaveBeenCalled();
@@ -218,7 +220,9 @@ describe("POST /api/sort-runs/[id]/checkout", () => {
     );
 
     await expect(response.json()).resolves.toEqual({
-      error: "Use the platform full-organization start endpoint."
+      error: "Legacy checkout is disabled. Start full-library organization from the platform workflow.",
+      nextPath: "/app/sorts/sort_1/start",
+      nextApiPath: "/api/app/sorts/sort_1/checkout"
     });
     expect(response.status).toBe(409);
     expect(withPgBossMock).not.toHaveBeenCalled();
@@ -237,7 +241,9 @@ describe("POST /api/sort-runs/[id]/create-playlists", () => {
     );
 
     await expect(response.json()).resolves.toEqual({
-      error: "Playlist creation requires the MVP-020 confirmation flow."
+      error: "Legacy playlist creation is disabled. Use the platform review export flow to create Apple Music playlists and add approved tracks.",
+      nextPath: "/app/sorts/sort_1/review",
+      nextApiPath: "/api/app/sorts/sort_1/export"
     });
     expect(response.status).toBe(409);
     expect(exportMock).not.toHaveBeenCalled();

@@ -170,6 +170,10 @@ Platform-first note: Sort runs are for full-library organization. One-off playli
 Legacy `/api/sort-runs/*` routes remain for compatibility. New app surfaces use
 `/api/app/sorts/*`.
 
+Disabled legacy write/start endpoints return `409` with `nextPath` and
+`nextApiPath` so stale clients can move into the platform workflow without
+reopening legacy write-back.
+
 ## App Sorts
 
 ### `POST /api/app/sorts`
