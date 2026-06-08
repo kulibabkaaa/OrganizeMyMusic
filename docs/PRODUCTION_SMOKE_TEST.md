@@ -66,8 +66,8 @@ library data and creates real playlists only after explicit confirmation.
 27. Create one new playlist from `/app/playlists/new` without starting a Sort.
 28. Save its playlist-owned recipe.
 29. Generate proposed tracks from the latest synced Apple Music library.
-30. Review every proposed track, remove or restore at least one track, then
-    queue `Create Apple Music playlist`.
+30. Review every proposed track, remove or restore at least one track, click
+    `Mark Review Complete`, then queue `Create Apple Music playlist`.
 31. Verify the individual playlist export is processed by the persistent worker
     and the app playlist receives an Apple playlist ID.
 32. Run a second library sync after adding at least one song to Apple Music.
