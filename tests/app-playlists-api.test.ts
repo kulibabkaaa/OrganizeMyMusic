@@ -285,6 +285,24 @@ describe("platform playlist API routes", () => {
     });
   });
 
+  it("rejects client attempts to set Apple Music playlist linkage", async () => {
+    const response = await PATCH_PLAYLIST(
+      new Request("http://test.local/api/app/playlists/22222222-2222-4222-8222-222222222222", {
+        method: "PATCH",
+        body: JSON.stringify({
+          applePlaylistId: "p.existing-user-playlist"
+        })
+      }),
+      { params: Promise.resolve({ playlistId: playlist.id }) }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Apple Music export fields are managed by the server."
+    });
+    expect(response.status).toBe(400);
+    expect(playlistStore.updatePlaylist).not.toHaveBeenCalled();
+  });
+
   it("archives a user-owned persistent playlist without Apple Music writes", async () => {
     vi.mocked(playlistStore.updatePlaylist).mockResolvedValueOnce({
       ...playlist,
