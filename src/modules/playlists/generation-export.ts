@@ -12,6 +12,7 @@ type PlaylistRow = {
   user_id: string;
   name: string;
   description: string | null;
+  status: "draft" | "active" | "archived";
   apple_playlist_id: string | null;
 };
 
@@ -53,6 +54,7 @@ export type PlaylistGenerationExportResult =
   | {
       status:
         | "playlist_not_found"
+        | "playlist_archived"
         | "generation_not_found"
         | "invalid_state"
         | "empty_selection"
@@ -317,6 +319,13 @@ async function validatePlaylistGenerationExport(input: {
     };
   }
 
+  if (playlist.status === "archived") {
+    return {
+      status: "playlist_archived",
+      message: "Archived playlists cannot be exported."
+    };
+  }
+
   const generation = await input.store.getGeneration({
     userId: input.userId,
     playlistId: input.playlistId,
@@ -375,7 +384,7 @@ export function createSupabasePlaylistGenerationExportStore(
     async getPlaylist(input) {
       const { data, error } = await supabase
         .from("playlists")
-        .select("id,user_id,name,description,apple_playlist_id")
+        .select("id,user_id,name,description,status,apple_playlist_id")
         .eq("id", input.playlistId)
         .eq("user_id", input.userId)
         .maybeSingle();

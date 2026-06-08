@@ -20,7 +20,10 @@ import {
   createSupabasePlaylistRecipeStore,
   type PlaylistRecipeStore
 } from "@/modules/playlist-recipes/store";
-import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
+import {
+  createSupabasePlaylistGenerationStore,
+  type PlaylistGenerationStore
+} from "@/modules/playlists/generation-store";
 import {
   createSupabasePlaylistGenerationExportStore,
   queuePlaylistGenerationExport
@@ -149,9 +152,7 @@ const playlistStore: PlaylistStore = {
   async listPlaylists() {
     return [playlist];
   },
-  async getPlaylist() {
-    return playlist;
-  },
+  getPlaylist: vi.fn<PlaylistStore["getPlaylist"]>(async () => playlist),
   createPlaylist: vi.fn<PlaylistStore["createPlaylist"]>(async () => playlist),
   updatePlaylist: vi.fn<PlaylistStore["updatePlaylist"]>(async () => ({
     ...playlist,
@@ -170,20 +171,22 @@ const recipeStore: PlaylistRecipeStore = {
   reorderRecipesForPlaylist: vi.fn()
 };
 
-const generationStore = {
-  getLatestGeneration: vi.fn(async () => generation),
-  listGenerationHistory: vi.fn(async () => [
+const generationStore: PlaylistGenerationStore = {
+  getLatestGeneration: vi.fn<PlaylistGenerationStore["getLatestGeneration"]>(
+    async () => generation
+  ),
+  listGenerationHistory: vi.fn<PlaylistGenerationStore["listGenerationHistory"]>(async () => [
     {
       generation: generation.generation,
       trackCount: generation.tracks.length
     }
   ]),
-  generatePlaylist: vi.fn(async () => ({
+  generatePlaylist: vi.fn<PlaylistGenerationStore["generatePlaylist"]>(async () => ({
     status: "generated" as const,
     recipe,
     generation
   })),
-  updateTrackDecisions: vi.fn(async () => ({
+  updateTrackDecisions: vi.fn<PlaylistGenerationStore["updateTrackDecisions"]>(async () => ({
     ...generation,
     tracks: generation.tracks.map((track) => ({ ...track, decision: "remove" as const }))
   }))
@@ -411,6 +414,31 @@ describe("platform playlist API routes", () => {
     });
   });
 
+  it("does not edit recipes for archived playlists", async () => {
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce({
+      ...playlist,
+      status: "archived",
+      archivedAt: "2026-06-08T12:00:00.000Z"
+    });
+
+    const response = await PUT_PLAYLIST_RECIPE(
+      new Request("http://test.local", {
+        method: "PUT",
+        body: JSON.stringify({
+          playlistNote: "More aggressive tracks."
+        })
+      }),
+      { params: Promise.resolve({ playlistId: playlist.id }) }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Archived playlists cannot be edited."
+    });
+    expect(response.status).toBe(409);
+    expect(recipeStore.updateRecipe).not.toHaveBeenCalled();
+    expect(recipeStore.createRecipe).not.toHaveBeenCalled();
+  });
+
   it("can read the playlist recipe directly", async () => {
     vi.mocked(recipeStore.listRecipesForPlaylist).mockResolvedValueOnce([recipe]);
 
@@ -435,6 +463,22 @@ describe("platform playlist API routes", () => {
       userId: "user_1",
       playlistId: playlist.id
     });
+  });
+
+  it("does not generate archived playlists", async () => {
+    vi.mocked(generationStore.generatePlaylist).mockResolvedValueOnce({
+      status: "playlist_archived",
+      message: "Archived playlists cannot be generated."
+    });
+
+    const response = await GENERATE_PLAYLIST(new Request("http://test.local", { method: "POST" }), {
+      params: Promise.resolve({ playlistId: playlist.id })
+    });
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Archived playlists cannot be generated."
+    });
+    expect(response.status).toBe(409);
   });
 
   it("persists review decisions for generated playlist tracks", async () => {
@@ -483,6 +527,40 @@ describe("platform playlist API routes", () => {
         }
       ]
     });
+  });
+
+  it("does not save track reviews for archived playlists", async () => {
+    vi.mocked(playlistStore.getPlaylist).mockResolvedValueOnce({
+      ...playlist,
+      status: "archived",
+      archivedAt: "2026-06-08T12:00:00.000Z"
+    });
+
+    const response = await PATCH_GENERATION_TRACKS(
+      new Request("http://test.local", {
+        method: "PATCH",
+        body: JSON.stringify({
+          decisions: [
+            {
+              trackId: generation.tracks[0].id,
+              decision: "remove"
+            }
+          ]
+        })
+      }),
+      {
+        params: Promise.resolve({
+          playlistId: playlist.id,
+          generationId: generation.generation.id
+        })
+      }
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Archived playlists cannot be reviewed."
+    });
+    expect(response.status).toBe(409);
+    expect(generationStore.updateTrackDecisions).not.toHaveBeenCalled();
   });
 
   it("marks a generated playlist reviewed only when review completion is explicit", async () => {

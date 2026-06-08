@@ -35,7 +35,7 @@ export default async function PlaylistDetailPage({
     playlistId
   });
 
-  if (!playlist) {
+  if (!playlist || playlist.status === "archived") {
     notFound();
   }
 

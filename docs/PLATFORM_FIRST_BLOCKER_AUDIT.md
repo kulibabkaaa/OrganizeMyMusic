@@ -48,6 +48,8 @@ Latest local audit on 2026-06-08:
 - Individual playlist track toggles now save keep/remove decisions without
   prematurely marking the whole generation reviewed; only `Mark Review Complete`
   unlocks export.
+- Archived app playlists now cannot be reopened in the playlist workspace or
+  mutated through recipe, review, generation, or export paths.
 - Sort batch export now mirrors reviewed keep/remove choices into persistent
   playlist generation tracks, so Playlist Hub review state matches the exported
   Sort selection.

@@ -38,6 +38,14 @@ export async function PUT(
 
   try {
     const { playlist, recipeStore, session } = contextResult;
+
+    if (playlist.status === "archived") {
+      return NextResponse.json(
+        { error: "Archived playlists cannot be edited." },
+        { status: 409 }
+      );
+    }
+
     const body = await request.json().catch(() => null);
     const recipes = await recipeStore.listRecipesForPlaylist({
       userId: session.user.id,
