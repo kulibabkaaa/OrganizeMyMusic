@@ -317,7 +317,7 @@ describe("platform playlist API routes", () => {
     expect(queuePlaylistGenerationExportMock).not.toHaveBeenCalled();
   });
 
-  it("returns playlist detail with its current recipe", async () => {
+  it("returns playlist detail with recipe and generation state", async () => {
     vi.mocked(recipeStore.listRecipesForPlaylist).mockResolvedValueOnce([recipe]);
 
     const response = await GET_PLAYLIST(new Request("http://test.local"), {
@@ -326,7 +326,22 @@ describe("platform playlist API routes", () => {
 
     await expect(response.json()).resolves.toEqual({
       playlist,
-      recipe
+      recipe,
+      latestGeneration: generation,
+      generationHistory: [
+        {
+          generation: generation.generation,
+          trackCount: generation.tracks.length
+        }
+      ]
+    });
+    expect(generationStore.getLatestGeneration).toHaveBeenCalledWith({
+      userId: "user_1",
+      playlistId: playlist.id
+    });
+    expect(generationStore.listGenerationHistory).toHaveBeenCalledWith({
+      userId: "user_1",
+      playlistId: playlist.id
     });
   });
 

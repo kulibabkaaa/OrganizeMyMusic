@@ -485,7 +485,7 @@ Rules:
 
 ### `GET /api/app/playlists/:playlistId`
 
-Returns playlist, recipe, latest generation, and export status.
+Returns playlist, recipe, `latestGeneration`, and `generationHistory`.
 
 ### `PATCH /api/app/playlists/:playlistId`
 
