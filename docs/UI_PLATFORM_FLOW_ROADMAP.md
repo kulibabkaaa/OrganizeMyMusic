@@ -1607,7 +1607,6 @@ Files:
 src/modules/sorts/full-sort-job.ts
 src/worker/jobs/full-sort.ts
 src/app/api/app/sorts/[sortId]/start-full-sort/route.ts if needed
-src/modules/sorts/store.ts
 ```
 
 Tasks:

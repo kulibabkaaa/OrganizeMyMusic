@@ -1,19 +1,8 @@
-import { demoSortRun } from "@/lib/sample-data";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import {
   createSupabasePreviewSnapshotStore,
   type PreviewSortRun
 } from "@/modules/sorts/preview-snapshot";
-import type { SortRunSummary } from "@/types/domain";
-import { getStoredSortRun, saveSortRun } from "@/modules/sorts/store";
-
-export async function createDraftSortRun() {
-  return saveSortRun({
-    ...demoSortRun,
-    id: `sort_${Date.now()}`,
-    state: "draft"
-  } satisfies SortRunSummary);
-}
 
 export type SortPreviewLoadResult =
   | {
@@ -27,10 +16,6 @@ export type SortPreviewLoadResult =
       status: "error";
       message: string;
     };
-
-export async function getDemoSortPreview(sortRunId: string) {
-  return getStoredSortRun(sortRunId);
-}
 
 export async function getSortPreview(
   sortRunId: string,
