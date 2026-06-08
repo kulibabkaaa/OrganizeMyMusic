@@ -15,7 +15,7 @@ describe("production smoke checklist doc", () => {
       "at least three playlist recipes",
       "Sort Builder shows playlist plans on the left",
       "Preview generation",
-      "Checkout or approved development bypass",
+      "Start the full Sort with billing deferred",
       "Full Sort processing",
       "Review",
       "Explicit export to Apple Music",
@@ -35,8 +35,8 @@ describe("production smoke checklist doc", () => {
     }
   });
 
-  it("identifies payment blocked and development bypass behavior", () => {
-    expect(doc).toContain("Payment implementation is blocked until explicitly reopened.");
+  it("identifies deferred billing and development bypass behavior", () => {
+    expect(doc).toContain("Billing is deferred by default for the platform-first MVP.");
     expect(doc).toContain("PAYMENTS_DEV_BYPASS_ENABLED=true");
     expect(doc).toContain("Never enable a development bypass by default or in production.");
   });

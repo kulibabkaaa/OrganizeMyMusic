@@ -6,10 +6,10 @@ import {
 } from "@/modules/payments/checkout";
 
 describe("payments checkout", () => {
-  it("keeps checkout disabled unless payments or the explicit dev bypass are enabled", () => {
-    expect(getCheckoutMode({})).toBe("disabled");
-    expect(getCheckoutMode({ PAYMENTS_ENABLED: "false" })).toBe("disabled");
-    expect(getCheckoutMode({ PAYMENTS_DEV_BYPASS_ENABLED: "false" })).toBe("disabled");
+  it("uses deferred billing by default while subscription packaging is paused", () => {
+    expect(getCheckoutMode({})).toBe("deferred");
+    expect(getCheckoutMode({ PAYMENTS_ENABLED: "false" })).toBe("deferred");
+    expect(getCheckoutMode({ PAYMENTS_DEV_BYPASS_ENABLED: "false" })).toBe("deferred");
   });
 
   it("enables only the explicit dev bypass when approved", () => {
@@ -28,24 +28,24 @@ describe("payments checkout", () => {
         sortName: "My Apple Music cleanup",
         recipeCount: 3,
         estimatedTrackCount: 90,
-        mode: "dev_bypass"
+        mode: "deferred"
       })
     ).toEqual({
-      title: "Unlock this Sort",
+      title: "Start full Sort",
       description:
         "Generate full playlists from your Apple Music library, review the results, and export them to Apple Music.",
       sortName: "My Apple Music cleanup",
       recipeCount: 3,
       connectedLibrary: "Apple Music",
       estimatedOutput: "About 90 tracks across 3 Playlist Recipes",
-      priceLabel: "Dev bypass enabled",
+      priceLabel: "Billing deferred",
       included: [
         "Full library analysis",
         "Generated playlists from your recipes",
         "Track-level review before export",
         "Create playlists in Apple Music"
       ],
-      ctaLabel: "Use approved dev bypass"
+      ctaLabel: "Start full Sort"
     });
   });
 });

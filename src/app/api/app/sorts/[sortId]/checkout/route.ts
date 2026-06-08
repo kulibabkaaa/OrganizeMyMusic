@@ -7,6 +7,7 @@ import {
   createStripeCheckoutForSort,
   createSupabasePaymentStore,
   getCheckoutMode,
+  unlockSortWithDeferredBilling,
   unlockSortWithDevBypass
 } from "@/modules/payments/checkout";
 import {
@@ -44,13 +45,21 @@ export async function POST(
 
   const { sortId } = await context.params;
 
-  if (mode === "dev_bypass") {
+  if (mode === "deferred" || mode === "dev_bypass") {
     const result = await withPgBoss(async (queue) => {
-      const payment = await unlockSortWithDevBypass({
-        store: createSupabasePaymentStore(supabase),
-        sortRunId: sortId,
-        userId: session.user.id
-      });
+      const store = createSupabasePaymentStore(supabase);
+      const payment =
+        mode === "deferred"
+          ? await unlockSortWithDeferredBilling({
+              store,
+              sortRunId: sortId,
+              userId: session.user.id
+            })
+          : await unlockSortWithDevBypass({
+              store,
+              sortRunId: sortId,
+              userId: session.user.id
+            });
 
       if (payment.status === "not_found") {
         return {

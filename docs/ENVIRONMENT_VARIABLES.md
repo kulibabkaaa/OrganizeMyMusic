@@ -107,7 +107,10 @@ Server-only auth feature flag.
 
 ## `PAYMENTS_ENABLED`
 
-Server-only payment feature flag. Keep `false` while billing is deferred.
+Server-only payment feature flag. Keep `false` while billing is deferred. When
+`PAYMENTS_ENABLED` and `PAYMENTS_DEV_BYPASS_ENABLED` are both unset or false,
+the platform-first MVP lets an authenticated user start full Sort processing
+through the explicit billing-deferred `Start full Sort` action.
 
 ## `PAYMENTS_DEV_BYPASS_ENABLED`
 

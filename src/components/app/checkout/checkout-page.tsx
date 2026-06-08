@@ -17,15 +17,28 @@ export function CheckoutPage({
 }) {
   const isDisabled = mode === "disabled";
   const paymentDisabledReasonId = isDisabled ? "checkout-disabled-reason" : undefined;
+  const statusLabel =
+    mode === "deferred"
+      ? "Billing deferred"
+      : mode === "dev_bypass"
+        ? "Dev bypass approved"
+        : isDisabled
+          ? "Payment paused"
+          : "Checkout";
+  const statusTone =
+    mode === "deferred"
+      ? "success"
+      : mode === "dev_bypass"
+        ? "warning"
+        : isDisabled
+          ? "muted"
+          : "pink";
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
       <Card elevated className="space-y-6">
         <div>
-          <StatusPill
-            label={mode === "dev_bypass" ? "Dev bypass approved" : isDisabled ? "Payment paused" : "Checkout"}
-            tone={mode === "dev_bypass" ? "warning" : isDisabled ? "muted" : "pink"}
-          />
+          <StatusPill label={statusLabel} tone={statusTone} />
           <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0em] text-white">
             {summary.title}
           </h2>
@@ -63,7 +76,13 @@ export function CheckoutPage({
             id={paymentDisabledReasonId}
             className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-platform-secondary"
           >
-            Payment is paused. Full Sort processing stays blocked until payment is enabled.
+            Full Sort processing is disabled in this environment.
+          </p>
+        ) : null}
+        {mode === "deferred" ? (
+          <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-platform-secondary">
+            Billing is deferred for the MVP. Starting this Sort queues full playlist generation;
+            Apple Music export still requires track review and explicit confirmation.
           </p>
         ) : null}
 
