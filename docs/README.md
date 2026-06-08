@@ -34,8 +34,39 @@ This folder contains the product, architecture, implementation, and Codex workfl
 
 ## Current project stage
 
-As of 2026-05-23, the Apple Music MVP path has completed one production smoke
-test with a real Apple Music account:
+As of 2026-06-08, the platform-first migration is implemented locally and on
+the PR preview, but completion still requires a fresh end-to-end production
+smoke with real Apple Music authorization, library sync, worker processing,
+review, and export.
+
+Current platform-first state:
+
+- `Sort` is treated as full-library organization.
+- Persistent app playlists, playlist-owned recipes, playlist generations,
+  review decisions, playlist exports, and user-triggered new-music processing
+  are implemented.
+- Dashboard and playlist hub surfaces focus on saved playlists, review queues,
+  and new-music queues.
+- Legacy Sort write/start endpoints are disabled or compatibility-only and
+  guide stale clients into `/app/sorts/*` routes.
+- Apple Music write-back remains server-side and gated behind explicit review
+  export confirmation.
+- Billing is deferred by default while the Apple Music organizing flow is
+  verified.
+
+Remaining completion verification:
+
+- Real user sign-in.
+- Apple Music connect and library sync.
+- Full-library organization from `Organize My Library`.
+- Creation of at least three persistent playlists through a Sort.
+- Review of every playlist and track.
+- Apple Music playlist creation and approved-track add after confirmation.
+- Exported playlist persistence in `/app/playlists`.
+- One-off playlist create/regenerate without creating another Sort.
+- Worker deployment smoke in the configured environment.
+
+Historical Sort-first smoke evidence from 2026-05-23:
 
 - Supabase Auth protects the dashboard.
 - MusicKit connects Apple Music and stores an encrypted user token.
@@ -46,13 +77,12 @@ test with a real Apple Music account:
 - Preview and explicit confirmation are in place before Apple Music write-back.
 - A confirmed production run created two real Apple Music playlists.
 
-The next important work is platform migration planning and safe implementation:
+The next important work is platform-first production verification and safe
+quality hardening:
 
-- Treat `Sort` as full-library organization.
-- Move recurring value into persistent playlists and playlist recipes.
 - Keep Apple Music write-back review and confirmation strict.
-- Keep matching/scoring quality work active as playlist generation moves to the
-  new data model.
+- Keep matching/scoring quality work active as playlist generation runs through
+  the new data model.
 - Keep Stripe deferred until the Apple Music organizing quality is acceptable.
 
 ## Documentation rule

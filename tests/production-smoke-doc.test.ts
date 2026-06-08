@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const doc = readFileSync(join(process.cwd(), "docs/PRODUCTION_SMOKE_TEST.md"), "utf8");
 const acceptanceDoc = readFileSync(join(process.cwd(), "docs/MVP_ACCEPTANCE_CRITERIA.md"), "utf8");
+const docsReadme = readFileSync(join(process.cwd(), "docs/README.md"), "utf8");
 
 describe("production smoke checklist doc", () => {
   it("covers the full platform flow and reset notes", () => {
@@ -42,6 +43,15 @@ describe("production smoke checklist doc", () => {
     expect(doc).toContain("Billing is deferred by default for the platform-first MVP.");
     expect(doc).toContain("PAYMENTS_DEV_BYPASS_ENABLED=true");
     expect(doc).toContain("Never enable a development bypass by default or in production.");
+  });
+
+  it("separates current platform-first status from historical Sort-first smoke evidence", () => {
+    expect(docsReadme).toContain("As of 2026-06-08, the platform-first migration is implemented locally");
+    expect(docsReadme).toContain("Remaining completion verification");
+    expect(docsReadme).toContain("Historical Sort-first smoke evidence from 2026-05-23");
+    expect(docsReadme).not.toContain(
+      "As of 2026-05-23, the Apple Music MVP path has completed one production smoke"
+    );
   });
 
   it("keeps Apple Music write-back behind explicit review export confirmation", () => {
