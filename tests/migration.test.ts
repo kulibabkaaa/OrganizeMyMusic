@@ -96,4 +96,106 @@ describe("initial Supabase migration", () => {
     expect(migration).not.toMatch(/\bdrop\s+table\b/i);
     expect(migration).not.toMatch(/\bdisable\s+row\s+level\s+security\b/i);
   });
+
+  it("keeps platform playlist browser grants narrow", () => {
+    expect(platformPlaylistsMigration).toContain("revoke all on playlists from anon, authenticated");
+    expect(platformPlaylistsMigration).toContain(
+      "revoke all on playlist_generations from anon, authenticated"
+    );
+    expect(platformPlaylistsMigration).toContain(
+      "revoke all on playlist_generation_tracks from anon, authenticated"
+    );
+    expect(platformPlaylistsMigration).toContain(
+      "revoke all on playlist_exports from anon, authenticated"
+    );
+
+    expect(platformPlaylistsMigration).toContain("grant select, insert, update on playlists to authenticated");
+    expect(platformPlaylistsMigration).toContain("grant select on playlist_generations to authenticated");
+    expect(platformPlaylistsMigration).toContain(
+      "grant select, update on playlist_generation_tracks to authenticated"
+    );
+    expect(platformPlaylistsMigration).toContain("grant select on playlist_exports to authenticated");
+    expect(platformPlaylistsMigration).not.toMatch(
+      /grant\s+(?:insert|update|delete|all privileges)[^;]+on\s+playlist_generations\s+to\s+authenticated/i
+    );
+    expect(platformPlaylistsMigration).not.toMatch(
+      /grant\s+(?:insert|delete|all privileges)[^;]+on\s+playlist_generation_tracks\s+to\s+authenticated/i
+    );
+    expect(platformPlaylistsMigration).not.toMatch(
+      /grant\s+(?:insert|update|delete|all privileges)[^;]+on\s+playlist_exports\s+to\s+authenticated/i
+    );
+  });
+
+  it("scopes platform playlist RLS policies to the signed-in user and parent ownership", () => {
+    expect(getPolicyBody(platformPlaylistsMigration, "playlists_select_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+    expect(getPolicyBody(platformPlaylistsMigration, "playlists_insert_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+    expect(getPolicyBody(platformPlaylistsMigration, "playlists_update_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+
+    const recipeInsertPolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_recipes_insert_own"
+    );
+    expect(recipeInsertPolicy).toContain("(select auth.uid()) = user_id");
+    expect(recipeInsertPolicy).toContain("from sort_runs");
+    expect(recipeInsertPolicy).toContain("sort_runs.user_id = (select auth.uid())");
+    expect(recipeInsertPolicy).toContain("from playlists");
+    expect(recipeInsertPolicy).toContain("playlists.user_id = (select auth.uid())");
+
+    const recipeUpdatePolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_recipes_update_own"
+    );
+    expect(recipeUpdatePolicy).toContain("(select auth.uid()) = user_id");
+    expect(recipeUpdatePolicy).toContain("from sort_runs");
+    expect(recipeUpdatePolicy).toContain("sort_runs.user_id = (select auth.uid())");
+    expect(recipeUpdatePolicy).toContain("from playlists");
+    expect(recipeUpdatePolicy).toContain("playlists.user_id = (select auth.uid())");
+
+    const generationTrackSelectPolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_generation_tracks_select_own"
+    );
+    expect(generationTrackSelectPolicy).toContain("from playlist_generations");
+    expect(generationTrackSelectPolicy).toContain(
+      "playlist_generations.user_id = (select auth.uid())"
+    );
+
+    const generationTrackUpdatePolicy = getPolicyBody(
+      platformPlaylistsMigration,
+      "playlist_generation_tracks_update_own"
+    );
+    expect(generationTrackUpdatePolicy).toContain("from playlist_generations");
+    expect(generationTrackUpdatePolicy).toContain(
+      "playlist_generations.user_id = (select auth.uid())"
+    );
+    expect(generationTrackUpdatePolicy).toContain("with check");
+
+    expect(getPolicyBody(platformPlaylistsMigration, "playlist_exports_select_own")).toContain(
+      "(select auth.uid()) = user_id"
+    );
+  });
 });
+
+function getPolicyBody(source: string, policyName: string) {
+  const pattern = new RegExp(
+    `create policy ${policyName} on [\\s\\S]*?(?=\\ncreate policy |\\n$)`,
+    "i"
+  );
+  const match = source.match(pattern);
+
+  if (!match) {
+    throw new Error(`Policy ${policyName} was not found.`);
+  }
+
+  return normalizeSql(match[0]);
+}
+
+function normalizeSql(source: string) {
+  return source.replace(/\s+/g, " ").trim().toLowerCase();
+}
