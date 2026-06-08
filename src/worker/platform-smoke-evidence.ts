@@ -33,6 +33,10 @@ interface LibrarySyncRow {
   updated_at: string;
 }
 
+interface LibrarySyncSummaryRow {
+  completed_count: number;
+}
+
 interface CountRow {
   count: number;
 }
@@ -65,6 +69,7 @@ interface GenerationSummaryRow {
 
 interface GenerationTrackSummaryRow {
   total: number;
+  reviewed_total: number;
   kept_count: number;
   removed_count: number;
 }
@@ -75,7 +80,9 @@ interface ExportSummaryRow {
   exported_count: number;
   failed_count: number;
   apple_playlist_count: number;
+  sort_exported_count: number;
   standalone_exported_count: number;
+  new_music_exported_count: number;
   selected_track_count: number;
 }
 
@@ -95,6 +102,11 @@ interface SortCreatedPlaylistProofRow {
 
 interface OneOffFlowProofRow {
   complete_playlist_count: number;
+}
+
+interface NewMusicProofRow {
+  generation_count: number;
+  exported_count: number;
 }
 
 const requiredEnvKeys = ["DATABASE_URL", "SMOKE_USER_EMAIL"] as const;
@@ -144,6 +156,7 @@ async function run() {
     const [
       connectionSummary,
       recentSyncs,
+      librarySyncSummary,
       latestOwnership,
       playlistSummary,
       recipeSummary,
@@ -153,10 +166,12 @@ async function run() {
       sortSummary,
       duplicateNewMusicQueues,
       sortCreatedPlaylistProof,
-      oneOffFlowProof
+      oneOffFlowProof,
+      newMusicProof
     ] = await Promise.all([
       getConnectionSummary(client, profile.id),
       getRecentSyncs(client, profile.id),
+      getLibrarySyncSummary(client, profile.id),
       getLatestOwnershipCount(client, profile.id),
       getPlaylistSummary(client, profile.id),
       getRecipeSummary(client, profile.id),
@@ -166,7 +181,8 @@ async function run() {
       getSortSummary(client, profile.id),
       getDuplicateNewMusicQueueCount(client, profile.id),
       getSortCreatedPlaylistProof(client, profile.id),
-      getOneOffFlowProof(client, profile.id)
+      getOneOffFlowProof(client, profile.id),
+      getNewMusicProof(client, profile.id)
     ]);
     const latestSync = recentSyncs[0] ?? null;
     const completedSyncs = recentSyncs.filter((sync) => sync.status === "completed");
@@ -184,9 +200,9 @@ async function run() {
       ),
       result(
         "library sync",
-        completedSyncs.length > 0 ? "pass" : "fail",
+        completedSyncs.length > 0 && latestOwnership > 0 ? "pass" : "fail",
         latestSync
-          ? `latest=${latestSync.id}, status=${latestSync.status}, raw=${latestSync.raw_track_count}, normalized=${latestSync.normalized_track_count}, duplicates=${latestSync.duplicate_count}, owned=${latestOwnership}`
+          ? `latest=${latestSync.id}, status=${latestSync.status}, completed=${librarySyncSummary.completed_count}, raw=${latestSync.raw_track_count}, normalized=${latestSync.normalized_track_count}, duplicates=${latestSync.duplicate_count}, owned=${latestOwnership}`
           : "no syncs found"
       ),
       result(
@@ -208,13 +224,15 @@ async function run() {
       ),
       result(
         "track review decisions",
-        generationTrackSummary.total > 0 ? "pass" : "warn",
-        `tracks=${generationTrackSummary.total}, kept=${generationTrackSummary.kept_count}, removed=${generationTrackSummary.removed_count}`
+        generationTrackSummary.reviewed_total > 0 ? "pass" : "warn",
+        `tracks=${generationTrackSummary.total}, reviewed_tracks=${generationTrackSummary.reviewed_total}, kept=${generationTrackSummary.kept_count}, removed=${generationTrackSummary.removed_count}`
       ),
       result(
         "Apple Music exports",
-        exportSummary.exported_count > 0 && exportSummary.apple_playlist_count > 0 ? "pass" : "warn",
-        `exports=${exportSummary.total}, queued=${exportSummary.queued_count}, exported=${exportSummary.exported_count}, failed=${exportSummary.failed_count}, apple_playlist_ids=${exportSummary.apple_playlist_count}, standalone_exported=${exportSummary.standalone_exported_count}, selected_tracks=${exportSummary.selected_track_count}`
+        exportSummary.sort_exported_count > 0 && exportSummary.apple_playlist_count > 0
+          ? "pass"
+          : "warn",
+        `exports=${exportSummary.total}, queued=${exportSummary.queued_count}, exported=${exportSummary.exported_count}, failed=${exportSummary.failed_count}, apple_playlist_ids=${exportSummary.apple_playlist_count}, sort_exported=${exportSummary.sort_exported_count}, standalone_exported=${exportSummary.standalone_exported_count}, new_music_exported=${exportSummary.new_music_exported_count}, selected_tracks=${exportSummary.selected_track_count}`
       ),
       result(
         "one-off playlist flow",
@@ -223,10 +241,13 @@ async function run() {
       ),
       result(
         "new music processing",
-        playlistSummary.processed_new_music_count > 0 || generationSummary.new_music_generation_count > 0
+        librarySyncSummary.completed_count >= 2 &&
+          playlistSummary.processed_new_music_count > 0 &&
+          newMusicProof.generation_count > 0 &&
+          newMusicProof.exported_count === 0
           ? "pass"
           : "warn",
-        `processed_playlists=${playlistSummary.processed_new_music_count}, new_music_generations=${generationSummary.new_music_generation_count}, duplicate_queue_groups=${duplicateNewMusicQueues.count}`
+        `completed_syncs=${librarySyncSummary.completed_count}, processed_playlists=${playlistSummary.processed_new_music_count}, new_music_generations=${newMusicProof.generation_count}, new_music_exported=${newMusicProof.exported_count}, duplicate_queue_groups=${duplicateNewMusicQueues.count}`
       ),
       result(
         "duplicate new-music queues",
@@ -297,6 +318,21 @@ async function getRecentSyncs(client: Client, userId: string): Promise<LibrarySy
   );
 
   return rows.rows;
+}
+
+async function getLibrarySyncSummary(
+  client: Client,
+  userId: string
+): Promise<LibrarySyncSummaryRow> {
+  return oneRow<LibrarySyncSummaryRow>(
+    client,
+    `
+    select count(*) filter (where status = 'completed')::int as completed_count
+    from library_syncs
+    where user_id = $1
+    `,
+    [userId]
+  );
 }
 
 async function getLatestOwnershipCount(client: Client, userId: string): Promise<number> {
@@ -400,6 +436,7 @@ async function getGenerationTrackSummary(
     `
     select
       count(*)::int as total,
+      count(*) filter (where pg.status in ('reviewed', 'exporting', 'exported'))::int as reviewed_total,
       count(*) filter (where pgt.decision = 'keep')::int as kept_count,
       count(*) filter (where pgt.decision = 'remove')::int as removed_count
     from playlist_generation_tracks pgt
@@ -422,9 +459,18 @@ async function getExportSummary(client: Client, userId: string): Promise<ExportS
       count(*) filter (where pe.apple_playlist_id is not null)::int as apple_playlist_count,
       count(*) filter (
         where pe.status = 'exported'
+          and pe.sort_run_id is not null
+          and pe.apple_playlist_id is not null
+      )::int as sort_exported_count,
+      count(*) filter (
+        where pe.status = 'exported'
           and pe.sort_run_id is null
           and not coalesce(pg.recipe_snapshot @> '{"source":"new_music"}'::jsonb, false)
       )::int as standalone_exported_count,
+      count(*) filter (
+        where pe.status = 'exported'
+          and coalesce(pg.recipe_snapshot @> '{"source":"new_music"}'::jsonb, false)
+      )::int as new_music_exported_count,
       coalesce(sum(pe.selected_track_count), 0)::int as selected_track_count
     from playlist_exports pe
     left join playlist_generations pg on pg.id = pe.generation_id
@@ -529,6 +575,30 @@ async function getOneOffFlowProof(client: Client, userId: string): Promise<OneOf
           and pg.sort_run_id is null
           and not (pg.recipe_snapshot @> '{"source":"new_music"}'::jsonb)
       )
+    `,
+    [userId]
+  );
+}
+
+async function getNewMusicProof(client: Client, userId: string): Promise<NewMusicProofRow> {
+  return oneRow<NewMusicProofRow>(
+    client,
+    `
+    select
+      count(*)::int as generation_count,
+      count(*) filter (
+        where exists (
+          select 1
+          from playlist_exports pe
+          where pe.user_id = pg.user_id
+            and pe.generation_id = pg.id
+            and pe.status = 'exported'
+            and pe.apple_playlist_id is not null
+        )
+      )::int as exported_count
+    from playlist_generations pg
+    where pg.user_id = $1
+      and pg.recipe_snapshot @> '{"source":"new_music"}'::jsonb
     `,
     [userId]
   );

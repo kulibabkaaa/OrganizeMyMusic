@@ -32,6 +32,11 @@ describe("platform smoke evidence script", () => {
     expect(source).toContain("standalone_playlist_recipe_count");
     expect(source).toContain("standalone_generation_count");
     expect(source).toContain("standalone_exported_count");
+    expect(source).toContain("reviewed_total");
+    expect(source).toContain("sort_exported_count");
+    expect(source).toContain("new_music_exported_count");
+    expect(source).toContain("completed_count >= 2");
+    expect(source).toContain("newMusicProof.exported_count === 0");
     expect(source).toContain("playlist_with_recipe_count");
     expect(source).toContain("complete_playlist_count");
     expect(source).toContain("exists (");

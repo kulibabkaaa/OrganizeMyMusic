@@ -41,6 +41,10 @@ Strict mode exits non-zero if any completion row is still warning-only.
 It separately checks Sort-created playlists and the one-off playlist
 recipe/generation/export path. Those checks require linked rows on the same
 playlist, not only matching aggregate totals.
+It also requires reviewed/exported generation tracks, a Sort-backed Apple Music
+export, at least two completed library syncs for the new-music check, and zero
+exported new-music generations so the smoke proves recommendations were
+review-only.
 
 Record the output here before each manual smoke run:
 
