@@ -64,7 +64,7 @@ The MVP is done only when a real user can complete the full flow:
 - User can inspect playlist output before anything is written to Apple Music.
 - User can deselect playlists.
 - User can remove tracks from the proposed export.
-- Preview snapshot is stable after confirmation/payment state begins.
+- Preview snapshot is stable after confirmation/start state begins.
 
 ### 7. Confirmation
 
@@ -97,7 +97,7 @@ The MVP is done only when a real user can complete the full flow:
 
 ### 10. Safety
 
-- Raw Apple Music user token is never stored.
+- Raw Apple Music user token is never stored unencrypted.
 - Raw Apple Music user token is never logged.
 - Apple private key is never exposed to browser code.
 - Users cannot access other users' music data.
