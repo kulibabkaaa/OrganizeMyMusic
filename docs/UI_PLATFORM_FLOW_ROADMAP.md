@@ -175,7 +175,7 @@ The target route structure should use `/app` as the platform home. Keep redirect
 /app/sorts/[sortId]/preview        Lightweight preview + start panel
 /app/sorts/[sortId]/start          Full organization start page
 /app/sorts/[sortId]/checkout       Legacy redirect to /start
-/app/sorts/[sortId]/processing     Paid full-sort progress
+/app/sorts/[sortId]/processing     Full-organization progress
 /app/sorts/[sortId]/review         Review generated playlists/tracks
 /app/sorts/[sortId]/exporting      Apple Music export progress
 /app/sorts/[sortId]/complete       Export complete
@@ -225,7 +225,7 @@ Awaiting payment
   User has reached checkout but payment is not confirmed.
 
 Paid
-  Payment confirmed, full sorting job not yet started or just queued.
+  Payment confirmed, full-organization job not yet started or just queued.
 
 Processing
   Full sort job is running.
@@ -1556,7 +1556,7 @@ Generate full playlists from your Apple Music library, review the results, and e
 - CTA:
 
 ```text
-Pay and start full Sort
+Pay and start full organization
 ```
 
 Feature flag:
@@ -1579,13 +1579,13 @@ Acceptance criteria:
 - Webhook verifies signatures.
 - Payment status updates the Sort.
 - Preview snapshot freezes before checkout.
-- Full sorting does not start until payment is confirmed.
+- Full organization does not start until payment is confirmed.
 
 ---
 
 ## Phase G — Full processing, review, export
 
-### FLOW-021 — Start full sorting job after payment
+### FLOW-021 — Start full-organization job after payment
 
 Status: complete on 2026-05-26 using the explicitly approved local FLOW-020
 dev-bypass payment confirmation path. Real Stripe confirmation remains deferred.
@@ -1594,14 +1594,14 @@ Completion notes:
 
 - Added a `full-sort` pg-boss job that runs only for Sorts with
   `payment_status = paid`.
-- Checkout dev-bypass confirmation now queues the full Sort job after the Sort
+- Checkout dev-bypass confirmation now queues the full-organization job after the Sort
   is marked paid.
-- The full Sort worker generates complete editable playlists from Playlist
+- The full-organization worker generates complete editable playlists from Playlist
   Recipes and stores them in `sort_playlists` / `sort_playlist_tracks`.
 - Low-match diagnostics are preserved in `playlist_rules`.
-- Review loads stored full Sort results separately from the lightweight preview
+- Review loads stored full-organization results separately from the lightweight preview
   snapshot.
-- Apple Music export is not triggered by payment, checkout, or full sorting.
+- Apple Music export is not triggered by payment, checkout, or full organization.
 
 Goal: separate pre-payment preview from paid full generation.
 
@@ -1615,7 +1615,7 @@ src/app/api/app/sorts/[sortId]/start-full-sort/route.ts if needed
 
 Tasks:
 
-- When payment is confirmed, queue full sorting job.
+- When payment is confirmed, queue full-organization job.
 - Set UI status to `processing`.
 - Full job should generate complete editable playlists from Playlist Recipes.
 - Store generated playlists and tracks in existing `sort_playlists` / `sort_playlist_tracks` tables or new versioned tables if needed.
@@ -2132,7 +2132,7 @@ The redesigned MVP is done only when all of these are true:
 - Users can preview before payment.
 - Paywall appears only after preview.
 - Payment belongs to one Sort.
-- Full sorting starts only after payment confirmation or explicit dev bypass.
+- Full organization starts only after payment confirmation or explicit dev bypass.
 - Processing can be left and resumed.
 - Users review playlists before export.
 - Apple Music export happens only after explicit user action.

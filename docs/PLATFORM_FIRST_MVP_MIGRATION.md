@@ -240,7 +240,7 @@ Acceptance:
 
 Current MVP implementation:
 
-- Paid full Sorts export from stored review playlists after explicit user confirmation.
+- Paid full-organization runs export from stored review playlists after explicit user confirmation.
 - Sort export queues `playlist-create`; the worker writes Apple playlist IDs back to persistent playlist records.
 - Individual playlist export requires the user to save the track review before
   Apple Music export can be queued.

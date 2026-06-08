@@ -86,7 +86,7 @@ The MVP is done only when a real user can complete the full flow:
 
 ### 9. Recurring platform value
 
-- User can create a saved playlist without a full Sort.
+- User can create a saved playlist without full organization.
 - User can save a playlist-owned recipe.
 - User can regenerate that playlist from the latest synced library.
 - User can view generation history on playlist detail.

@@ -26,7 +26,7 @@ export default async function NewPlaylistPage() {
         <div>
           <StatusPill label="One playlist" tone="success" />
           <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0em] text-white">
-            Add a playlist idea without a full Sort
+            Add a playlist idea without full organization
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-platform-secondary">
             Use this after the first library organization when you have a new playlist idea.

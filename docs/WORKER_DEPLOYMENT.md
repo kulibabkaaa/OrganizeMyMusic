@@ -2,8 +2,8 @@
 
 ## Purpose
 
-The worker processes long-running `pg-boss` jobs for library sync, full-Sort
-Apple Music playlist creation, and individual playlist generation exports. It
+The worker processes long-running `pg-boss` jobs for library sync, full-library
+organization, Apple Music playlist creation, and individual playlist generation exports. It
 must run as a persistent process outside Vercel serverless.
 
 ## Selected MVP Host
@@ -113,7 +113,7 @@ or encryption values to `NEXT_PUBLIC_*` variables.
 6. Run `npm run worker:check` in the Railway shell or one-off command runner.
 7. Run `npm run platform:check` in the Railway shell or one-off command runner.
 8. Start the worker service.
-9. Confirm logs contain `Worker started and ready for library sync, full Sort, and playlist creation jobs.`
+9. Confirm logs contain `Worker started and ready for library sync, full organization, and playlist creation jobs.`
 10. Confirm logs contain `Worker deployment revision.` with the expected commit
    SHA or branch.
 11. Trigger one safe sync job from the web app after Apple Music auth works.
@@ -175,8 +175,8 @@ playlist-create
 playlist-generation-export
 ```
 
-`full-sort` generates reviewed full-library Sort output after the user starts
+`full-sort` generates reviewed full-library organization output after the user starts
 full organization through billing-deferred access or approved dev bypass.
-`playlist-create` writes reviewed full-Sort batches.
+`playlist-create` writes reviewed full-organization batches.
 `playlist-generation-export` writes one reviewed persistent playlist generation
 from `/app/playlists`.

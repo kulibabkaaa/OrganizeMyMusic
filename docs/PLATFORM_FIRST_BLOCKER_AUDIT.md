@@ -17,7 +17,7 @@ Latest local audit on 2026-06-08:
 - Legacy `/sorts/:id` page links now redirect into `/app/sorts/:id` instead of
   rendering the old standalone preview UI.
 - Legacy payment-first Sort copy has been softened for deferred billing.
-- Preview and full-Sort start copy now avoids checkout-first language while
+- Preview and full-organization start copy now avoids checkout-first language while
   billing is deferred.
 - `/app/sorts/:sortId/start` is now the canonical full-organization start
   route; legacy `/app/sorts/:sortId/checkout` redirects there for compatibility.
@@ -25,7 +25,7 @@ Latest local audit on 2026-06-08:
   code no longer points at disabled legacy write/start endpoints.
 - Dashboard and connected-library settings no longer surface Spotify or YouTube
   Music cards; MVP UI is Apple Music-only.
-- Full Sort start now defaults to billing-deferred unlock so a real MVP user
+- Full-organization start now defaults to billing-deferred unlock so a real MVP user
   can start full-library organization without enabling Stripe or dev bypass.
 - `GET /api/apple/connection` now exposes authenticated Apple Music connection
   status without returning raw or encrypted token fields.
@@ -56,7 +56,7 @@ Latest local audit on 2026-06-08:
 - Saved playlists now store `last_processed_new_music_sync_id` for
   user-triggered new-music checks, and the hosted Supabase migration
   `playlist_new_music_processing` is applied.
-- Full Sort persistence now has regression coverage for creating persistent app
+- Full-organization persistence now has regression coverage for creating persistent app
   playlists, storing reviewable generations, and linking Sort-created recipes to
   those playlists for later Playlist Hub editing.
 - Sort Builder advanced recipe controls are collapsed by default and open when
@@ -67,7 +67,7 @@ Latest local audit on 2026-06-08:
   invalid playlist-generation export states before any export row or queue job
   is created.
 - Legacy `/api/sort-runs/:id/checkout` now returns `409` and cannot mark a Sort
-  paid; full Sort starts through authenticated `/api/app/sorts/:sortId/checkout`.
+  paid; full organization starts through authenticated `/api/app/sorts/:sortId/checkout`.
 - Playlist PATCH now rejects client attempts to set server-managed Apple Music
   export fields, so MVP exports cannot be redirected to arbitrary Apple Music
   playlists through the public API.
@@ -89,7 +89,7 @@ Latest local audit on 2026-06-08:
   in the billing-deferred MVP path; copy uses organization, generation, review,
   `Create Apple Music playlists`, and `add approved tracks` language.
 - Preview warnings, Sort empty states, processing, and review headings now use
-  full-organization wording instead of old paywall-era full-Sort phrasing.
+  full-organization wording instead of old paywall-era wording.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - Supabase MCP read-only check on 2026-06-08 confirmed project
@@ -199,7 +199,7 @@ Current MVP behavior:
 - `PAYMENTS_ENABLED=true` uses Stripe checkout.
 - `PAYMENTS_DEV_BYPASS_ENABLED=true` uses the explicitly approved development
   bypass.
-- With both flags unset or false, full Sort processing uses billing-deferred
+- With both flags unset or false, full-organization processing uses billing-deferred
   unlock after the user clicks `Generate full results`.
 
 Decision needed later:
@@ -290,6 +290,9 @@ Follow-up observed earlier on 2026-06-08:
   collecting page data because `.next/server/pages-manifest.json` was missing.
 - Latest local build on 2026-06-08 now passes end-to-end with Next.js
   `15.5.19`.
+- If the local shell is on unsupported Node `v25.x`, `npm run build` can still
+  reproduce the missing `.next/server/pages-manifest.json` failure. Use the
+  declared Node `24.x` runtime from `package.json` for local and CI verification.
 
 Remaining follow-up:
 

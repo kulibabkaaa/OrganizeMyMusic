@@ -36,7 +36,7 @@ async function bootstrap() {
   await registerFullSortWorker(boss);
   await registerPlaylistCreationWorker(boss);
 
-  logger.info("Worker started and ready for library sync, full Sort, and playlist creation jobs.");
+  logger.info("Worker started and ready for library sync, full organization, and playlist creation jobs.");
 }
 
 bootstrap().catch((error) => {

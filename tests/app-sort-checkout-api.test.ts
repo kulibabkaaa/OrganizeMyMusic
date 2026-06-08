@@ -112,7 +112,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
     expect(bypassMock).not.toHaveBeenCalled();
   });
 
-  it("unlocks the Sort through deferred billing and queues full sorting by default", async () => {
+  it("unlocks the Sort through deferred billing and queues full organization by default", async () => {
     const response = await POST(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });

@@ -16,7 +16,7 @@ describe("production smoke checklist doc", () => {
       "Sort Builder shows playlist plans on the left",
       "Preview generation",
       "Start full organization from `/app/sorts/{sortId}/start`",
-      "Full Sort processing",
+      "Full-organization processing",
       "Review",
       "Explicit export to Apple Music",
       "exported app-created playlists appear in `/app/playlists`",

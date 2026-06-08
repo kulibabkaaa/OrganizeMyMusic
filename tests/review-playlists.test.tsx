@@ -174,7 +174,7 @@ describe("review playlists page", () => {
     );
     expect(panelMarkup).toContain("Rename playlist");
     expect(panelMarkup).not.toContain("Regenerate playlist");
-    expect(panelMarkup).not.toContain("Regeneration stays disabled until full sorting jobs are reopened.");
+    expect(panelMarkup).not.toContain("Regeneration stays disabled until full organization jobs are reopened.");
     expect(panelMarkup).not.toContain("Save for later");
     expect(panelMarkup).toContain("Delete playlist");
     expect(panelMarkup).toContain("Export selected playlists");

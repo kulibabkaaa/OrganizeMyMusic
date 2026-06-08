@@ -6,6 +6,6 @@ export async function POST(
 ) {
   await context.params;
   return NextResponse.json({
-    error: "Use the platform full Sort start endpoint."
+    error: "Use the platform full-organization start endpoint."
   }, { status: 409 });
 }

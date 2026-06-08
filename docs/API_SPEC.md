@@ -325,7 +325,7 @@ Legacy endpoint. Returns `409`.
 
 Rules:
 
-- Does not unlock full Sort processing.
+- Does not unlock full-organization processing.
 - Does not mark a Sort paid.
 - New app surfaces must route users through `/app/sorts/:sortId/start`; that
   page calls `POST /api/app/sorts/:sortId/checkout` internally.

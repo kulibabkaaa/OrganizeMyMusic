@@ -25,14 +25,14 @@ export async function registerFullSortWorker(boss: PgBoss) {
         jobName: FULL_SORT_JOB_NAME,
         jobCount: jobs.length
       },
-      "Worker received full Sort jobs."
+      "Worker received full-organization jobs."
     );
 
     try {
       const supabase = createSupabaseServiceRoleClient();
 
       if (!supabase) {
-        throw new Error("Supabase service role client is required for full Sort jobs.");
+        throw new Error("Supabase service role client is required for full-organization jobs.");
       }
 
       const store = createSupabaseFullSortStore(supabase);
@@ -53,11 +53,11 @@ export async function registerFullSortWorker(boss: PgBoss) {
           jobCount: jobs.length,
           durationMs: getWorkflowDurationMs(startedAt)
         },
-        "Worker completed full Sort jobs."
+        "Worker completed full-organization jobs."
       );
     } catch (error) {
       const failure = createPrivacySafeFailure({
-        workflowName: "Full Sort worker",
+        workflowName: "Full organization worker",
         error
       });
 
@@ -69,7 +69,7 @@ export async function registerFullSortWorker(boss: PgBoss) {
           durationMs: getWorkflowDurationMs(startedAt),
           failureCategory: failure.category
         },
-        "Worker failed full Sort jobs."
+        "Worker failed full-organization jobs."
       );
 
       throw error;
