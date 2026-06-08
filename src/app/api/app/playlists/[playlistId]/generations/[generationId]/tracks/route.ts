@@ -4,6 +4,7 @@ import { z, ZodError } from "zod";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
+import { createSupabasePlaylistStore } from "@/modules/playlists/store";
 
 const decisionSchema = z.object({
   markReviewed: z.boolean().optional().default(false),
@@ -37,6 +38,22 @@ export async function PATCH(
   try {
     const { playlistId, generationId } = await context.params;
     const body = decisionSchema.parse(await request.json().catch(() => null));
+    const playlist = await createSupabasePlaylistStore(supabase).getPlaylist({
+      userId: session.user.id,
+      playlistId
+    });
+
+    if (!playlist) {
+      return NextResponse.json({ error: "Playlist not found." }, { status: 404 });
+    }
+
+    if (playlist.status === "archived") {
+      return NextResponse.json(
+        { error: "Archived playlists cannot be reviewed." },
+        { status: 409 }
+      );
+    }
+
     const generation = await createSupabasePlaylistGenerationStore(supabase).updateTrackDecisions({
       userId: session.user.id,
       playlistId,

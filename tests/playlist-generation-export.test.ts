@@ -13,6 +13,7 @@ const store: PlaylistGenerationExportStore = {
     user_id: "user_1",
     name: "Ukrainian Rap",
     description: "High energy.",
+    status: "active" as const,
     apple_playlist_id: null
   })),
   getGeneration: vi.fn(async () => ({
@@ -110,6 +111,38 @@ describe("playlist generation export", () => {
     expect(result).toEqual({
       status: "invalid_state",
       message: "Review the generated playlist before export."
+    });
+    expect(store.createExportRow).not.toHaveBeenCalled();
+    expect(store.markExporting).not.toHaveBeenCalled();
+    expect(queue.send).not.toHaveBeenCalled();
+  });
+
+  it("does not queue exports for archived playlists", async () => {
+    vi.clearAllMocks();
+    vi.mocked(store.getPlaylist).mockResolvedValueOnce({
+      id: "playlist_1",
+      user_id: "user_1",
+      name: "Ukrainian Rap",
+      description: "High energy.",
+      status: "archived",
+      apple_playlist_id: null
+    });
+    const queue = {
+      createQueue: vi.fn(),
+      send: vi.fn(async () => "job_1")
+    };
+
+    const result = await queuePlaylistGenerationExport({
+      store,
+      queue,
+      userId: "user_1",
+      playlistId: "playlist_1",
+      generationId: "generation_1"
+    });
+
+    expect(result).toEqual({
+      status: "playlist_archived",
+      message: "Archived playlists cannot be exported."
     });
     expect(store.createExportRow).not.toHaveBeenCalled();
     expect(store.markExporting).not.toHaveBeenCalled();

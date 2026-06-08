@@ -79,7 +79,11 @@ export type GeneratePlaylistResult =
       generation: PlaylistGenerationView;
     }
   | {
-      status: "playlist_not_found" | "recipe_required" | "library_sync_required";
+      status:
+        | "playlist_not_found"
+        | "playlist_archived"
+        | "recipe_required"
+        | "library_sync_required";
       message: string;
     };
 
@@ -150,6 +154,13 @@ export function createSupabasePlaylistGenerationStore(
         return {
           status: "playlist_not_found",
           message: "Playlist not found."
+        };
+      }
+
+      if (playlist.status === "archived") {
+        return {
+          status: "playlist_archived",
+          message: "Archived playlists cannot be generated."
         };
       }
 
