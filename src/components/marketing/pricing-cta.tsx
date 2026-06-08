@@ -1,9 +1,10 @@
 import Link from "next/link";
+import type { Route } from "next";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
 
-export function PricingCta() {
+export function PricingCta({ connectHref = "/app" }: { connectHref?: Route }) {
   return (
     <section className="bg-black text-white">
       <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-28">
@@ -22,7 +23,7 @@ export function PricingCta() {
 
           <div className="flex flex-col items-start gap-4 lg:items-end">
             <div className="font-display text-5xl tracking-[0em]">Review first</div>
-            <Link href="/app">
+            <Link href={connectHref}>
               <Button className="min-w-44">Open app</Button>
             </Link>
           </div>

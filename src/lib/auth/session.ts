@@ -33,6 +33,20 @@ export type AuthSessionResult<TClient extends SupabaseAuthReader = SupabaseAppCl
       supabase: TClient | null;
     };
 
+export function getLandingCtaRoutes(status: AuthSessionResult["status"]) {
+  if (status === "authenticated") {
+    return {
+      openAppHref: "/app",
+      startSortHref: "/app"
+    } as const;
+  }
+
+  return {
+    openAppHref: "/auth",
+    startSortHref: "/auth"
+  } as const;
+}
+
 export async function getAuthenticatedSession<TClient extends SupabaseAuthReader>(
   client: TClient | null
 ): Promise<AuthSessionResult<TClient>>;

@@ -21,7 +21,8 @@ Before editing code, read:
 1. `README.md`
 2. `docs/README.md`
 3. `docs/ROADMAP_TO_MVP.md`
-4. The specific document related to the ticket, for example `docs/APPLE_MUSIC_INTEGRATION.md` for Apple Music work or `docs/AI_CLASSIFICATION_STRATEGY.md` for OpenAI work.
+4. `docs/UI_PLATFORM_FLOW_ROADMAP.md` for UI, route, dashboard, Sort, Playlist Recipe, preview, payment, review, or export work.
+5. The specific document related to the ticket, for example `docs/APPLE_MUSIC_INTEGRATION.md` for Apple Music work or `docs/AI_CLASSIFICATION_STRATEGY.md` for OpenAI work.
 
 ## Non-negotiable product constraints
 
@@ -35,6 +36,8 @@ Before editing code, read:
 - Store normalized track records separately from raw payloads.
 - Keep preview snapshots stable after the user reaches confirmation/payment state.
 - Payment is optional until the Apple Music flow works end-to-end.
+- Preserve the public landing page visuals during platform UI work unless a ticket explicitly says otherwise.
+- Use `/app` as the target platform home, keep legacy `/dashboard` and `/login` links working during migration, and implement the UI roadmap ticket by ticket from `docs/UI_PLATFORM_FLOW_ROADMAP.md`.
 
 ## Security constraints
 

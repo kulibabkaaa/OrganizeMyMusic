@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   AppleDeveloperTokenConfigError,
+  AppleDeveloperTokenInvalidConfigError,
   createAppleDeveloperTokenFromConfig,
   normalizeApplePrivateKey
 } from "@/modules/apple-music/developer-token";
@@ -42,6 +43,19 @@ describe("createAppleDeveloperTokenFromConfig", () => {
       name: "AppleDeveloperTokenConfigError",
       missing: ["APPLE_TEAM_ID"]
     } satisfies Partial<AppleDeveloperTokenConfigError>);
+  });
+
+  it("throws a clear error when the Apple private key cannot be parsed", async () => {
+    await expect(
+      createAppleDeveloperTokenFromConfig({
+        teamId: "TEAMID1234",
+        keyId: "KEYID12345",
+        privateKey: "not-a-private-key"
+      })
+    ).rejects.toMatchObject({
+      name: "AppleDeveloperTokenInvalidConfigError",
+      message: "Apple Music private key could not be parsed."
+    } satisfies Partial<AppleDeveloperTokenInvalidConfigError>);
   });
 
   it("creates an ES256 Apple Music developer JWT without exposing the private key", async () => {

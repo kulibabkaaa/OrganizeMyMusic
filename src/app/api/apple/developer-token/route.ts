@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import {
   AppleDeveloperTokenConfigError,
+  AppleDeveloperTokenInvalidConfigError,
   createAppleDeveloperToken
 } from "@/modules/apple-music/developer-token";
 
@@ -27,6 +28,15 @@ export async function GET() {
         {
           error: "Apple Music developer token is not configured.",
           missing: error.missing
+        },
+        { status: 503 }
+      );
+    }
+
+    if (error instanceof AppleDeveloperTokenInvalidConfigError) {
+      return NextResponse.json(
+        {
+          error: error.message
         },
         { status: 503 }
       );

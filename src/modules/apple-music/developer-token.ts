@@ -28,6 +28,13 @@ export class AppleDeveloperTokenConfigError extends Error {
   }
 }
 
+export class AppleDeveloperTokenInvalidConfigError extends Error {
+  constructor(message = "Apple Music developer token configuration is invalid.") {
+    super(message);
+    this.name = "AppleDeveloperTokenInvalidConfigError";
+  }
+}
+
 export function normalizeApplePrivateKey(privateKey: string) {
   return privateKey.replace(/\\n/g, "\n").trim();
 }
@@ -60,7 +67,7 @@ export async function createAppleDeveloperTokenFromConfig(
   const issuedAt = config.issuedAt ?? new Date();
   const ttlSeconds = Math.min(config.ttlSeconds ?? DEFAULT_TTL_SECONDS, MAX_APPLE_TTL_SECONDS);
   const expiresAt = new Date(issuedAt.getTime() + ttlSeconds * 1000);
-  const privateKey = await importPKCS8(normalizeApplePrivateKey(config.privateKey ?? ""), "ES256");
+  const privateKey = await importApplePrivateKey(config.privateKey ?? "");
 
   const developerToken = await new SignJWT({})
     .setProtectedHeader({
@@ -76,6 +83,16 @@ export async function createAppleDeveloperTokenFromConfig(
     developerToken,
     expiresAt: expiresAt.toISOString()
   };
+}
+
+async function importApplePrivateKey(privateKey: string) {
+  try {
+    return await importPKCS8(normalizeApplePrivateKey(privateKey), "ES256");
+  } catch {
+    throw new AppleDeveloperTokenInvalidConfigError(
+      "Apple Music private key could not be parsed."
+    );
+  }
 }
 
 export async function createAppleDeveloperToken() {

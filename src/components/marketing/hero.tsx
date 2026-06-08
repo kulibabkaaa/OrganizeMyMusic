@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ const stats: {
   { value: "Review first", label: "EXPORT ONLY AFTER APPROVAL" }
 ];
 
-export function Hero() {
+export function Hero({ startSortHref = "/app" }: { startSortHref?: Route }) {
   return (
     <section className="relative min-h-[100svh] overflow-hidden bg-black text-white">
       <div className="absolute inset-0 bg-hero-bloom" />
@@ -47,7 +48,7 @@ export function Hero() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link href="/app">
+              <Link href={startSortHref}>
                 <Button className="min-h-14 min-w-52 px-7 py-4 text-base shadow-[0_28px_90px_rgba(255,4,54,0.22)]">
                   Start a sort
                 </Button>
