@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AppleMusicLibraryCard } from "@/components/app/library/apple-music-library-card";
 import { ComingSoonProviderCard } from "@/components/app/library/coming-soon-provider-card";
 import { ConnectedLibrariesPage } from "@/components/app/library/connected-libraries-page";
+import { NewMusicRecommendationList } from "@/components/app/library/new-music-card";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/app/settings/libraries",
@@ -117,5 +118,39 @@ describe("connected libraries page", () => {
     expect(markup).toContain("Coming later");
     expect(markup).toContain("Unavailable");
     expect(markup).toContain("aria-disabled");
+  });
+
+  it("renders new-music recommendations with a review-first playlist link", () => {
+    const markup = renderToStaticMarkup(
+      <NewMusicRecommendationList
+        recommendations={[
+          {
+            playlistId: "playlist_1",
+            playlistName: "Ukrainian Rap",
+            recipeId: "recipe_1",
+            recipeName: "Ukrainian Rap",
+            trackCount: 1,
+            tracks: [
+              {
+                normalizedTrackId: "track_1",
+                appleSongId: "song_1",
+                name: "Kyiv Night",
+                artistName: "Artist",
+                albumName: "Album",
+                score: 0.91,
+                reason: "Matched language and genre."
+              }
+            ]
+          }
+        ]}
+      />
+    );
+
+    expect(markup).toContain("Ukrainian Rap");
+    expect(markup).toContain("Review only");
+    expect(markup).toContain("Open the playlist to adjust its recipe");
+    expect(markup).toContain("Open playlist");
+    expect(markup).toContain("/app/playlists/playlist_1");
+    expect(markup).toContain("Kyiv Night - Artist");
   });
 });
