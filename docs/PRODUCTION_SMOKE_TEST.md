@@ -117,6 +117,20 @@ Stop before confirmation when:
 
 As of 2026-06-08:
 
+- Platform-first PR #1 was merged to `main` at commit
+  `95bc5fffbe95ad5c1579b2cab60815a51d364adb`.
+- Vercel Production deployment `dpl_A7bKrk5Z5Fhq2S7J7NhjTcs2vTAx` is `READY`
+  for that commit and aliases `https://organize-my-music.vercel.app`.
+- Railway reported a successful worker deployment for the same merged main
+  commit through the GitHub commit status check.
+- Production `/api/health` returns `ok: true` with commit
+  `95bc5fffbe95ad5c1579b2cab60815a51d364adb`, branch `main`, and environment
+  `production`.
+- Production `/` returns the platform-first landing page with signed-out CTAs
+  routed to `/auth`.
+- Production `/dashboard` resolves to the canonical `/app` signed-out workspace.
+- Vercel Production runtime logs had no `error` or `fatal` entries in the
+  first 30 minutes checked after deployment.
 - The platform-first code path builds locally and passes typecheck, lint, tests,
   and production build.
 - `/app` is the canonical platform dashboard. `/dashboard` redirects to `/app`
@@ -149,10 +163,12 @@ As of 2026-06-08:
 - Hosted Supabase has `unique_zero_dollar_sort_unlocks` applied; duplicate
   deferred/dev Sort unlock markers were cleaned up and the unique index is in
   place.
-- Platform-first production smoke verification is pending.
-- Worker deployment verification, real Apple Music authorization, library sync,
-  Sort export, individual playlist export, and new-music processing still need
-  to be verified in the configured environment.
+- Platform-first production smoke verification is partially complete for safe
+  unauthenticated routes, production deployment, Railway deployment status, and
+  hosted schema/queue readiness.
+- Real Apple Music authorization, library sync, Sort export, individual
+  playlist export, and new-music processing still require a real signed-in user
+  with Apple Music access.
 
 Historical Sort-first smoke from 2026-05-23:
 

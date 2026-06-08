@@ -125,6 +125,10 @@ or encryption values to `NEXT_PUBLIC_*` variables.
 
 As of 2026-06-08:
 
+- GitHub commit status for merged main commit
+  `95bc5fffbe95ad5c1579b2cab60815a51d364adb` reports Railway deployment
+  success for service `5506cf9a-6d9d-464f-a388-61c23959361f` in project
+  `fecd0822-7cc9-4767-932c-760d93a732e6`.
 - Supabase Postgres is reachable through Supabase MCP.
 - Public MVP tables exist with RLS enabled.
 - Local `npm run worker:check` passes against the configured hosted Supabase
@@ -138,9 +142,9 @@ As of 2026-06-08:
   - `playlist-generation-export`
 - Hosted pg-boss has no active, queued, retrying, or failed jobs for those four
   queues at the time of this verification.
-- Railway must still be redeployed with the current platform-first worker code
-  before production smoke can prove `full-sort` and
-  `playlist-generation-export` processing.
+- Railway has deployed the merged platform-first code, but production smoke
+  must still prove real `full-sort` and `playlist-generation-export` job
+  processing with a signed-in Apple Music account.
 
 Historical 2026-05-23 status:
 

@@ -49,7 +49,8 @@ describe("production smoke checklist doc", () => {
   });
 
   it("separates current platform-first status from historical Sort-first smoke evidence", () => {
-    expect(docsReadme).toContain("As of 2026-06-08, the platform-first migration is implemented locally");
+    expect(docsReadme).toContain("As of 2026-06-08, the platform-first migration is merged to `main`");
+    expect(docsReadme).toContain("to Vercel Production");
     expect(docsReadme).toContain("Remaining completion verification");
     expect(docsReadme).toContain("Historical Sort-first smoke evidence from 2026-05-23");
     expect(docsReadme).not.toContain(

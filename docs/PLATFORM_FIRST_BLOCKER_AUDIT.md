@@ -210,6 +210,16 @@ Latest local audit on 2026-06-08:
 - Vercel MCP read-only log checks on 2026-06-08 found no preview error/fatal
   runtime logs in the prior 2 hours and no production error/fatal runtime logs
   in the prior 24 hours.
+- Platform-first PR #1 was merged to `main` at commit
+  `95bc5fffbe95ad5c1579b2cab60815a51d364adb`.
+- Vercel Production deployment `dpl_A7bKrk5Z5Fhq2S7J7NhjTcs2vTAx` is `READY`
+  for the merged main commit, and `/api/health` reports that commit in the
+  `production` environment.
+- Railway's GitHub commit status reports successful worker deployment for the
+  merged main commit.
+- Safe Production checks for `/`, `/dashboard`, and `/api/health` returned
+  `200`; Vercel Production runtime logs had no `error` or `fatal` entries in
+  the first 30 minutes checked after deployment.
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
 - `npm run platform:check` passes with required env, encryption-key strength,
   migrations, RLS, linking columns, recipe scope, worker queue registration,
@@ -222,10 +232,13 @@ Latest local audit on 2026-06-08:
 
 Automated/local completion coverage includes platform readiness, route/API
 tests, review/export safety, dashboard and playlist hub behavior, and the
-production smoke checklist. Remaining completion verification is external: real
-Apple Music authorization, worker deployment, and Apple Music write-back smoke
-testing require configured credentials and environment access. Railway CLI is
-currently unauthorized in this Codex environment.
+production smoke checklist. Production deploy and Railway deploy status are
+verified. Remaining completion verification is external: real Apple Music
+authorization, library sync, full Sort export, individual playlist export, and
+new-music smoke testing require a signed-in Apple Music account. Railway CLI is
+currently unauthorized in this Codex environment, so worker runtime proof is
+limited to GitHub deployment status plus hosted pg-boss readiness until a real
+job is processed.
 
 ## Not blockers for the next implementation slices
 

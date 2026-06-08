@@ -66,9 +66,10 @@ Fallback worker hosts:
 
 Current platform-first worker status:
 
-- Railway is the selected worker host, but the current platform-first branch
-  still needs a fresh Railway deployment before production smoke can prove
-  `full-sort` and `playlist-generation-export` processing.
+- Railway is the selected worker host and GitHub reports a successful Railway
+  deployment for merged main commit `95bc5fffbe95ad5c1579b2cab60815a51d364adb`.
+  Production smoke still needs to prove `full-sort` and
+  `playlist-generation-export` processing with real Apple Music data.
 - The worker must run with `npm run worker`, outside Vercel serverless request
   lifecycle.
 - The Supabase pooler `DATABASE_URL` must let pg-boss connect and initialize
@@ -105,9 +106,9 @@ Current platform-first web deployment status:
 
 - Vercel project `kulibabkaaas-projects/organize-my-music` is linked locally.
 - Vercel MCP can inspect the project and deployments.
-- PR preview deployments for the platform-first branch are passing. Production
-  must be promoted or redeployed from the same reviewed branch before final
-  smoke.
+- Platform-first PR #1 is merged to `main`, and Vercel Production deployment
+  `dpl_A7bKrk5Z5Fhq2S7J7NhjTcs2vTAx` is ready for commit
+  `95bc5fffbe95ad5c1579b2cab60815a51d364adb`.
 - Public Production, Preview, and Development env vars were added for
   `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`, and
   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
@@ -116,8 +117,8 @@ Current platform-first web deployment status:
 - Required server-only Supabase, Apple Music, OpenAI, database, and Sentry env
   values exist for Production and Preview.
 - Stripe env vars are intentionally deferred until payment is activated.
-- Landing page and signed-out dashboard smoke checks should return `200` before
-  starting the Apple Music smoke path.
+- Landing page, `/dashboard`, and `/api/health` return `200` in Production
+  before starting the Apple Music smoke path.
 
 ## Worker deployment checklist
 
