@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  createSupabaseSortRunExportStore,
   exportReviewedPlaylists,
   PLAYLIST_CREATION_JOB_NAME,
   type PlaylistExportQueue,
@@ -260,5 +261,124 @@ describe("exportReviewedPlaylists", () => {
 
     expect(store.saveExportSelection).not.toHaveBeenCalled();
     expect(queue.send).not.toHaveBeenCalled();
+  });
+
+  it("mirrors reviewed Sort track removals into persistent playlist generations", async () => {
+    const operations: Array<{
+      table: string;
+      operation: string;
+      payload?: unknown;
+      filters: Array<[string, unknown, unknown?]>;
+    }> = [];
+    const createQuery = (table: string) => {
+      let operation = "";
+      let payload: unknown;
+      const filters: Array<[string, unknown, unknown?]> = [];
+      const query = {
+        select: vi.fn((columns: string) => {
+          if (!operation) {
+            operation = "select";
+          }
+          payload = columns;
+          return query;
+        }),
+        update: vi.fn((values: unknown) => {
+          operation = "update";
+          payload = values;
+          return query;
+        }),
+        insert: vi.fn(async (values: unknown) => {
+          operations.push({
+            table,
+            operation: "insert",
+            payload: values,
+            filters: []
+          });
+          return { error: null };
+        }),
+        eq: vi.fn((column: string, value: unknown) => {
+          filters.push([column, value]);
+          return query;
+        }),
+        in: vi.fn((column: string, value: unknown) => {
+          filters.push([column, value]);
+          return query;
+        }),
+        not: vi.fn((column: string, operator: string, value: unknown) => {
+          filters.push([column, operator, value]);
+          return query;
+        }),
+        single: vi.fn(async () => {
+          operations.push({ table, operation, payload, filters: [...filters] });
+          return { data: { id: "sort_1" }, error: null };
+        }),
+        then: (
+          resolve: (value: { data?: unknown; error: null }) => unknown,
+          reject?: (reason: unknown) => unknown
+        ) => {
+          const result =
+            operation === "select" && table === "sort_playlists"
+              ? {
+                  data: [
+                    {
+                      id: "sort_playlist_1",
+                      playlist_id: "persistent_playlist_1",
+                      playlist_rules: { generatedPlaylistId: "playlist_1" }
+                    }
+                  ],
+                  error: null
+                }
+              : operation === "select" && table === "playlist_generations"
+                ? { data: [{ id: "generation_1" }], error: null }
+                : { error: null };
+
+          operations.push({ table, operation, payload, filters: [...filters] });
+          return Promise.resolve(result).then(resolve, reject);
+        }
+      };
+
+      return query;
+    };
+    const supabase = {
+      from: vi.fn((table: string) => createQuery(table))
+    };
+    const store = createSupabaseSortRunExportStore(
+      supabase as never,
+      vi.fn(async () => previewSortRun)
+    );
+
+    await expect(
+      store.saveExportSelection({
+        sortRun: previewSortRun,
+        selectedPlaylists: [
+          {
+            generatedPlaylistId: "playlist_1",
+            title: "Late night edits",
+            removedTrackFingerprints: ["fp_1"],
+            includedNormalizedTrackIds: ["track_2"]
+          }
+        ]
+      })
+    ).resolves.toBeUndefined();
+
+    expect(operations).toContainEqual(
+      expect.objectContaining({
+        table: "playlist_generation_tracks",
+        operation: "update",
+        payload: { decision: "keep" },
+        filters: [["generation_id", ["generation_1"]]]
+      })
+    );
+    expect(operations).toContainEqual(
+      expect.objectContaining({
+        table: "playlist_generation_tracks",
+        operation: "update",
+        payload: { decision: "remove" },
+        filters: [
+          ["generation_id", ["generation_1"]],
+          ["normalized_track_id", "in", "(track_2)"]
+        ]
+      })
+    );
   });
 });

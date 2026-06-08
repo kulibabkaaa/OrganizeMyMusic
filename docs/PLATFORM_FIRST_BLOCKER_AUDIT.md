@@ -43,15 +43,21 @@ Latest local audit on 2026-06-08:
   playlists through the public API.
 - Playlist generation export now requires a saved track review before queuing
   Apple Music writes; `ready_for_review` generations cannot be exported.
+- Sort batch export now mirrors reviewed keep/remove choices into persistent
+  playlist generation tracks, so Playlist Hub review state matches the exported
+  Sort selection.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
+- `npm run platform:check` passes with required env, migrations, RLS, linking
+  columns, recipe scope, worker queue registration, and no queued MVP jobs.
 - Local `npm run build` compiles and prerenders, but may fail during Next trace
   collection on this machine; Vercel preview remains the production build gate.
 
 Remaining completion verification is external: real Apple Music authorization,
 worker deployment, and Apple Music write-back smoke testing require configured
-credentials and environment access.
+credentials and environment access. Railway CLI is currently unauthorized in
+this Codex environment.
 
 ## Not blockers for the next implementation slices
 

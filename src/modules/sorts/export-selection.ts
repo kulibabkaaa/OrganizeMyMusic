@@ -241,6 +241,10 @@ type SortPlaylistRow = {
   } | null;
 };
 
+type PlaylistGenerationIdRow = {
+  id: string;
+};
+
 export function createSupabaseSortRunExportStore(
   supabase: SupabaseClient,
   getSortRunForExport: SortRunExportStore["getSortRunForExport"]
@@ -364,6 +368,43 @@ export function createSupabaseSortRunExportStore(
 
         if (generationError) {
           throw new Error(generationError.message);
+        }
+
+        const { data: generationRows, error: generationLoadError } = await supabase
+          .from("playlist_generations")
+          .select("id")
+          .eq("playlist_id", row.playlist_id)
+          .eq("sort_run_id", input.sortRun.id);
+
+        if (generationLoadError || !generationRows) {
+          throw new Error(
+            generationLoadError?.message ?? "Unable to load playlist generations."
+          );
+        }
+
+        const generationIds = (generationRows as PlaylistGenerationIdRow[]).map(
+          (generation) => generation.id
+        );
+
+        if (generationIds.length > 0) {
+          const { error: keepDecisionError } = await supabase
+            .from("playlist_generation_tracks")
+            .update({ decision: "keep" })
+            .in("generation_id", generationIds);
+
+          if (keepDecisionError) {
+            throw new Error(keepDecisionError.message);
+          }
+
+          const { error: removeDecisionError } = await supabase
+            .from("playlist_generation_tracks")
+            .update({ decision: "remove" })
+            .in("generation_id", generationIds)
+            .not("normalized_track_id", "in", `(${selected.includedNormalizedTrackIds.join(",")})`);
+
+          if (removeDecisionError) {
+            throw new Error(removeDecisionError.message);
+          }
         }
 
         const { error: exportError } = await supabase.from("playlist_exports").insert({
