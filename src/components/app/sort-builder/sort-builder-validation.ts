@@ -154,7 +154,7 @@ export function validateSortBuilder(input: {
     return {
       canSave: true,
       canPreview: false,
-      message: "You can save this draft now. Preview unlocks when the library index is ready."
+      message: "You can save this draft now. Preview becomes available when the library index is ready."
     };
   }
 
