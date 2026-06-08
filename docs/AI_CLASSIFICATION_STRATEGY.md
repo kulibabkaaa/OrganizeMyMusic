@@ -161,7 +161,7 @@ Parse into structured rules:
 Current request parser implementation:
 
 - The dashboard accepts one playlist request per line.
-- `POST /api/sort-runs` requires at least three requests and a completed user-owned library sync.
+- Legacy `POST /api/sort-runs` playlist-request creation is disabled. Platform Sort creation uses `/api/app/sorts`, then structured playlist recipes.
 - Simple requests such as `Ukrainian rap`, `Gym rap`, and `Sad Slavic songs` are parsed deterministically without OpenAI.
 - Parsed rules are stored in `playlist_requests.parsed_rules` for review and later planning.
 - This step creates a draft sort run only; playlist planning, preview generation, and Apple Music write-back happen in later tickets.

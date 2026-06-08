@@ -82,6 +82,9 @@ Latest local audit on 2026-06-08:
 - Disabled legacy Sort write/start endpoints now include platform `nextPath`
   and `nextApiPath` guidance, so stale clients get actionable migration routes
   without re-enabling legacy Apple Music writes.
+- Legacy `POST /api/sort-runs` playlist-request creation now returns `409`
+  with platform Sort creation targets instead of creating old freeform
+  playlist-request Sorts.
 - Playlist PATCH now rejects client attempts to set server-managed Apple Music
   export fields, so MVP exports cannot be redirected to arbitrary Apple Music
   playlists through the public API.
