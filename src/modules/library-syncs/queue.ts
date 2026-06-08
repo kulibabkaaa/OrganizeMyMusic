@@ -156,6 +156,15 @@ export type QueueLibrarySyncResult =
       status: "missing_apple_music_connection";
     };
 
+export type QueueLibrarySyncAfterConnectionResult =
+  | QueueLibrarySyncResult
+  | {
+      status: "already_active";
+      sync: LibrarySyncSummary;
+    };
+
+const activeSyncStatuses = new Set<LibrarySyncStatus>(["queued", "syncing", "normalizing"]);
+
 export async function queueLibrarySync(input: {
   store: LibrarySyncStore;
   queue: LibrarySyncQueue;
@@ -199,6 +208,23 @@ export async function queueLibrarySync(input: {
     sync,
     jobId
   };
+}
+
+export async function queueLibrarySyncAfterConnection(input: {
+  store: LibrarySyncStore;
+  queue: LibrarySyncQueue;
+  userId: string;
+}): Promise<QueueLibrarySyncAfterConnectionResult> {
+  const latestSync = await input.store.getLatestSyncForUser(input.userId);
+
+  if (latestSync && activeSyncStatuses.has(latestSync.status)) {
+    return {
+      status: "already_active",
+      sync: latestSync
+    };
+  }
+
+  return queueLibrarySync(input);
 }
 
 export async function handleLibrarySyncJob(input: {

@@ -20,7 +20,7 @@ export interface PreviewSnapshot {
 export interface PreviewSortRun {
   id: string;
   userId: string;
-  librarySyncId: string;
+  librarySyncId: string | null;
   state: SortRunState;
   paymentStatus: PaymentStatus;
   previewSnapshot: PreviewSnapshot | null;
@@ -84,6 +84,10 @@ const immutablePreviewStates = new Set<SortRunState>([
   "completed"
 ]);
 
+export function isPreviewImmutable(sortRun: Pick<PreviewSortRun, "state" | "paymentStatus">) {
+  return immutablePreviewStates.has(sortRun.state) || sortRun.paymentStatus === "paid";
+}
+
 export async function generateAndStorePreviewSnapshot(input: {
   store: PreviewSnapshotStore;
   sortRunId: string;
@@ -99,7 +103,7 @@ export async function generateAndStorePreviewSnapshot(input: {
     return { status: "not_found" };
   }
 
-  if (immutablePreviewStates.has(sortRun.state)) {
+  if (isPreviewImmutable(sortRun)) {
     return {
       status: "immutable",
       snapshot: sortRun.previewSnapshot
@@ -111,6 +115,10 @@ export async function generateAndStorePreviewSnapshot(input: {
       status: "existing",
       snapshot: sortRun.previewSnapshot
     };
+  }
+
+  if (!sortRun.librarySyncId) {
+    return { status: "not_found" };
   }
 
   const tracks = await input.store.listTracksForPreview({
@@ -147,6 +155,29 @@ export async function generateAndStorePreviewSnapshot(input: {
       snapshot
     })
   };
+}
+
+export async function saveSortRunPreviewSnapshotOnly<TSnapshot>(input: {
+  supabase: SupabaseClient;
+  sortRun: PreviewSortRun;
+  snapshot: TSnapshot;
+}) {
+  const { error } = await input.supabase
+    .from("sort_runs")
+    .update({
+      state: "preview_ready",
+      preview_snapshot: input.snapshot,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", input.sortRun.id)
+    .eq("user_id", input.sortRun.userId)
+    .eq("state", input.sortRun.state);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return input.snapshot;
 }
 
 type SortRunRow = {

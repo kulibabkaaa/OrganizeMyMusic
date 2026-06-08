@@ -3,9 +3,22 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --font-body: "Inter", "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   --font-display: "Space Grotesk", "Avenir Next", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --bg: #030103;
+  --burgundy: #19040a;
+  --card: rgba(255, 255, 255, 0.055);
+  --card-elevated: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.12);
+  --fg: #ffffff;
+  --secondary: #b9aeb5;
+  --muted: #7e747a;
+  --pink: #ff2d55;
+  --red: #ff174c;
+  --success: #39d98a;
+  --warning: #ffb020;
+  --danger: #ff4d6d;
 }
 
 html {
@@ -14,8 +27,8 @@ html {
 
 body {
   margin: 0;
-  background: #ffffff;
-  color: #000000;
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-body), sans-serif;
 }
 

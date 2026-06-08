@@ -18,6 +18,7 @@ export interface ConfirmedSortRunForPlaylistCreation {
 
 export interface SelectedPlaylistForCreation {
   id: string;
+  playlistId?: string | null;
   title: string;
   description: string;
   applePlaylistId: string | null;
@@ -83,6 +84,7 @@ type AppleMusicConnectionRow = {
 
 type SortPlaylistRow = {
   id: string;
+  playlist_id: string | null;
   title: string;
   description: string;
   apple_playlist_id: string | null;
@@ -432,7 +434,7 @@ export function createSupabasePlaylistCreationStore(
     async listSelectedPlaylists(sortRunId) {
       const { data, error } = await supabase
         .from("sort_playlists")
-        .select("id,title,description,apple_playlist_id")
+        .select("id,playlist_id,title,description,apple_playlist_id")
         .eq("sort_run_id", sortRunId)
         .eq("selected", true)
         .order("created_at", { ascending: true });
@@ -456,6 +458,7 @@ export function createSupabasePlaylistCreationStore(
 
           return {
             id: playlist.id,
+            playlistId: playlist.playlist_id,
             title: playlist.title,
             description: playlist.description,
             applePlaylistId: playlist.apple_playlist_id,
@@ -476,6 +479,17 @@ export function createSupabasePlaylistCreationStore(
     },
 
     async setApplePlaylistId(input) {
+      const { data: playlistRow, error: playlistLoadError } = await supabase
+        .from("sort_playlists")
+        .select("playlist_id")
+        .eq("id", input.sortPlaylistId)
+        .eq("sort_run_id", input.sortRunId)
+        .maybeSingle();
+
+      if (playlistLoadError) {
+        throw new Error(playlistLoadError.message);
+      }
+
       const { error } = await supabase
         .from("sort_playlists")
         .update({
@@ -486,6 +500,53 @@ export function createSupabasePlaylistCreationStore(
 
       if (error) {
         throw new Error(error.message);
+      }
+
+      const playlistId = (playlistRow as { playlist_id: string | null } | null)?.playlist_id;
+
+      if (!playlistId) {
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const { error: playlistError } = await supabase
+        .from("playlists")
+        .update({
+          apple_playlist_id: input.applePlaylistId,
+          last_exported_at: now,
+          updated_at: now
+        })
+        .eq("id", playlistId);
+
+      if (playlistError) {
+        throw new Error(playlistError.message);
+      }
+
+      const { error: generationError } = await supabase
+        .from("playlist_generations")
+        .update({
+          status: "exported",
+          updated_at: now
+        })
+        .eq("playlist_id", playlistId)
+        .eq("sort_run_id", input.sortRunId);
+
+      if (generationError) {
+        throw new Error(generationError.message);
+      }
+
+      const { error: exportError } = await supabase
+        .from("playlist_exports")
+        .update({
+          apple_playlist_id: input.applePlaylistId,
+          status: "exported",
+          updated_at: now
+        })
+        .eq("playlist_id", playlistId)
+        .eq("sort_run_id", input.sortRunId);
+
+      if (exportError) {
+        throw new Error(exportError.message);
       }
     },
 

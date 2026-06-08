@@ -1,18 +1,20 @@
+import React from "react";
+
 const faqs = [
   {
-    question: "Does the app touch my Apple Music account before I pay?",
+    question: "Does the app touch my Apple Music playlists before I approve?",
     answer:
-      "No. The system reads your library, builds a preview, and waits until payment plus your manual confirmation before it writes playlists."
+      "No. The system reads your library, builds proposed playlists, and waits for your manual export confirmation before it creates app-managed playlists."
   },
   {
-    question: "What does the first version sort by?",
+    question: "What does the first Sort create?",
     answer:
-      "Language, genre, and mood. The MVP keeps the output curated instead of offering a heavy custom rules builder."
+      "A full-library Sort creates persistent playlists with saved recipes, so you can revisit the playlist, regenerate it, and edit the tracks later."
   },
   {
-    question: "What happens if Apple Music auth expires?",
+    question: "What happens when I want a new playlist later?",
     answer:
-      "The sort run stays on your account. If the Apple token is stale at creation time, you reconnect and resume the same paid run."
+      "Create a playlist directly from the Playlist hub, add simple tags and instructions, generate tracks from your synced library, review the list, then export."
   }
 ];
 
@@ -40,4 +42,3 @@ export function Faq() {
     </section>
   );
 }
-

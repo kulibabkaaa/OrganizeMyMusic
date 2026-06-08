@@ -147,6 +147,96 @@ Returns latest library sync summary and track count.
 
 ## Sort runs
 
+Platform-first note: Sort runs are for full-library organization. One-off playlist creation should use `/api/app/playlists`.
+
+Legacy `/api/sort-runs/*` routes remain for compatibility. New app surfaces use
+`/api/app/sorts/*`.
+
+## App Sorts
+
+### `POST /api/app/sorts`
+
+Creates a platform Sort draft for full-library organization.
+
+Rules:
+
+- Requires authenticated user.
+- Uses the latest completed library sync unless `librarySyncId` is provided.
+- Stores Sort metadata only; no Apple Music write occurs.
+
+Response includes:
+
+```json
+{
+  "status": "created",
+  "sort": {
+    "id": "uuid",
+    "name": "My Apple Music organization"
+  }
+}
+```
+
+### `GET /api/app/sorts/:sortId`
+
+Returns a user-owned Sort draft, its playlist recipes, and preview readiness.
+
+### `PATCH /api/app/sorts/:sortId`
+
+Updates Sort draft metadata and library sync selection.
+
+### `GET /api/app/sorts/:sortId/recipes`
+
+Returns playlist recipes inside a Sort.
+
+### `POST /api/app/sorts/:sortId/recipes`
+
+Creates a playlist recipe inside a Sort.
+
+### `PATCH /api/app/sorts/:sortId/recipes`
+
+Reorders playlist recipes inside a Sort.
+
+### `PATCH /api/app/sorts/:sortId/recipes/:recipeId`
+
+Updates one playlist recipe inside a Sort.
+
+### `DELETE /api/app/sorts/:sortId/recipes/:recipeId`
+
+Deletes one playlist recipe inside a Sort.
+
+### `POST /api/app/sorts/:sortId/preview`
+
+Generates or returns a lightweight preview snapshot after library sync is ready.
+
+Rules:
+
+- Requires authenticated user.
+- Requires completed library sync.
+- Requires at least one playlist recipe.
+- Does not write to Apple Music.
+
+### `POST /api/app/sorts/:sortId/checkout`
+
+Starts checkout or dev-bypass processing for a Sort.
+
+Rules:
+
+- Requires authenticated user.
+- Queues `full-sort` when checkout/dev-bypass unlocks processing.
+- Does not write to Apple Music.
+
+### `POST /api/app/sorts/:sortId/export`
+
+Queues reviewed Sort playlist export to Apple Music.
+
+Rules:
+
+- Requires authenticated user.
+- Requires explicit user action.
+- Persists selected playlists and removed tracks.
+- Queues `playlist-create` for the persistent worker.
+- Does not promise exact replacement, reorder, or automatic removal in Apple Music.
+
 ### `POST /api/sort-runs`
 
 Creates a draft sort run and stores parsed playlist requests.
@@ -299,18 +389,183 @@ Rules:
 
 Returns job events for a sort run.
 
+## New Music
+
+### `POST /api/app/new-music/process`
+
+Processes tracks that exist in the latest completed sync but not the previous
+completed sync.
+
+Rules:
+
+- Requires authenticated user.
+- Requires two completed library syncs.
+- Uses saved app playlist recipes.
+- Returns review-only recommendations.
+- Does not write to Apple Music.
+- Does not update existing Apple Music playlists automatically.
+
 Response:
 
 ```json
 {
-  "events": [
+  "status": "processed",
+  "summary": {
+    "latestSyncId": "uuid",
+    "previousSyncId": "uuid",
+    "newTrackCount": 4,
+    "canProcess": true,
+    "message": "4 new songs detected since the previous sync."
+  },
+  "recommendations": [
     {
-      "stage": "classification",
-      "level": "info",
-      "message": "Classified 500 tracks.",
-      "createdAt": "2026-01-01T00:00:00.000Z"
+      "playlistId": "uuid",
+      "playlistName": "Ukrainian Rap",
+      "recipeId": "uuid",
+      "recipeName": "Ukrainian Rap",
+      "trackCount": 2,
+      "tracks": [
+        {
+          "normalizedTrackId": "uuid",
+          "appleSongId": "i.xxxxx",
+          "name": "Song",
+          "artistName": "Artist",
+          "albumName": "Album",
+          "score": 0.88,
+          "reason": "Matched language and genre recipe tags."
+        }
+      ]
     }
   ]
+}
+```
+
+## Platform playlists
+
+### `GET /api/app/playlists`
+
+Returns non-archived persistent playlists for the current user.
+
+Response:
+
+```json
+{
+  "playlists": [
+    {
+      "id": "uuid",
+      "name": "Ukrainian Rap",
+      "description": "High-energy Ukrainian rap from my library.",
+      "status": "active",
+      "applePlaylistId": "p.xxxxx",
+      "lastGeneratedAt": "2026-06-08T10:00:00.000Z",
+      "lastExportedAt": "2026-06-08T10:05:00.000Z"
+    }
+  ]
+}
+```
+
+### `POST /api/app/playlists`
+
+Creates one persistent playlist.
+
+Request:
+
+```json
+{
+  "name": "Ukrainian Rap",
+  "description": "High-energy Ukrainian rap from my library."
+}
+```
+
+Rules:
+
+- Requires authenticated user.
+- Does not write to Apple Music.
+- Creates an app playlist in `draft` state.
+
+### `GET /api/app/playlists/:playlistId`
+
+Returns playlist, recipe, latest generation, and export status.
+
+### `PATCH /api/app/playlists/:playlistId`
+
+Updates playlist metadata or archives the playlist.
+
+Rules:
+
+- Archive user-facing playlists instead of destructive delete.
+- Must not change Apple Music before explicit export/update.
+
+### `GET /api/app/playlists/:playlistId/recipe`
+
+Returns the playlist recipe.
+
+### `PUT /api/app/playlists/:playlistId/recipe`
+
+Creates or updates the playlist recipe.
+
+Rules:
+
+- Validate tags and target track range with Zod.
+- Recipe controls are product-style fields, not chat.
+
+### `POST /api/app/playlists/:playlistId/generate`
+
+Creates one playlist generation from the current recipe and latest completed library sync.
+
+Response:
+
+```json
+{
+  "recipe": {
+    "id": "uuid",
+    "playlistId": "uuid"
+  },
+  "generation": {
+    "id": "uuid",
+    "status": "ready_for_review",
+    "tracks": []
+  }
+}
+```
+
+Rules:
+
+- Requires a completed library sync.
+- Does not write to Apple Music.
+- Stores proposed tracks in `playlist_generation_tracks`.
+
+### `PATCH /api/app/playlists/:playlistId/generations/:generationId/tracks`
+
+Stores keep/remove decisions from review.
+
+### `POST /api/app/playlists/:playlistId/generations/:generationId/export`
+
+Queues explicit Apple Music export after reviewing one playlist generation.
+
+Rules:
+
+- Requires reviewed tracks.
+- Requires at least one kept Apple Music library track.
+- Requires explicit user action.
+- Uses server-side Apple Music credentials.
+- Creates a `playlist_exports` row.
+- Marks the generation as `exporting`.
+- Queues `playlist-generation-export` for the persistent worker.
+- Does not promise exact replacement, reorder, or automatic removal in Apple Music.
+
+Response:
+
+```json
+{
+  "export": {
+    "status": "queued",
+    "playlistId": "uuid",
+    "generationId": "uuid",
+    "exportId": "uuid",
+    "selectedTrackCount": 42,
+    "jobId": "pg-boss-job-id"
+  }
 }
 ```
 

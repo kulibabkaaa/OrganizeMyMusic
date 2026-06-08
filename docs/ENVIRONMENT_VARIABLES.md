@@ -2,7 +2,7 @@
 
 ## Public variables
 
-These may be exposed to browser code.
+Only these variables may be exposed to browser code.
 
 ```text
 NEXT_PUBLIC_APP_URL
@@ -17,16 +17,20 @@ These must never be exposed to browser code.
 ```text
 SUPABASE_SERVICE_ROLE_KEY
 DATABASE_URL
+ENCRYPTION_KEY
 APPLE_TEAM_ID
 APPLE_KEY_ID
 APPLE_PRIVATE_KEY
 APPLE_MUSICKIT_KEY
 OPENAI_API_KEY
+AUTH_APPLE_OAUTH_ENABLED
+AUTH_GOOGLE_OAUTH_ENABLED
+PAYMENTS_ENABLED
+PAYMENTS_DEV_BYPASS_ENABLED
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 STRIPE_PRICE_SORT
 SENTRY_DSN
-ENCRYPTION_KEY
 ```
 
 ## Variable purpose
@@ -93,6 +97,22 @@ Do not confuse this with the private key.
 
 Server-only OpenAI API key.
 
+## `AUTH_APPLE_OAUTH_ENABLED`
+
+Server-only auth feature flag.
+
+## `AUTH_GOOGLE_OAUTH_ENABLED`
+
+Server-only auth feature flag.
+
+## `PAYMENTS_ENABLED`
+
+Server-only payment feature flag. Keep `false` while billing is deferred.
+
+## `PAYMENTS_DEV_BYPASS_ENABLED`
+
+Server-only development bypass flag. Never enable the development bypass in production.
+
 ## `STRIPE_SECRET_KEY`
 
 Server-only Stripe secret key. Optional until payment ticket.
@@ -103,7 +123,9 @@ Stripe webhook verification secret. Optional until payment ticket.
 
 ## `STRIPE_PRICE_SORT`
 
-Stripe price ID for one-time sort/payment. Optional until payment ticket.
+Legacy Stripe price ID for one-time sort/payment. Do not add new dependency on this variable during the platform-first migration.
+
+Payment is deferred until Apple Music organization quality is strong and the subscription model is defined.
 
 ## `SENTRY_DSN`
 
@@ -141,3 +163,19 @@ Supabase MCP should confirm:
 - Anon key.
 - Service role key.
 - Database URL.
+
+## Production Deploy Checklist
+
+- `.env.example` contains placeholders only.
+- Only `NEXT_PUBLIC_*` variables are exposed to browser code.
+- Server-only secrets are configured only in server/worker environments.
+- `PAYMENTS_ENABLED=false` while billing is deferred.
+- `PAYMENTS_DEV_BYPASS_ENABLED=false` by default.
+- Never enable the development bypass in production.
+- Worker health checks pass before production smoke testing.
+
+## Rotation Notes
+
+- Rotate `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, Stripe secrets, and Apple private keys through the hosting provider secret manager.
+- Rotate `ENCRYPTION_KEY` only with a migration plan for encrypted Apple Music user tokens.
+- After rotation, run `npm run worker:check` and a safe authenticated smoke test.

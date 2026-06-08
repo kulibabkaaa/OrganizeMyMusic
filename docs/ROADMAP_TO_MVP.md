@@ -1,5 +1,11 @@
 # Roadmap to MVP
 
+## Current platform migration note
+
+This original roadmap describes the Apple Music Sort-first MVP. The active product direction is now platform-first: a Sort is a full-library organization project, while persistent playlists and playlist recipes become the recurring product surface.
+
+Use `docs/PLATFORM_FIRST_MVP_MIGRATION.md` for the migration sequence before adding new Sort-first tickets.
+
 ## Purpose
 
 This is the master execution plan for Codex.

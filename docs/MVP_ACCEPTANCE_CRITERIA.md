@@ -7,10 +7,16 @@ The MVP is done only when a real user can complete the full flow:
 1. Create or access an app account.
 2. Connect Apple Music.
 3. Sync their Apple Music saved library.
-4. Request custom playlists.
-5. See a preview.
-6. Confirm the output.
-7. See playlists appear in their Apple Music account.
+4. Click `Organize My Library`.
+5. Create playlist recipes for at least three playlists.
+6. Generate proposed playlist tracks.
+7. Review every playlist and track.
+8. Confirm the output.
+9. See playlists appear in their Apple Music account.
+10. See app-created playlists persist in the dashboard or playlist hub.
+11. Create or regenerate one saved playlist without starting a new Sort.
+12. Process newly synced music through saved playlist recipes without automatic
+    Apple Music writes.
 
 ## Required user flow
 
@@ -45,10 +51,10 @@ The MVP is done only when a real user can complete the full flow:
 - App stores classification source, confidence, version, and metadata hash.
 - Ukrainian, Russian, mixed-language, instrumental, and unknown tracks are supported.
 
-### 5. Playlist request and planning
+### 5. Playlist recipe and planning
 
-- User can request playlists in natural language.
-- App converts requests into playlist rules.
+- User can create playlist objects.
+- User can define playlist recipes with product-style fields.
 - App matches existing tracks to rules.
 - App produces playlist titles, descriptions, track lists, and confidence/reasons.
 - App handles empty or low-confidence playlists gracefully.
@@ -57,7 +63,7 @@ The MVP is done only when a real user can complete the full flow:
 
 - User can inspect playlist output before anything is written to Apple Music.
 - User can deselect playlists.
-- User can remove tracks if implemented.
+- User can remove tracks from the proposed export.
 - Preview snapshot is stable after confirmation/payment state begins.
 
 ### 7. Confirmation
@@ -71,10 +77,24 @@ The MVP is done only when a real user can complete the full flow:
 - App creates confirmed playlists in Apple Music.
 - App adds confirmed tracks to each playlist.
 - App stores Apple playlist IDs.
+- App stores persistent app playlist rows linked to Apple playlist IDs.
+- App shows exported playlists in the playlist hub.
 - App shows completion status.
 - App records partial failures.
+- Individual playlist exports run through the persistent worker, not directly in
+  the browser request.
 
-### 9. Safety
+### 9. Recurring platform value
+
+- User can create a saved playlist without a full Sort.
+- User can save a playlist-owned recipe.
+- User can regenerate that playlist from the latest synced library.
+- User can view generation history on playlist detail.
+- User can process new music after a later sync.
+- New-music recommendations are review-only and do not automatically update
+  Apple Music.
+
+### 10. Safety
 
 - Raw Apple Music user token is never stored.
 - Raw Apple Music user token is never logged.

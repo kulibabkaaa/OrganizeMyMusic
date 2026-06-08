@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -74,7 +74,7 @@ export function PlaylistRequestCard({
             Define the playlists you want.
           </h2>
         </div>
-        <StatusPill label={sortRunId ? "Requests saved" : "Parser ready"} tone={sortRunId ? "success" : "inverse"} />
+        <StatusPill label={sortRunId ? "Requests saved" : "Ready"} tone={sortRunId ? "success" : "inverse"} />
       </div>
 
       <p className="mt-3 max-w-2xl text-sm leading-7 text-white/62">
@@ -104,14 +104,14 @@ export function PlaylistRequestCard({
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button disabled={!canRequest || isPending} onClick={submitRequests} className="min-w-48">
-          {isPending ? "Saving..." : "Save requests"}
+          {isPending ? "Saving..." : "Create a Sort"}
         </Button>
         {sortRunId ? (
           <>
-            <Link href={`/sorts/${sortRunId}`} className="inline-flex">
+            <Link href={`/app/sorts/${sortRunId}/preview`} className="inline-flex">
               <Button variant="secondary">Review preview</Button>
             </Link>
-            <span className="text-sm text-white/48">Sort run: {sortRunId}</span>
+            <span className="text-sm text-white/48">Project ID: {sortRunId}</span>
           </>
         ) : null}
       </div>

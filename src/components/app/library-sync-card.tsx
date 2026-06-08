@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
@@ -178,7 +179,14 @@ export function LibrarySyncCard({
         {displayState.description} No playlists are created from this action.
       </p>
 
-      <div className="mt-5" aria-label="Library sync progress">
+      <div
+        className="mt-5"
+        role="progressbar"
+        aria-label="Library sync progress"
+        aria-valuenow={displayState.progressPercent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div className="h-2 overflow-hidden rounded-full bg-black/30">
           <div
             className="h-full rounded-full bg-[#fb2d55] transition-[width] duration-500"
@@ -213,7 +221,10 @@ export function LibrarySyncCard({
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <Button disabled={!canStart || isBusy || displayState.isActive} onClick={startSync} className="min-w-44">
-          {isBusy ? "Queueing..." : "Start sync"}
+          {isBusy ? "Queueing..." : "Start background sync"}
+        </Button>
+        <Button variant="ghost" onClick={() => router.refresh()}>
+          Refresh status
         </Button>
         {currentSync?.status === "failed" ? (
           <Button

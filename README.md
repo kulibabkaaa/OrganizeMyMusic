@@ -1,6 +1,6 @@
 # Organize Your Music
 
-Web-first Apple Music playlist organizer that ingests a user's saved library, classifies tracks, previews a curated playlist bundle, and writes playlists back to Apple Music after payment and confirmation.
+Web-first Apple Music playlist organizer that ingests a user's saved library, classifies tracks, helps them build persistent playlist recipes, previews proposed tracks, and writes confirmed playlists back to Apple Music.
 
 ## Stack
 
@@ -18,9 +18,10 @@ Web-first Apple Music playlist organizer that ingests a user's saved library, cl
 2. Connect Apple Music in the browser with MusicKit.
 3. Sync library tracks from Apple Music.
 4. Normalize, dedupe, and classify tracks across language, genre, and mood.
-5. Show a preview of generated playlists.
-6. Charge a one-time Stripe payment.
+5. Let the user build playlist recipes inside a full-library Sort.
+6. Show proposed playlists and tracks for review.
 7. Let the user manually confirm creation in Apple Music.
+8. Persist app-created playlists for later review and regeneration.
 
 ## Local Setup
 
@@ -37,5 +38,6 @@ npm run dev
 
 - Apple Music auth is browser-driven and stores an encrypted user token server-side for resumable fulfillment.
 - Classification uses heuristics first and OpenAI for ambiguous language plus mood labeling.
-- Preview snapshots are immutable once a checkout session is created.
+- Preview/review snapshots are immutable once confirmation or export begins.
+- Payment is deferred until Apple Music organization quality is strong.
 - Admin visibility is intentionally simple: queryable run state, job events, retries, and failure summaries.
