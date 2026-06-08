@@ -22,7 +22,7 @@ export function ConnectedLibrariesPage({
   return (
     <AppShell
       title="Connected libraries"
-      subtitle="Manage provider access, sync status, and reconnect flows from the platform settings area."
+      subtitle="Manage Apple Music access, sync status, and reconnect flows from the platform settings area."
     >
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.7fr)]">
         <AppleMusicLibraryCard
