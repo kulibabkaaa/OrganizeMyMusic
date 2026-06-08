@@ -187,6 +187,7 @@ export function PlaylistDetailWorkspace({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            markReviewed: true,
             decisions: generation.tracks.map((track) => ({
               trackId: track.id,
               decision: track.decision

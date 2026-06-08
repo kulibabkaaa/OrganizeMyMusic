@@ -542,6 +542,27 @@ Rules:
 
 Stores keep/remove decisions from review.
 
+Request:
+
+```json
+{
+  "markReviewed": false,
+  "decisions": [
+    {
+      "trackId": "uuid",
+      "decision": "keep"
+    }
+  ]
+}
+```
+
+Rules:
+
+- Track toggles can save individual keep/remove decisions while the generation
+  remains `ready_for_review`.
+- `markReviewed: true` is only sent by the explicit review-completion action.
+- Export stays blocked until the generation is marked `reviewed`.
+
 ### `POST /api/app/playlists/:playlistId/generations/:generationId/export`
 
 Queues explicit Apple Music export after reviewing one playlist generation.

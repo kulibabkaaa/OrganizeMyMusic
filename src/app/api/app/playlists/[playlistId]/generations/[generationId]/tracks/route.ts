@@ -6,6 +6,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
 
 const decisionSchema = z.object({
+  markReviewed: z.boolean().optional().default(false),
   decisions: z
     .array(
       z.object({
@@ -40,6 +41,7 @@ export async function PATCH(
       userId: session.user.id,
       playlistId,
       generationId,
+      markReviewed: body.markReviewed,
       decisions: body.decisions
     });
 

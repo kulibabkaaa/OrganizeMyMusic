@@ -102,6 +102,7 @@ export interface PlaylistGenerationStore {
     userId: string;
     playlistId: string;
     generationId: string;
+    markReviewed?: boolean;
     decisions: Array<{ trackId: string; decision: PlaylistTrackDecision }>;
   }): Promise<PlaylistGenerationView | null>;
 }
@@ -294,9 +295,7 @@ export function createSupabasePlaylistGenerationStore(
         throw new Error(error.message);
       }
 
-      const hasReviewed = input.decisions.length > 0;
-
-      if (hasReviewed && generation.status === "ready_for_review") {
+      if (input.markReviewed && generation.status === "ready_for_review") {
         const { error: statusError } = await supabase
           .from("playlist_generations")
           .update({
