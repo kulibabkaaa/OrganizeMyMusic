@@ -93,9 +93,27 @@ Response:
 {
   "status": "connected",
   "storefront": "gb",
-  "lastValidatedAt": "2026-01-01T00:00:00.000Z"
+  "lastValidatedAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z"
 }
 ```
+
+If the user has not connected Apple Music:
+
+```json
+{
+  "status": "disconnected",
+  "storefront": null,
+  "lastValidatedAt": null,
+  "updatedAt": null
+}
+```
+
+Rules:
+
+- Requires authenticated user.
+- Does not return raw or encrypted Apple Music user tokens.
+- May return `connected`, `expired`, `revoked`, `error`, or `disconnected`.
 
 ## Library sync
 

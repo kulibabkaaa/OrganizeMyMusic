@@ -17,6 +17,8 @@ Latest local audit on 2026-06-08:
 - Legacy payment-first Sort copy has been softened for deferred billing.
 - Full Sort checkout now defaults to billing-deferred unlock so a real MVP user
   can start full-library organization without enabling Stripe or dev bypass.
+- `GET /api/apple/connection` now exposes authenticated Apple Music connection
+  status without returning raw or encrypted token fields.
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.
 - The playlist hub and playlist detail screens were simplified to reduce
   always-visible metrics, safety panels, and history blocks.
