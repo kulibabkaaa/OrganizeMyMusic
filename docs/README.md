@@ -56,6 +56,17 @@ Current platform-first state:
 
 Remaining completion verification:
 
+Automated/local coverage already verifies:
+
+- Platform schema readiness, RLS, required linking columns, worker queue
+  registration, and empty MVP queue backlog through `npm run platform:check`.
+- Dashboard, Sort Builder, playlist hub, review, export, new-music, legacy
+  compatibility, API validation, and security behavior through the test suite.
+- The production smoke checklist in `PRODUCTION_SMOKE_TEST.md` stays aligned
+  with the platform-first completion path.
+
+External smoke still needs to verify:
+
 - Real user sign-in.
 - Apple Music connect and library sync.
 - Full-library organization from `Organize My Library`.
