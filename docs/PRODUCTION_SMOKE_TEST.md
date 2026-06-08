@@ -140,9 +140,12 @@ As of 2026-06-08:
   validated, no playlist recipe rows are unscoped, `playlists.updated_at` is
   not nullable with `now()` default, and platform playlist tables exist.
 - Vercel preview deployment
-  `https://organize-my-music-pc7gsrxdz-kulibabkaaas-projects.vercel.app`
-  built successfully and responded for `/`, `/app/playlists`, and
-  `/app/billing`.
+  `https://organize-my-music-git-codex-platfo-cbc5d7-kulibabkaaas-projects.vercel.app`
+  built successfully and responded through authenticated Vercel curl for `/`,
+  `/app`, `/dashboard`, `/app/playlists`, and `/app/billing`.
+- Plain public curl returns `401` because the preview is protected by Vercel.
+- `/app` renders the new signed-out workspace state, `/dashboard` redirects to
+  `/app`, and signed-out protected app subroutes redirect to `/auth`.
 - The preview homepage copy was checked through `vercel curl` and matches the
   platform-first, billing-deferred MVP direction.
 - No fatal/error runtime logs were found for preview deployment
