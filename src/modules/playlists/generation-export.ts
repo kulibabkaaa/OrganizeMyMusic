@@ -120,6 +120,11 @@ export interface PlaylistGenerationExportStore {
     selectedTrackCount: number;
   }): Promise<string>;
   markExporting(input: { generationId: string; exportId: string }): Promise<void>;
+  markApplePlaylistCreated(input: {
+    playlistId: string;
+    exportId: string;
+    applePlaylistId: string;
+  }): Promise<void>;
   markExported(input: {
     playlistId: string;
     generationId: string;
@@ -275,14 +280,25 @@ export async function exportPlaylistGenerationToAppleMusic(input: {
       musicUserToken,
       storefront: validation.connection.storefront
     };
-    const applePlaylistId =
-      playlist.apple_playlist_id ??
-      (
-        await (input.createLibraryPlaylist ?? createAppleMusicPlaylistShell)(credentials, {
+    let applePlaylistId = playlist.apple_playlist_id;
+
+    if (!applePlaylistId) {
+      const created = await (input.createLibraryPlaylist ?? createAppleMusicPlaylistShell)(
+        credentials,
+        {
           name: playlist.name,
           description: playlist.description
-        })
-      ).id;
+        }
+      );
+
+      applePlaylistId = created.id;
+      await input.store.markApplePlaylistCreated({
+        playlistId: playlist.id,
+        exportId,
+        applePlaylistId
+      });
+    }
+
     const batches = chunk(addableTracks, input.trackBatchSize ?? APPLE_PLAYLIST_TRACK_BATCH_SIZE);
 
     for (const batch of batches) {
@@ -370,7 +386,9 @@ async function validatePlaylistGenerationExport(input: {
     };
   }
 
-  const allowedStatuses = input.allowExportingStatus ? ["reviewed", "exporting"] : ["reviewed"];
+  const allowedStatuses = input.allowExportingStatus
+    ? ["reviewed", "exporting", "failed"]
+    : ["reviewed"];
 
   if (!allowedStatuses.includes(generation.status)) {
     return {
@@ -527,6 +545,31 @@ export function createSupabasePlaylistGenerationExportStore(
           .eq("id", input.exportId)
       ]);
       const error = generationResult.error ?? exportResult.error;
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    },
+
+    async markApplePlaylistCreated(input) {
+      const now = new Date().toISOString();
+      const [playlistResult, exportResult] = await Promise.all([
+        supabase
+          .from("playlists")
+          .update({
+            apple_playlist_id: input.applePlaylistId,
+            updated_at: now
+          })
+          .eq("id", input.playlistId),
+        supabase
+          .from("playlist_exports")
+          .update({
+            apple_playlist_id: input.applePlaylistId,
+            updated_at: now
+          })
+          .eq("id", input.exportId)
+      ]);
+      const error = playlistResult.error ?? exportResult.error;
 
       if (error) {
         throw new Error(error.message);

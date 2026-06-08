@@ -40,6 +40,7 @@ const store: PlaylistGenerationExportStore = {
   ]),
   createExportRow: vi.fn(async () => "export_1"),
   markExporting: vi.fn(),
+  markApplePlaylistCreated: vi.fn(),
   markExported: vi.fn(),
   markFailed: vi.fn()
 };
@@ -260,6 +261,11 @@ describe("playlist generation export", () => {
       "apple_playlist_1",
       [{ id: "song_1", type: "library-songs" }]
     );
+    expect(store.markApplePlaylistCreated).toHaveBeenCalledWith({
+      playlistId: "playlist_1",
+      exportId: "export_1",
+      applePlaylistId: "apple_playlist_1"
+    });
     expect(store.markExported).toHaveBeenCalledWith({
       playlistId: "playlist_1",
       generationId: "generation_1",
@@ -289,6 +295,94 @@ describe("playlist generation export", () => {
       message: "Keep at least one Apple Music library track before export."
     });
     expect(store.createExportRow).not.toHaveBeenCalled();
+  });
+
+  it("persists the created Apple playlist ID before track insertion can fail", async () => {
+    vi.clearAllMocks();
+    const addTracksToPlaylist = vi.fn(async () => {
+      throw new Error("Track unavailable.");
+    });
+
+    await expect(
+      exportPlaylistGenerationToAppleMusic({
+        store,
+        userId: "user_1",
+        playlistId: "playlist_1",
+        generationId: "generation_1",
+        exportId: "export_1",
+        createDeveloperToken: vi.fn(async () => ({
+          developerToken: "developer_token",
+          expiresAt: "2026-06-09T00:00:00.000Z"
+        })),
+        decryptUserToken: vi.fn(() => "music_user_token"),
+        createLibraryPlaylist: vi.fn(async () => ({ id: "apple_playlist_1" })),
+        addTracksToPlaylist
+      })
+    ).rejects.toThrow("Track unavailable.");
+
+    expect(store.markApplePlaylistCreated).toHaveBeenCalledWith({
+      playlistId: "playlist_1",
+      exportId: "export_1",
+      applePlaylistId: "apple_playlist_1"
+    });
+    expect(store.markFailed).toHaveBeenCalledWith({
+      generationId: "generation_1",
+      exportId: "export_1",
+      errorSummary: "Playlist generation export failed. Failure category: unknown."
+    });
+    expect(vi.mocked(store.markApplePlaylistCreated).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(store.markFailed).mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER
+    );
+  });
+
+  it("retries failed export jobs against the stored Apple playlist instead of creating duplicates", async () => {
+    vi.clearAllMocks();
+    vi.mocked(store.getPlaylist).mockResolvedValueOnce({
+      id: "playlist_1",
+      user_id: "user_1",
+      name: "Ukrainian Rap",
+      description: "High energy.",
+      status: "active",
+      apple_playlist_id: "apple_playlist_existing"
+    });
+    vi.mocked(store.getGeneration).mockResolvedValueOnce({
+      id: "generation_1",
+      user_id: "user_1",
+      playlist_id: "playlist_1",
+      status: "failed" as const
+    });
+    const createLibraryPlaylist = vi.fn(async () => ({ id: "apple_playlist_duplicate" }));
+    const addTracksToPlaylist = vi.fn(async () => undefined);
+
+    const result = await exportPlaylistGenerationToAppleMusic({
+      store,
+      userId: "user_1",
+      playlistId: "playlist_1",
+      generationId: "generation_1",
+      exportId: "export_1",
+      createDeveloperToken: vi.fn(async () => ({
+        developerToken: "developer_token",
+        expiresAt: "2026-06-09T00:00:00.000Z"
+      })),
+      decryptUserToken: vi.fn(() => "music_user_token"),
+      createLibraryPlaylist,
+      addTracksToPlaylist
+    });
+
+    expect(result).toEqual({
+      status: "exported",
+      playlistId: "playlist_1",
+      generationId: "generation_1",
+      applePlaylistId: "apple_playlist_existing",
+      selectedTrackCount: 1
+    });
+    expect(createLibraryPlaylist).not.toHaveBeenCalled();
+    expect(store.markApplePlaylistCreated).not.toHaveBeenCalled();
+    expect(addTracksToPlaylist).toHaveBeenCalledWith(
+      expect.any(Object),
+      "apple_playlist_existing",
+      [{ id: "song_1", type: "library-songs" }]
+    );
   });
 
   it("stores privacy-safe failure summaries when Apple Music export fails", async () => {
