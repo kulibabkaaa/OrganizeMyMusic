@@ -24,6 +24,9 @@ describe("platform smoke evidence script", () => {
     expect(source).toContain("SMOKE_USER_EMAIL");
     expect(source).toContain("SMOKE_EVIDENCE_STRICT");
     expect(source).toContain("maskEmail");
+    expect(source).toContain("maskId");
+    expect(source).toContain("profile=${maskId");
+    expect(source).toContain("latest=${maskId");
     expect(source).toContain("FAIL strict evidence");
     expect(source).toContain("playlist_generations");
     expect(source).toContain("playlist_exports");

@@ -36,7 +36,7 @@ SMOKE_EVIDENCE_STRICT=true SMOKE_USER_EMAIL=listener@example.com npm run smoke:e
 This prints masked user identity plus aggregate sync, playlist, generation,
 review, export, and new-music counts. It does not print track names, artist
 names, Apple Music user tokens, raw Apple payloads, recipe text, or playlist
-names.
+names. Internal user and sync IDs printed by the checker are masked.
 Strict mode exits non-zero if any completion row is still warning-only.
 It separately checks Sort-created playlists and the one-off playlist
 recipe/generation/export path. Those checks require linked rows on the same

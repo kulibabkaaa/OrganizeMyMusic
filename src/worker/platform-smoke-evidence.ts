@@ -191,7 +191,7 @@ async function run() {
       result(
         "smoke user",
         "pass",
-        `profile=${profile.id}, email=${maskEmail(profile.email ?? smokeUserEmail)}`
+        `profile=${maskId(profile.id)}, email=${maskEmail(profile.email ?? smokeUserEmail)}`
       ),
       result(
         "Apple Music connection",
@@ -202,7 +202,7 @@ async function run() {
         "library sync",
         completedSyncs.length > 0 && latestOwnership > 0 ? "pass" : "fail",
         latestSync
-          ? `latest=${latestSync.id}, status=${latestSync.status}, completed=${librarySyncSummary.completed_count}, raw=${latestSync.raw_track_count}, normalized=${latestSync.normalized_track_count}, duplicates=${latestSync.duplicate_count}, owned=${latestOwnership}`
+          ? `latest=${maskId(latestSync.id)}, status=${latestSync.status}, completed=${librarySyncSummary.completed_count}, raw=${latestSync.raw_track_count}, normalized=${latestSync.normalized_track_count}, duplicates=${latestSync.duplicate_count}, owned=${latestOwnership}`
           : "no syncs found"
       ),
       result(
@@ -627,6 +627,14 @@ function maskEmail(email: string): string {
   }
 
   return `${localPart.slice(0, 2)}***@${domain}`;
+}
+
+function maskId(value: string): string {
+  if (value.length <= 12) {
+    return "masked";
+  }
+
+  return `${value.slice(0, 8)}...${value.slice(-4)}`;
 }
 
 function printAndExit(checks: CheckResult[], failOnWarn = false): never {
