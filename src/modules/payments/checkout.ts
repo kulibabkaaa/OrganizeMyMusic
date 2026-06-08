@@ -8,7 +8,9 @@ export type CheckoutMode = "deferred" | "disabled" | "dev_bypass" | "stripe";
 export interface CheckoutSortSummary {
   id: string;
   name: string;
+  state: string;
   paymentStatus: string;
+  librarySyncId: string | null;
   recipeCount: number;
   estimatedTrackCount: number | null;
 }
@@ -39,6 +41,15 @@ export interface PaymentStore {
     userId: string;
   }): Promise<boolean>;
 }
+
+export type SortStartReadiness =
+  | {
+      status: "ready";
+    }
+  | {
+      status: "not_ready";
+      message: string;
+    };
 
 export function getCheckoutMode(config: Record<string, string | undefined> = env): CheckoutMode {
   if (isEnabled(config.PAYMENTS_ENABLED)) {
@@ -87,6 +98,31 @@ export function summarizeCheckout(input: {
           ? "Use approved dev bypass"
           : "Continue to billing"
   };
+}
+
+export function getSortStartReadiness(sort: CheckoutSortSummary): SortStartReadiness {
+  if (sort.state !== "preview_ready" && sort.state !== "paid") {
+    return {
+      status: "not_ready",
+      message: "Generate a reviewable preview before starting full organization."
+    };
+  }
+
+  if (!sort.librarySyncId) {
+    return {
+      status: "not_ready",
+      message: "Complete an Apple Music library sync before starting full organization."
+    };
+  }
+
+  if (sort.recipeCount === 0) {
+    return {
+      status: "not_ready",
+      message: "Add at least one Playlist Recipe before starting full organization."
+    };
+  }
+
+  return { status: "ready" };
 }
 
 export async function unlockSortWithDevBypass(input: {
@@ -169,7 +205,7 @@ export function createSupabasePaymentStore(supabase: SupabaseClient): PaymentSto
     async getSortForCheckout(input) {
       const { data, error } = await supabase
         .from("sort_runs")
-        .select("id,name,payment_status,preview_snapshot")
+        .select("id,name,state,payment_status,library_sync_id,preview_snapshot")
         .eq("id", input.sortRunId)
         .eq("user_id", input.userId)
         .maybeSingle();
@@ -195,7 +231,9 @@ export function createSupabasePaymentStore(supabase: SupabaseClient): PaymentSto
       return {
         id: data.id as string,
         name: (data.name as string | null) ?? "Untitled Sort",
+        state: data.state as string,
         paymentStatus: data.payment_status as string,
+        librarySyncId: (data.library_sync_id as string | null) ?? null,
         recipeCount: count ?? 0,
         estimatedTrackCount: estimateTracksFromPreview(data.preview_snapshot)
       };
@@ -237,6 +275,7 @@ async function markSortPaidWithZeroDollarPayment(input: {
     })
     .eq("id", input.sortRunId)
     .eq("user_id", input.userId)
+    .in("state", ["preview_ready", "paid"])
     .select("id")
     .maybeSingle();
 

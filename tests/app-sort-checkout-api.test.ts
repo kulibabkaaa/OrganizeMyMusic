@@ -54,6 +54,10 @@ const deferredUnlockMock = vi.mocked(unlockSortWithDeferredBilling);
 const bypassMock = vi.mocked(unlockSortWithDevBypass);
 const fullSortStoreMock = vi.mocked(createSupabaseFullSortStore);
 const queueFullSortMock = vi.mocked(queueFullSortAfterStart);
+const paymentStore = {
+  store: "payment",
+  getSortForCheckout: vi.fn()
+};
 
 describe("POST /api/app/sorts/[sortId]/start", () => {
   beforeEach(() => {
@@ -64,7 +68,16 @@ describe("POST /api/app/sorts/[sortId]/start", () => {
       supabase: null
     } as unknown as Awaited<ReturnType<typeof getAuthenticatedSession>>);
     serviceRoleMock.mockReturnValue({} as ReturnType<typeof createSupabaseServiceRoleClient>);
-    storeMock.mockReturnValue({ store: "payment" } as unknown as ReturnType<typeof createSupabasePaymentStore>);
+    paymentStore.getSortForCheckout.mockResolvedValue({
+      id: "sort_1",
+      name: "My Apple Music cleanup",
+      state: "preview_ready",
+      paymentStatus: "pending",
+      librarySyncId: "sync_1",
+      recipeCount: 3,
+      estimatedTrackCount: 90
+    });
+    storeMock.mockReturnValue(paymentStore as unknown as ReturnType<typeof createSupabasePaymentStore>);
     fullSortStoreMock.mockReturnValue({ store: "full-sort" } as unknown as ReturnType<typeof createSupabaseFullSortStore>);
     withPgBossMock.mockImplementation(async (callback) => callback({ queue: true } as never));
     modeMock.mockReturnValue("deferred");
@@ -129,7 +142,7 @@ describe("POST /api/app/sorts/[sortId]/start", () => {
     });
     expect(response.status).toBe(200);
     expect(deferredUnlockMock).toHaveBeenCalledWith({
-      store: { store: "payment" },
+      store: paymentStore,
       sortRunId: "sort_1",
       userId: "user_1"
     });
@@ -161,7 +174,7 @@ describe("POST /api/app/sorts/[sortId]/start", () => {
     expect(response.status).toBe(200);
     expect(deferredUnlockMock).not.toHaveBeenCalled();
     expect(bypassMock).toHaveBeenCalledWith({
-      store: { store: "payment" },
+      store: paymentStore,
       sortRunId: "sort_1",
       userId: "user_1"
     });
@@ -171,6 +184,30 @@ describe("POST /api/app/sorts/[sortId]/start", () => {
       sortRunId: "sort_1",
       userId: "user_1"
     });
+  });
+
+  it("does not unlock or queue when the Sort is missing start prerequisites", async () => {
+    paymentStore.getSortForCheckout.mockResolvedValueOnce({
+      id: "sort_1",
+      name: "Draft cleanup",
+      state: "draft",
+      paymentStatus: "pending",
+      librarySyncId: null,
+      recipeCount: 0,
+      estimatedTrackCount: null
+    });
+
+    const response = await startPost(new Request("http://test.local"), {
+      params: Promise.resolve({ sortId: "sort_1" })
+    });
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Generate a reviewable preview before starting full organization."
+    });
+    expect(response.status).toBe(409);
+    expect(deferredUnlockMock).not.toHaveBeenCalled();
+    expect(bypassMock).not.toHaveBeenCalled();
+    expect(queueFullSortMock).not.toHaveBeenCalled();
   });
 });
 

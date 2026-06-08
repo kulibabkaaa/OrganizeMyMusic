@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getCheckoutMode,
+  getSortStartReadiness,
   summarizeCheckout
 } from "@/modules/payments/checkout";
 
@@ -46,6 +47,32 @@ describe("payments checkout", () => {
         "Create Apple Music playlists and add approved tracks"
       ],
       ctaLabel: "Generate full results"
+    });
+  });
+
+  it("requires preview-ready state, library sync, and recipes before start", () => {
+    const startableSort = {
+      id: "sort_1",
+      name: "My Apple Music cleanup",
+      state: "preview_ready",
+      paymentStatus: "pending",
+      librarySyncId: "sync_1",
+      recipeCount: 3,
+      estimatedTrackCount: 90
+    };
+
+    expect(getSortStartReadiness(startableSort)).toEqual({ status: "ready" });
+    expect(getSortStartReadiness({ ...startableSort, state: "draft" })).toEqual({
+      status: "not_ready",
+      message: "Generate a reviewable preview before starting full organization."
+    });
+    expect(getSortStartReadiness({ ...startableSort, librarySyncId: null })).toEqual({
+      status: "not_ready",
+      message: "Complete an Apple Music library sync before starting full organization."
+    });
+    expect(getSortStartReadiness({ ...startableSort, recipeCount: 0 })).toEqual({
+      status: "not_ready",
+      message: "Add at least one Playlist Recipe before starting full organization."
     });
   });
 });

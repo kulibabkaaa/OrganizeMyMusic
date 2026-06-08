@@ -7,6 +7,7 @@ import {
   createStripeCheckoutForSort,
   createSupabasePaymentStore,
   getCheckoutMode,
+  getSortStartReadiness,
   unlockSortWithDeferredBilling,
   unlockSortWithDevBypass
 } from "@/modules/payments/checkout";
@@ -44,19 +45,33 @@ export async function POST(
   }
 
   const { sortId } = await context.params;
+  const paymentStore = createSupabasePaymentStore(supabase);
+  const sort = await paymentStore.getSortForCheckout({
+    sortRunId: sortId,
+    userId: session.user.id
+  });
+
+  if (!sort) {
+    return NextResponse.json({ error: "Sort not found." }, { status: 404 });
+  }
+
+  const readiness = getSortStartReadiness(sort);
+
+  if (readiness.status === "not_ready") {
+    return NextResponse.json({ error: readiness.message }, { status: 409 });
+  }
 
   if (mode === "deferred" || mode === "dev_bypass") {
     const result = await withPgBoss(async (queue) => {
-      const store = createSupabasePaymentStore(supabase);
       const payment =
         mode === "deferred"
           ? await unlockSortWithDeferredBilling({
-              store,
+              store: paymentStore,
               sortRunId: sortId,
               userId: session.user.id
             })
           : await unlockSortWithDevBypass({
-              store,
+              store: paymentStore,
               sortRunId: sortId,
               userId: session.user.id
             });

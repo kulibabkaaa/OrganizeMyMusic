@@ -157,6 +157,10 @@ Latest local audit on 2026-06-08:
 - Logger redaction now explicitly covers canonical server secret keys including
   `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `APPLE_PRIVATE_KEY`, and
   `ENCRYPTION_KEY`.
+- Full-organization start now checks for a reviewable preview state, completed
+  library sync reference, and at least one Playlist Recipe before writing the
+  deferred billing unlock marker or queueing the worker, so direct API calls
+  cannot turn incomplete drafts into failed started Sorts.
 - Playlist API regressions now cover cross-user attempts to read, mutate, edit
   recipes, review tracks, generate, and export another user's playlist.
 - Archived app playlists now cannot be reopened in the playlist workspace or
