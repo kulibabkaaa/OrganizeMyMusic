@@ -47,6 +47,8 @@ export function PlaylistDetailWorkspace({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
+  const [isSavingReview, setIsSavingReview] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -57,11 +59,14 @@ export function PlaylistDetailWorkspace({
     [generation]
   );
   const removedCount = (generation?.tracks.length ?? 0) - keptCount;
+  const isReviewComplete =
+    generation?.generation.status === "reviewed" ||
+    generation?.generation.status === "exporting" ||
+    generation?.generation.status === "exported";
   const canExport =
     Boolean(generation) &&
     keptCount > 0 &&
-    generation?.generation.status !== "exporting" &&
-    generation?.generation.status !== "exported";
+    generation?.generation.status === "reviewed";
 
   async function saveRecipe(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,6 +166,48 @@ export function PlaylistDetailWorkspace({
       router.refresh();
     } finally {
       setIsExporting(false);
+    }
+  }
+
+  async function markReviewComplete() {
+    if (!generation || generation.tracks.length === 0) {
+      return;
+    }
+
+    setIsSavingReview(true);
+    setDecisionError(null);
+    setDecisionMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/app/playlists/${encodeURIComponent(
+          playlist.id
+        )}/generations/${encodeURIComponent(generation.generation.id)}/tracks`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            decisions: generation.tracks.map((track) => ({
+              trackId: track.id,
+              decision: track.decision
+            }))
+          })
+        }
+      );
+      const payload = (await response.json().catch(() => null)) as
+        | { generation?: PlaylistGenerationView; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.generation) {
+        setDecisionError(payload?.error ?? "Track review could not be saved.");
+        return;
+      }
+
+      setGeneration(payload.generation);
+      setDecisionMessage("Review saved. Export is now available.");
+      router.refresh();
+    } finally {
+      setIsSavingReview(false);
     }
   }
 
@@ -393,6 +440,11 @@ export function PlaylistDetailWorkspace({
               {decisionError}
             </p>
           ) : null}
+          {decisionMessage ? (
+            <p className="mt-5 rounded-[1rem] border border-[rgba(47,212,133,0.24)] bg-[rgba(47,212,133,0.10)] px-4 py-3 text-sm text-platform-success">
+              {decisionMessage}
+            </p>
+          ) : null}
 
           <div className="mt-6">
             {generation && generation.tracks.length > 0 ? (
@@ -464,7 +516,9 @@ export function PlaylistDetailWorkspace({
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
             <div>
-              <p className="text-sm font-medium text-white">Ready after review</p>
+              <p className="text-sm font-medium text-white">
+                {isReviewComplete ? "Review saved" : "Ready after review"}
+              </p>
               <p className="mt-1 text-sm text-platform-secondary">
                 {keptCount} approved {keptCount === 1 ? "track" : "tracks"} will be added.
               </p>
@@ -479,14 +533,33 @@ export function PlaylistDetailWorkspace({
                 {exportMessage}
               </p>
             ) : null}
-            <Button
-              disabled={!canExport || isExporting}
-              variant={!canExport ? "disabled" : "primary"}
-              className="min-w-56"
-              onClick={exportGeneration}
-            >
-              {isExporting ? "Exporting..." : "Create Apple Music playlist"}
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                disabled={
+                  !generation ||
+                  generation.tracks.length === 0 ||
+                  isReviewComplete ||
+                  isSavingReview
+                }
+                variant={!generation || isReviewComplete ? "disabled" : "glass"}
+                className="min-w-48"
+                onClick={markReviewComplete}
+              >
+                {isSavingReview
+                  ? "Saving Review..."
+                  : isReviewComplete
+                    ? "Review Saved"
+                    : "Mark Review Complete"}
+              </Button>
+              <Button
+                disabled={!canExport || isExporting}
+                variant={!canExport ? "disabled" : "primary"}
+                className="min-w-56"
+                onClick={exportGeneration}
+              >
+                {isExporting ? "Exporting..." : "Create Apple Music playlist"}
+              </Button>
+            </div>
           </div>
         </Card>
       </section>

@@ -41,6 +41,8 @@ Latest local audit on 2026-06-08:
 - Playlist PATCH now rejects client attempts to set server-managed Apple Music
   export fields, so MVP exports cannot be redirected to arbitrary Apple Music
   playlists through the public API.
+- Playlist generation export now requires a saved track review before queuing
+  Apple Music writes; `ready_for_review` generations cannot be exported.
 - Hosted Supabase has platform migrations `platform_playlists` and
   `fix_playlists_updated_at_default` applied.
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
