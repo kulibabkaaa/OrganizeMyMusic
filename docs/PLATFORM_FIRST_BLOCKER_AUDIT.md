@@ -132,6 +132,9 @@ Latest local audit on 2026-06-08:
 - Playlist generation export queue handoff failures now mark the generation and
   export row failed with a privacy-safe summary instead of leaving them stuck in
   `exporting`.
+- Individual playlist export now stores the created Apple playlist ID before
+  adding tracks, and worker retries for the same export job can reuse a failed
+  generation's stored Apple playlist instead of creating duplicate playlists.
 - Playlist API regressions now cover cross-user attempts to read, mutate, edit
   recipes, review tracks, generate, and export another user's playlist.
 - Archived app playlists now cannot be reopened in the playlist workspace or
