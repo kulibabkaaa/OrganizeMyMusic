@@ -39,6 +39,7 @@ describe("production smoke checklist doc", () => {
       "playlist_recipes_scope_check",
       "idx_payments_unique_zero_dollar_sort_unlock",
       "npm run smoke:preflight",
+      "npm run smoke:evidence",
       "PLATFORM_FIRST_SMOKE_EVIDENCE.md",
       "playlists.updated_at",
       "Rollback/reset notes",

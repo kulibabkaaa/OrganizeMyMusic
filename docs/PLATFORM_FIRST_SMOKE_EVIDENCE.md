@@ -21,6 +21,17 @@ This command is read-only. It checks production health, signed-out production
 routes, and Vercel/Railway GitHub deployment statuses. It does not connect Apple
 Music, start sync jobs, create playlist jobs, or write Apple Music playlists.
 
+After the manual smoke actions, run the read-only database evidence checker:
+
+```bash
+SMOKE_USER_EMAIL=listener@example.com npm run smoke:evidence
+```
+
+This prints masked user identity plus aggregate sync, playlist, generation,
+review, export, and new-music counts. It does not print track names, artist
+names, Apple Music user tokens, raw Apple payloads, recipe text, or playlist
+names.
+
 Record the output here before each manual smoke run:
 
 ```text
@@ -98,6 +109,7 @@ Duplicate queue check:
 
 Logs reviewed:
 Token/secret exposure check:
+Smoke evidence command output:
 Partial failures:
 Known limitations:
 Final result:

@@ -98,6 +98,9 @@ library data and creates real playlists only after explicit confirmation.
 40. Record any partial failures and retry behavior.
 41. Update `docs/PLATFORM_FIRST_SMOKE_EVIDENCE.md` with the full result before
     claiming the platform-first MVP goal is complete.
+42. Run `SMOKE_USER_EMAIL=listener@example.com npm run smoke:evidence` and add
+    its aggregate output to the evidence log. This command is read-only and
+    must not print track names, recipe text, raw Apple payloads, or tokens.
 
 ## Historical Sort-first smoke path
 

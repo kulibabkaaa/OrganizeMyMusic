@@ -17,7 +17,8 @@
     "worker": "tsx src/worker/index.ts",
     "worker:check": "tsx src/worker/healthcheck.ts",
     "platform:check": "tsx src/worker/platform-readiness.ts",
-    "smoke:preflight": "tsx src/worker/production-smoke-preflight.ts"
+    "smoke:preflight": "tsx src/worker/production-smoke-preflight.ts",
+    "smoke:evidence": "tsx src/worker/platform-smoke-evidence.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
