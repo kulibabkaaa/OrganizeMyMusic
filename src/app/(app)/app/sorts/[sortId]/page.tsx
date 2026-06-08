@@ -26,7 +26,7 @@ export default async function AppSortStatusPage({
   }
 
   if (previewResult.status !== "ready") {
-    redirect(`/sorts/${encodeURIComponent(sortId)}` as Route);
+    redirect(`/app/sorts/${encodeURIComponent(sortId)}/builder` as Route);
   }
 
   const status = getSortUiStatus({

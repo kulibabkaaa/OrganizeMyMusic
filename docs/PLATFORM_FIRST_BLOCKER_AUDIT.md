@@ -22,6 +22,8 @@ Latest local audit on 2026-06-08:
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.
 - Legacy dashboard and checkout helpers now point users at canonical
   `/app/sorts/*` routes while compatibility routes remain available.
+- The canonical `/app/sorts/:sortId` status route no longer falls back to the
+  legacy `/sorts/:id` preview page when preview data is not ready.
 - The playlist hub and playlist detail screens were simplified to reduce
   always-visible metrics, safety panels, and history blocks.
 - Dashboard queue metrics now route directly to saved playlists, playlist review,
