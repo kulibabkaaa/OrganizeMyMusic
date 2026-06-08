@@ -108,8 +108,9 @@ Latest local audit on 2026-06-08:
   runtime logs in the prior 2 hours and no production error/fatal runtime logs
   in the prior 24 hours.
 - `npm run typecheck`, `npm run lint`, and `npm run test` pass locally.
-- `npm run platform:check` passes with required env, migrations, RLS, linking
-  columns, recipe scope, worker queue registration, and no queued MVP jobs.
+- `npm run platform:check` passes with required env, encryption-key strength,
+  migrations, RLS, linking columns, recipe scope, worker queue registration,
+  and no queued MVP jobs.
 - Local `npm run build` passes with Next.js `15.5.19`; Vercel preview also
   passes for the PR branch.
 

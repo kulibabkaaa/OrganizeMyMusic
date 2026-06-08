@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decryptWithKey, encryptWithKey } from "@/lib/crypto";
+import { decryptWithKey, encryptWithKey, getEncryptionKeyValidationError } from "@/lib/crypto";
 
 const validTestKey = "test-encryption-key-with-at-least-32-bytes";
 
@@ -24,5 +24,9 @@ describe("token encryption", () => {
     expect(() => encryptWithKey("music-user-token", "short-key")).toThrow(
       "ENCRYPTION_KEY must be at least 32 bytes."
     );
+    expect(getEncryptionKeyValidationError("short-key")).toBe(
+      "ENCRYPTION_KEY must be at least 32 bytes."
+    );
+    expect(getEncryptionKeyValidationError(validTestKey)).toBeNull();
   });
 });

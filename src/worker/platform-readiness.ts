@@ -47,7 +47,10 @@ function result(name: string, status: CheckStatus, detail: string): CheckResult 
 }
 
 async function run() {
-  const [{ env }] = await Promise.all([import("@/lib/env")]);
+  const [{ env }, { getEncryptionKeyValidationError }] = await Promise.all([
+    import("@/lib/env"),
+    import("@/lib/crypto")
+  ]);
   const checks: CheckResult[] = [];
 
   const missingEnv = requiredEnvKeys.filter((key) => !env[key]);
@@ -56,6 +59,16 @@ async function run() {
       "required server env",
       missingEnv.length === 0 ? "pass" : "fail",
       missingEnv.length === 0 ? "all required keys are present" : `missing: ${missingEnv.join(", ")}`
+    )
+  );
+  const encryptionKeyError = env.ENCRYPTION_KEY
+    ? getEncryptionKeyValidationError(env.ENCRYPTION_KEY)
+    : "ENCRYPTION_KEY is missing";
+  checks.push(
+    result(
+      "encryption key strength",
+      encryptionKeyError ? "fail" : "pass",
+      encryptionKeyError ?? "ENCRYPTION_KEY meets minimum strength"
     )
   );
 
