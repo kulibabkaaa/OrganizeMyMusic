@@ -8,6 +8,6 @@ export async function POST(
   return NextResponse.json({
     error: "Legacy checkout is disabled. Start full-library organization from the platform workflow.",
     nextPath: `/app/sorts/${encodeURIComponent(id)}/start`,
-    nextApiPath: `/api/app/sorts/${encodeURIComponent(id)}/checkout`
+    nextApiPath: `/api/app/sorts/${encodeURIComponent(id)}/start`
   }, { status: 409 });
 }

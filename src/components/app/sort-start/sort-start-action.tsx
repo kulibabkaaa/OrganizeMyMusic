@@ -21,7 +21,7 @@ export function SortStartAction({
   function startFullOrganization() {
     setError(null);
     startTransition(async () => {
-      const response = await fetch(`/api/app/sorts/${encodeURIComponent(sortId)}/checkout`, {
+      const response = await fetch(`/api/app/sorts/${encodeURIComponent(sortId)}/start`, {
         method: "POST"
       });
       const payload = (await response.json().catch(() => null)) as

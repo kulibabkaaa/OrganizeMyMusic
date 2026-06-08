@@ -223,7 +223,7 @@ describe("POST /api/sort-runs/[id]/checkout", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Legacy checkout is disabled. Start full-library organization from the platform workflow.",
       nextPath: "/app/sorts/sort_1/start",
-      nextApiPath: "/api/app/sorts/sort_1/checkout"
+      nextApiPath: "/api/app/sorts/sort_1/start"
     });
     expect(response.status).toBe(409);
     expect(withPgBossMock).not.toHaveBeenCalled();

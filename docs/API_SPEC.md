@@ -237,9 +237,9 @@ Rules:
 - Requires at least one playlist recipe.
 - Does not write to Apple Music.
 
-### `POST /api/app/sorts/:sortId/checkout`
+### `POST /api/app/sorts/:sortId/start`
 
-Internal start endpoint used by `/app/sorts/:sortId/start`. In the default
+Canonical start endpoint used by `/app/sorts/:sortId/start`. In the default
 MVP configuration it starts billing-deferred full-library organization. If
 payments are explicitly enabled, it can create a Stripe billing session.
 
@@ -249,6 +249,11 @@ Rules:
 - Queues `full-sort` when billing-deferred access, Stripe billing, or the
   approved development bypass unlocks processing.
 - Does not write to Apple Music.
+
+### `POST /api/app/sorts/:sortId/checkout`
+
+Compatibility endpoint for older app clients. It reuses
+`POST /api/app/sorts/:sortId/start`.
 
 ### `POST /api/app/sorts/:sortId/export`
 
@@ -292,7 +297,7 @@ Rules:
 - Does not unlock full-organization processing.
 - Does not mark a Sort paid.
 - New app surfaces must route users through `/app/sorts/:sortId/start`; that
-  page calls `POST /api/app/sorts/:sortId/checkout` internally.
+  page calls `POST /api/app/sorts/:sortId/start` internally.
 
 ### `GET /api/sort-runs/:sortRunId`
 

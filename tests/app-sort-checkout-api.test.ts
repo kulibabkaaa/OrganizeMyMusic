@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { POST } from "@/app/api/app/sorts/[sortId]/checkout/route";
+import { POST as checkoutPost } from "@/app/api/app/sorts/[sortId]/checkout/route";
+import { POST as startPost } from "@/app/api/app/sorts/[sortId]/start/route";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { withPgBoss } from "@/lib/pg-boss";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
@@ -54,7 +55,7 @@ const bypassMock = vi.mocked(unlockSortWithDevBypass);
 const fullSortStoreMock = vi.mocked(createSupabaseFullSortStore);
 const queueFullSortMock = vi.mocked(queueFullSortAfterStart);
 
-describe("POST /api/app/sorts/[sortId]/checkout", () => {
+describe("POST /api/app/sorts/[sortId]/start", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authMock.mockResolvedValue({
@@ -89,7 +90,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       supabase: null
     });
 
-    const response = await POST(new Request("http://test.local"), {
+    const response = await startPost(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
 
@@ -97,10 +98,10 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
     expect(response.status).toBe(401);
   });
 
-  it("keeps checkout blocked when the mode is explicitly disabled", async () => {
+  it("keeps start blocked when the mode is explicitly disabled", async () => {
     modeMock.mockReturnValueOnce("disabled");
 
-    const response = await POST(new Request("http://test.local"), {
+    const response = await startPost(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
 
@@ -113,7 +114,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
   });
 
   it("unlocks the Sort through deferred billing and queues full organization by default", async () => {
-    const response = await POST(new Request("http://test.local"), {
+    const response = await startPost(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
 
@@ -144,7 +145,7 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
   it("keeps the explicit dev bypass path available when configured", async () => {
     modeMock.mockReturnValueOnce("dev_bypass");
 
-    const response = await POST(new Request("http://test.local"), {
+    const response = await startPost(new Request("http://test.local"), {
       params: Promise.resolve({ sortId: "sort_1" })
     });
 
@@ -170,5 +171,11 @@ describe("POST /api/app/sorts/[sortId]/checkout", () => {
       sortRunId: "sort_1",
       userId: "user_1"
     });
+  });
+});
+
+describe("POST /api/app/sorts/[sortId]/checkout compatibility", () => {
+  it("reuses the canonical full-organization start handler", () => {
+    expect(checkoutPost).toBe(startPost);
   });
 });

@@ -23,6 +23,9 @@ Latest local audit on 2026-06-08:
   payment-first names while preserving existing stored state compatibility.
 - `/app/sorts/:sortId/start` is now the canonical full-organization start
   route; legacy `/app/sorts/:sortId/checkout` redirects there for compatibility.
+- `/api/app/sorts/:sortId/start` is now the canonical full-organization start
+  API; legacy `/api/app/sorts/:sortId/checkout` reuses the same handler for
+  compatibility.
 - Unused legacy Sort preview/action components were removed, so stale client
   code no longer points at disabled legacy write/start endpoints.
 - Dashboard and connected-library settings no longer surface Spotify or YouTube
@@ -85,7 +88,7 @@ Latest local audit on 2026-06-08:
   invalid playlist-generation export states before any export row or queue job
   is created.
 - Legacy `/api/sort-runs/:id/checkout` now returns `409` and cannot mark a Sort
-  paid; full organization starts through authenticated `/api/app/sorts/:sortId/checkout`.
+  paid; full organization starts through authenticated `/api/app/sorts/:sortId/start`.
 - Disabled legacy Sort write/start endpoints now include platform `nextPath`
   and `nextApiPath` guidance, so stale clients get actionable migration routes
   without re-enabling legacy Apple Music writes.
