@@ -459,6 +459,12 @@ export function SortBuilderTopBar({ autosaveStatus }: { autosaveStatus: Autosave
           >
             Drafts
           </Link>
+          <Link
+            href="/app/playlists"
+            className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.05] px-4 text-sm font-semibold text-platform-secondary transition hover:-translate-y-0.5 hover:bg-white/[0.09] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-platform-pink"
+          >
+            Playlist Hub
+          </Link>
         </nav>
         <div className="min-w-0 lg:flex lg:justify-end">
           <AutosaveStatusBadge status={autosaveStatus} id="sort-builder-top-autosave-status" />

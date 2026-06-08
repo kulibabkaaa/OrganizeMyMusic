@@ -108,11 +108,11 @@ export function SortBuilderFooter({
               aria-describedby={previewDescriptionIds || undefined}
               onClick={onPreview}
             >
-              {isSaving ? "Saving..." : "Generate Playlists"}
+              {isSaving ? "Saving..." : "Generate Review"}
             </Button>
           ) : (
             <Button variant="disabled" aria-describedby={previewDescriptionIds || undefined}>
-              Generate Playlists
+              Generate Review
             </Button>
           )}
         </div>

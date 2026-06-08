@@ -3,7 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { getSubmitLabel, NewPlaylistForm } from "@/components/app/playlists/new-playlist-form";
-import { PlaylistDetailWorkspace } from "@/components/app/playlists/playlist-detail-workspace";
+import {
+  PlaylistDetailWorkspace,
+  PlaylistExportConfirmationDialog
+} from "@/components/app/playlists/playlist-detail-workspace";
 import { PlaylistsPage } from "@/components/app/playlists/playlists-page";
 import type { PlaylistGenerationView } from "@/modules/playlists/generation-store";
 import type { PersistentPlaylist } from "@/types/domain";
@@ -198,6 +201,7 @@ describe("playlists page", () => {
     expect(markup).toContain("Review proposed tracks");
     expect(markup).toContain("Rap Track");
     expect(markup).toContain("Remove");
+    expect(markup).toContain("Regenerate Playlist");
     expect(markup).toContain("Mark Review Complete");
     expect(markup).toContain("Create Apple Music playlist");
     expect(markup).toContain("Archive Playlist");
@@ -235,5 +239,24 @@ describe("playlists page", () => {
     expect(markup).toContain("Review new music suggestions");
     expect(markup).toContain("These tracks were suggested from your latest library sync.");
     expect(markup).toContain("new music");
+  });
+
+  it("renders an explicit playlist export confirmation dialog", () => {
+    const markup = renderToStaticMarkup(
+      <PlaylistExportConfirmationDialog
+        isOpen
+        playlistName="Ukrainian Rap"
+        approvedTrackCount={18}
+        onClose={() => undefined}
+        onConfirm={() => undefined}
+      />
+    );
+
+    expect(markup).toContain("Explicit confirmation required");
+    expect(markup).toContain("Create Apple Music playlist?");
+    expect(markup).toContain("Export Ukrainian Rap and add 18 approved tracks");
+    expect(markup).toContain("Existing Apple Music playlists will not be replaced, reordered, or removed.");
+    expect(markup).toContain("Cancel");
+    expect(markup).toContain("Create Apple Music playlist");
   });
 });

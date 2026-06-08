@@ -3,7 +3,10 @@ import { z, ZodError } from "zod";
 
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
-import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
+import {
+  createSupabasePlaylistGenerationStore,
+  PlaylistGenerationTrackNotFoundError
+} from "@/modules/playlists/generation-store";
 import { createSupabasePlaylistStore } from "@/modules/playlists/store";
 
 const decisionSchema = z.object({
@@ -70,6 +73,10 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ error: "Invalid track decision payload." }, { status: 400 });
+    }
+
+    if (error instanceof PlaylistGenerationTrackNotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
     throw error;

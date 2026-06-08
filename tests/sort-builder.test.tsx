@@ -335,7 +335,7 @@ describe("SortBuilder", () => {
     expect(markup).not.toContain("Move up");
     expect(markup).not.toContain("Move down");
     expect(markup).not.toContain("Save draft");
-    expect(markup).toContain("Generate Playlists");
+    expect(markup).toContain("Generate Review");
     expect(markup).toContain("You can save this draft now. Preview becomes available when the library index is ready.");
   });
 
@@ -369,7 +369,7 @@ describe("SortBuilder", () => {
     expect(markup).not.toContain("Confirm to remove this playlist from the Sort.");
     expect(markup).not.toContain("Keep at least one playlist in this Sort.");
     expect(markup).toContain("2 playlists planned");
-    expect(markup).toContain("Generate Playlists");
+    expect(markup).toContain("Generate Review");
     expect(markup).toContain("Draft autosaves.");
     expect(markup).toContain("Last saved May 26, 2026, 10:00 AM UTC");
   });
@@ -461,7 +461,7 @@ describe("SortBuilder", () => {
     expect(failedMarkup).toContain('aria-describedby="sort-builder-autosave-status"');
   });
 
-  it("renders a persistent top bar with Sorts navigation, Drafts, and autosave status", () => {
+  it("renders a persistent top bar with Sorts, Drafts, Playlist Hub, and autosave status", () => {
     const markup = renderToStaticMarkup(
       <SortBuilderTopBar
         autosaveStatus={{
@@ -478,6 +478,8 @@ describe("SortBuilder", () => {
     expect(markup).toContain('href="/app/sorts"');
     expect(markup).toContain("Drafts");
     expect(markup).toContain('href="/app/sorts?status=draft"');
+    expect(markup).toContain("Playlist Hub");
+    expect(markup).toContain('href="/app/playlists"');
     expect(markup).toContain('id="sort-builder-top-autosave-status"');
     expect(markup).toContain("Saved just now");
   });

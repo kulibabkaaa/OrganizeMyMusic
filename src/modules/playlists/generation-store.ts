@@ -72,6 +72,13 @@ export interface PlaylistGenerationHistoryItem {
   trackCount: number | null;
 }
 
+export class PlaylistGenerationTrackNotFoundError extends Error {
+  constructor() {
+    super("Playlist generation track not found.");
+    this.name = "PlaylistGenerationTrackNotFoundError";
+  }
+}
+
 export type GeneratePlaylistResult =
   | {
       status: "generated";
@@ -298,12 +305,18 @@ export function createSupabasePlaylistGenerationStore(
             .update({ decision: item.decision })
             .eq("id", item.trackId)
             .eq("generation_id", input.generationId)
+            .select("id")
+            .maybeSingle()
         )
       );
       const error = updates.find((update) => update.error)?.error;
 
       if (error) {
         throw new Error(error.message);
+      }
+
+      if (updates.some((update) => !update.data)) {
+        throw new PlaylistGenerationTrackNotFoundError();
       }
 
       if (input.markReviewed && generation.status === "ready_for_review") {
