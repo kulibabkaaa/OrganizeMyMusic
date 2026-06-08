@@ -11,6 +11,8 @@ Latest local audit on 2026-06-08:
 - `full-sort` is registered in the persistent worker bootstrap.
 - Individual playlist generation exports are queued through `playlist-generation-export`.
 - `/api/app/sorts/*` and playlist generation/export API docs match the implemented routes.
+- `GET /api/app/playlists/:playlistId` returns the playlist, recipe, latest
+  generation, and generation history for playlist hub clients.
 - Legacy Sort preview navigation points into `/app/sorts/*`.
 - Legacy payment-first Sort copy has been softened for deferred billing.
 - `/app` is the canonical dashboard route and `/dashboard` redirects there.

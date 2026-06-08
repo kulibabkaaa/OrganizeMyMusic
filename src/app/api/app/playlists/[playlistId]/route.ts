@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { getAuthenticatedSession } from "@/lib/auth/session";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/admin";
 import { createSupabasePlaylistRecipeStore } from "@/modules/playlist-recipes/store";
+import { createSupabasePlaylistGenerationStore } from "@/modules/playlists/generation-store";
 import { createSupabasePlaylistStore } from "@/modules/playlists/store";
 
 export async function GET(
@@ -16,15 +17,27 @@ export async function GET(
     return contextResult;
   }
 
-  const { playlist, recipeStore, session } = contextResult;
-  const recipes = await recipeStore.listRecipesForPlaylist({
-    userId: session.user.id,
-    playlistId: playlist.id
-  });
+  const { generationStore, playlist, recipeStore, session } = contextResult;
+  const [recipes, latestGeneration, generationHistory] = await Promise.all([
+    recipeStore.listRecipesForPlaylist({
+      userId: session.user.id,
+      playlistId: playlist.id
+    }),
+    generationStore.getLatestGeneration({
+      userId: session.user.id,
+      playlistId: playlist.id
+    }),
+    generationStore.listGenerationHistory({
+      userId: session.user.id,
+      playlistId: playlist.id
+    })
+  ]);
 
   return NextResponse.json({
     playlist,
-    recipe: recipes[0] ?? null
+    recipe: recipes[0] ?? null,
+    latestGeneration,
+    generationHistory
   });
 }
 
@@ -90,6 +103,7 @@ async function getPlaylistItemRouteContext(context: {
     session,
     playlist,
     playlistStore,
+    generationStore: createSupabasePlaylistGenerationStore(supabase),
     recipeStore: createSupabasePlaylistRecipeStore(supabase)
   };
 }
