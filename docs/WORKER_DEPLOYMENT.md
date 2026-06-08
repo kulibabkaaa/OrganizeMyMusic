@@ -175,8 +175,8 @@ playlist-create
 playlist-generation-export
 ```
 
-`full-sort` generates reviewed full-library Sort output after billing-deferred
-start, checkout, or approved dev bypass. `playlist-create` writes reviewed
-full-Sort batches.
+`full-sort` generates reviewed full-library Sort output after the user starts
+full organization through billing-deferred access or approved dev bypass.
+`playlist-create` writes reviewed full-Sort batches.
 `playlist-generation-export` writes one reviewed persistent playlist generation
 from `/app/playlists`.

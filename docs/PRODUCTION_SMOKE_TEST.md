@@ -51,8 +51,8 @@ library data and creates real playlists only after explicit confirmation.
     - Ukrainian rap
     - gym rap
     - sad Slavic songs
-16. Start the full Sort with billing deferred. If Stripe is explicitly enabled,
-    use checkout; use development bypass only in approved local/staging smoke.
+16. Start full organization from `/app/sorts/{sortId}/start` with billing
+    deferred; use development bypass only in approved local/staging smoke.
 17. Full Sort processing.
 18. Review playlist names, descriptions, track counts, and included tracks.
 19. Deselect playlists or remove tracks that should not be created.
@@ -101,8 +101,9 @@ platform-first completion gate.
     - Ukrainian rap
     - gym rap
     - sad Slavic songs
-13. Start the full Sort with billing deferred, checkout, or approved
-    development bypass depending on environment configuration.
+13. Start full organization from `/app/sorts/{sortId}/start` with billing
+    deferred or approved development bypass depending on environment
+    configuration.
 14. Full Sort processing.
 15. Review playlist names, descriptions, track counts, and included tracks.
 16. Deselect or remove anything that should not be created.

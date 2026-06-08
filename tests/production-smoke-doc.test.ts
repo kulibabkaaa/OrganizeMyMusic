@@ -15,7 +15,7 @@ describe("production smoke checklist doc", () => {
       "at least three playlist recipes",
       "Sort Builder shows playlist plans on the left",
       "Preview generation",
-      "Start the full Sort with billing deferred",
+      "Start full organization from `/app/sorts/{sortId}/start`",
       "Full Sort processing",
       "Review",
       "Explicit export to Apple Music",

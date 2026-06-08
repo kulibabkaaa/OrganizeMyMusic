@@ -1,12 +1,12 @@
 import React from "react";
 
-import { CheckoutAction } from "@/components/app/checkout/checkout-action";
+import { SortStartAction } from "@/components/app/sort-start/sort-start-action";
 import { WorkflowEscapeActions } from "@/components/app/workflow-escape-actions";
 import { Card } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import type { CheckoutMode, CheckoutSummary } from "@/modules/payments/checkout";
 
-export function CheckoutPage({
+export function SortStartPage({
   sortId,
   mode,
   summary
@@ -86,7 +86,7 @@ export function CheckoutPage({
           </p>
         ) : null}
 
-        <CheckoutAction
+        <SortStartAction
           sortId={sortId}
           ctaLabel={summary.ctaLabel}
           disabled={isDisabled}

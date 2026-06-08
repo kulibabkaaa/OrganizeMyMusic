@@ -235,12 +235,15 @@ Rules:
 
 ### `POST /api/app/sorts/:sortId/checkout`
 
-Starts checkout or dev-bypass processing for a Sort.
+Internal start endpoint used by `/app/sorts/:sortId/start`. In the default
+MVP configuration it starts billing-deferred full-library organization. If
+payments are explicitly enabled, it can create a Stripe billing session.
 
 Rules:
 
 - Requires authenticated user.
-- Queues `full-sort` when checkout/dev-bypass unlocks processing.
+- Queues `full-sort` when billing-deferred access, Stripe billing, or the
+  approved development bypass unlocks processing.
 - Does not write to Apple Music.
 
 ### `POST /api/app/sorts/:sortId/export`
@@ -324,7 +327,8 @@ Rules:
 
 - Does not unlock full Sort processing.
 - Does not mark a Sort paid.
-- New app surfaces must use `POST /api/app/sorts/:sortId/checkout`.
+- New app surfaces must route users through `/app/sorts/:sortId/start`; that
+  page calls `POST /api/app/sorts/:sortId/checkout` internally.
 
 ### `GET /api/sort-runs/:sortRunId`
 
