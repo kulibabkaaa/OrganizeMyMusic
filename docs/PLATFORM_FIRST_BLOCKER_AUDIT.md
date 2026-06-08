@@ -61,6 +61,9 @@ Latest local audit on 2026-06-08:
 - Full-organization persistence now has regression coverage for creating persistent app
   playlists, storing reviewable generations, and linking Sort-created recipes to
   those playlists for later Playlist Hub editing.
+- Full-organization persistence coverage now explicitly proves a Sort can create
+  three persistent app playlists and link each Sort-created recipe to its saved
+  playlist.
 - Sort Builder advanced recipe controls are collapsed by default and open when
   needed for tag notes or detailed tuning.
 - Logger redaction now recursively sanitizes token-like, secret-like, private

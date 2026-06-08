@@ -184,12 +184,25 @@ describe("full sort job", () => {
     );
   });
 
-  it("links Sort-created recipes to persistent playlists for later playlist editing", async () => {
+  it("links Sort-created recipes to three persistent playlists for later playlist editing", async () => {
     const tableCalls: Array<{ table: string; operation: string; payload?: unknown }> = [];
-    const playlistRows = [{ id: "playlist_1" }];
-    const sortPlaylistRows = [{ id: "sort_playlist_1" }];
-    const generationRows = [{ id: "generation_1" }];
+    const playlistRows = [{ id: "playlist_1" }, { id: "playlist_2" }, { id: "playlist_3" }];
+    const sortPlaylistRows = [
+      { id: "sort_playlist_1" },
+      { id: "sort_playlist_2" },
+      { id: "sort_playlist_3" }
+    ];
+    const generationRows = [
+      { id: "generation_1" },
+      { id: "generation_2" },
+      { id: "generation_3" }
+    ];
     const recipeUpdateFilters: Array<[string, string]> = [];
+    const recipes = [
+      recipe,
+      { ...recipe, id: "recipe_2", name: "Gym rap", position: 1 },
+      { ...recipe, id: "recipe_3", name: "Sad Slavic songs", position: 2 }
+    ];
 
     const createQuery = (table: string) => {
       const query = {
@@ -253,28 +266,26 @@ describe("full sort job", () => {
           sortRunId: "sort_1",
           librarySyncId: "sync_1",
           generatedAt: "2026-05-26T12:00:00.000Z",
-          playlists: [
-            {
-              id: recipe.id,
-              dimension: "request",
-              title: "Ukrainian rap",
-              description: "Keep it hard and energetic.",
-              confidenceLabel: "medium",
-              trackCount: 1,
-              trackFingerprints: ["fp_1"],
-              appleSongIds: ["apple_1"],
-              tracks: [
-                {
-                  fingerprint: "fp_1",
-                  normalizedTrackId: "track_1",
-                  appleSongId: "apple_1",
-                  position: 0,
-                  score: 0.9,
-                  reason: "Language matches ukrainian"
-                }
-              ]
-            }
-          ]
+          playlists: recipes.map((playlistRecipe, index) => ({
+            id: playlistRecipe.id,
+            dimension: "request",
+            title: playlistRecipe.name,
+            description: `${playlistRecipe.name} from saved tracks.`,
+            confidenceLabel: "medium",
+            trackCount: 1,
+            trackFingerprints: [`fp_${index + 1}`],
+            appleSongIds: [`apple_${index + 1}`],
+            tracks: [
+              {
+                fingerprint: `fp_${index + 1}`,
+                normalizedTrackId: `track_${index + 1}`,
+                appleSongId: `apple_${index + 1}`,
+                position: 0,
+                score: 0.9 - index * 0.1,
+                reason: "Recipe tags match this track."
+              }
+            ]
+          }))
         }
       })
     ).resolves.toBeUndefined();
@@ -282,15 +293,25 @@ describe("full sort job", () => {
     expect(tableCalls).toContainEqual({
       table: "playlists",
       operation: "insert",
-      payload: [
+      payload: expect.arrayContaining([
         expect.objectContaining({
           user_id: "user_1",
           name: "Ukrainian rap",
           created_from_sort_run_id: "sort_1",
           latest_library_sync_id: "sync_1",
           last_generated_at: "2026-05-26T12:00:00.000Z"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          name: "Gym rap",
+          created_from_sort_run_id: "sort_1"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          name: "Sad Slavic songs",
+          created_from_sort_run_id: "sort_1"
         })
-      ]
+      ])
     });
     expect(tableCalls).toContainEqual({
       table: "playlist_generations",
@@ -302,18 +323,36 @@ describe("full sort job", () => {
           recipe_id: recipe.id,
           sort_run_id: "sort_1",
           status: "ready_for_review"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          playlist_id: "playlist_2",
+          recipe_id: "recipe_2",
+          sort_run_id: "sort_1",
+          status: "ready_for_review"
+        }),
+        expect.objectContaining({
+          user_id: "user_1",
+          playlist_id: "playlist_3",
+          recipe_id: "recipe_3",
+          sort_run_id: "sort_1",
+          status: "ready_for_review"
         })
       ]
     });
-    expect(tableCalls).toContainEqual({
-      table: "playlist_recipes",
-      operation: "update",
-      payload: {
-        playlist_id: "playlist_1"
-      }
-    });
+    expect(
+      tableCalls.filter((call) => call.table === "playlist_recipes" && call.operation === "update")
+    ).toEqual([
+      { table: "playlist_recipes", operation: "update", payload: { playlist_id: "playlist_1" } },
+      { table: "playlist_recipes", operation: "update", payload: { playlist_id: "playlist_2" } },
+      { table: "playlist_recipes", operation: "update", payload: { playlist_id: "playlist_3" } }
+    ]);
     expect(recipeUpdateFilters).toEqual([
       ["id", recipe.id],
+      ["sort_run_id", "sort_1"],
+      ["id", "recipe_2"],
+      ["sort_run_id", "sort_1"],
+      ["id", "recipe_3"],
       ["sort_run_id", "sort_1"]
     ]);
   });
