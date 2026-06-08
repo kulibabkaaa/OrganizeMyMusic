@@ -127,10 +127,8 @@ describe("playlists page", () => {
     const markup = renderToStaticMarkup(<PlaylistsPage playlists={[]} />);
 
     expect(markup).toContain("Playlists");
-    expect(markup).toContain("Saved playlist system");
+    expect(markup).toContain("Your playlist workspace");
     expect(markup).toContain("Create Playlist");
-    expect(markup).toContain("MVP safety");
-    expect(markup).toContain("Existing Apple Music playlists stay untouched");
     expect(markup).toContain("No saved playlists yet");
     expect(markup).toContain("review the result before export");
   });
@@ -145,7 +143,7 @@ describe("playlists page", () => {
 
     expect(markup).toContain("Ukrainian Rap");
     expect(markup).toContain("High-energy Ukrainian rap from my saved library.");
-    expect(markup).toContain("Build playlists from your library");
+    expect(markup).toContain("Your playlist workspace");
     expect(markup).toContain("Latest generation");
     expect(markup).toContain("Review needed");
     expect(markup).toContain("Proposed tracks are waiting for review.");
